@@ -1,0 +1,21 @@
+{
+  "translation": {
+    "appName": "Suliv",
+    "login": {
+      "withEmail": "Login with email",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "I forgot my password",
+      "login": "Login"
+    },
+    "register": {
+      "fullName": "Name and surname",
+      "email": "Email",
+      "password": "Password",
+      "passwordConfirmation": "Confirm password"
+    },
+    "error": {
+      "required": "Required field"
+    }
+  } 
+}
