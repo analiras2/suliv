@@ -16,6 +16,9 @@
     },
     "error": {
       "required": "Campo obrigatório"
+    },
+    "favorites": {
+      "title": "Favoritos"
     }
   } 
 }
