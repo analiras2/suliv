@@ -1,15 +1,16 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
-  "typeRoots": ["src/@types"],
-  "baseUrl": ".",
-  "paths": {
-    "src/*": ["src/*"],
-    "types/*": ["src/@types/*"],
-    "assets/*": ["src/assets/*"],
-    "navigation/*": ["src/navigation/*"],
-    "screens/*": ["src/screens/*"],
-    "utils/*": ["src/utils/*"],
+    "types": ["jest"],
+    "typeRoots": ["node_modules/@types", "src/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"],
+      "types/*": ["src/@types/*"],
+      "assets/*": ["src/assets/*"],
+      "navigation/*": ["src/navigation/*"],
+      "screens/*": ["src/screens/*"],
+      "utils/*": ["src/utils/*"]
+    }
   }
-}
 }

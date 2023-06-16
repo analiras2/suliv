@@ -16,6 +16,7 @@ export default function App() {
         <RootStack.Navigator initialRouteName={StackNames.HOME}>
           {Stacks().map(stack => (
             <RootStack.Screen
+              key={stack.name}
               name={stack.name}
               component={stack.component}
               options={stack.options || {}}
