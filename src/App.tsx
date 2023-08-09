@@ -13,7 +13,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <NativeBaseProvider theme={theme}>
-        <RootStack.Navigator initialRouteName={StackNames.HOME}>
+        <RootStack.Navigator initialRouteName={StackNames.BOTTOM_TABS}>
           {Stacks().map(stack => (
             <RootStack.Screen
               key={stack.name}

@@ -1,14 +1,15 @@
 import React from 'react';
-import {Box, Text} from 'native-base';
+import {Text} from 'native-base';
 import {useTranslation} from 'react-i18next';
+import BaseScreen from '../baseScreen';
 
 const FavoritesScreen = () => {
   const {t} = useTranslation();
 
   return (
-    <Box p={5}>
+    <BaseScreen>
       <Text>{t('favorites.title')}</Text>
-    </Box>
+    </BaseScreen>
   );
 };
 

@@ -1,21 +1,21 @@
 import {useTranslation} from 'react-i18next';
-import FavoritesScreen from 'src/screens/favorites';
-import HomeScreen from 'src/screens/home';
+import {BottomTabs} from 'src/components';
 
 export enum StackNames {
+  BOTTOM_TABS = 'bottomTabs',
   HOME = 'home',
   FAVORITES = 'favorites',
+  PROFILE = 'profile',
 }
 
 const Stacks = () => {
   const {t} = useTranslation();
 
   return [
-    {name: StackNames.HOME, component: HomeScreen},
     {
-      name: StackNames.FAVORITES,
-      component: FavoritesScreen,
-      options: {title: t('favorites.title')},
+      name: StackNames.BOTTOM_TABS,
+      component: BottomTabs,
+      options: {headerShown: false},
     },
   ];
 };
