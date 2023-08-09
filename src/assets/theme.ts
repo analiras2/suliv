@@ -14,6 +14,18 @@ const theme = extendTheme({
       800: '#2A3427',
       900: '#1F271D',
     },
+    secondary: {
+      50: '#fefdfa',
+      100: '#fdf9f1',
+      200: '#fdf7ec',
+      300: '#fcf5e7',
+      400: '#FCF3E3',
+      500: '#d2cabd',
+      600: '#a8a297',
+      700: '#7e7971',
+      800: '#54514b',
+      900: '#2a2825',
+    },
   },
   fontConfig: {
     NunitoSans: {
@@ -49,6 +61,22 @@ const theme = extendTheme({
     heading: 'NunitoSans',
     body: 'NunitoSans',
     mono: 'NunitoSans',
+  },
+  components: {
+    Button: {
+      sizes: {
+        lg: {
+          _text: {
+            fontSize: '20px',
+          },
+        },
+        md: {
+          _text: {
+            fontSize: '18px',
+          },
+        },
+      },
+    },
   },
 });
 

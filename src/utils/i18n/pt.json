@@ -17,8 +17,12 @@
     "error": {
       "required": "Campo obrigatório"
     },
+    "home": "Home",
     "favorites": {
       "title": "Favoritos"
+    },
+    "profile": {
+      "title": "Perfil"
     }
-  } 
+  }
 }
