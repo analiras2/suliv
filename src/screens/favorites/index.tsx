@@ -1,6 +1,8 @@
-import React from 'react';
 import {Text} from 'native-base';
 import {useTranslation} from 'react-i18next';
+
+import React from 'react';
+
 import BaseScreen from '../baseScreen';
 
 const FavoritesScreen = () => {

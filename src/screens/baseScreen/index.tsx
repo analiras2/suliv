@@ -1,7 +1,8 @@
-import React, {ReactNode} from 'react';
-import {Box, theme} from 'native-base';
+import {Box, useTheme} from 'native-base';
 import {SafeAreaView} from 'react-native';
-import {useTheme} from 'native-base';
+
+import React, {ReactNode} from 'react';
+
 import styles from './styles';
 
 type BaseScreenProps = {

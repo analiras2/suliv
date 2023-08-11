@@ -1,4 +1,4 @@
-import {useTranslation} from 'react-i18next';
+// import {useTranslation} from 'react-i18next';
 import {BottomTabs} from 'src/components';
 
 export enum StackNames {
@@ -9,7 +9,7 @@ export enum StackNames {
 }
 
 const Stacks = () => {
-  const {t} = useTranslation();
+  // const {t} = useTranslation();
 
   return [
     {

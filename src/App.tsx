@@ -1,11 +1,12 @@
-import 'utils/i18n/index';
-import React from 'react';
-import {NativeBaseProvider} from 'native-base';
-import theme from 'assets/theme';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import theme from 'assets/theme';
+import {NativeBaseProvider} from 'native-base';
 import Stacks, {StackNames} from 'navigation/stacks';
 import {RootStackParamList} from 'types/navigation';
+import 'utils/i18n/index';
+
+import React from 'react';
 
 export default function App() {
   const RootStack = createNativeStackNavigator<RootStackParamList>();

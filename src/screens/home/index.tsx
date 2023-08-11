@@ -1,9 +1,11 @@
-import React from 'react';
-import {Box, Button, Text} from 'native-base';
-import {useTranslation} from 'react-i18next';
-import {StackNames} from 'src/navigation/stacks';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {Button, Text} from 'native-base';
+import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
+import {StackNames} from 'src/navigation/stacks';
+
+import React from 'react';
+
 import BaseScreen from '../baseScreen';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<

@@ -1,9 +1,11 @@
-import React from 'react';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Text} from 'native-base';
 import {useTranslation} from 'react-i18next';
-import {StackNames} from 'src/navigation/stacks';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from 'src/@types/navigation';
+import {StackNames} from 'src/navigation/stacks';
+
+import React from 'react';
+
 import BaseScreen from '../baseScreen';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -15,6 +17,7 @@ type Props = {
   navigation: HomeScreenNavigationProp;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ProfileScreen = ({navigation}: Props) => {
   const {t} = useTranslation();
 
