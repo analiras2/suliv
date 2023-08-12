@@ -40,7 +40,11 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
       );
 
     default:
-      return <Text {...props}>{children}</Text>;
+      return (
+        <Text fontFamily="body" {...props}>
+          {children}
+        </Text>
+      );
   }
 };
 

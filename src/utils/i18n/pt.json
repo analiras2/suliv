@@ -29,7 +29,15 @@
       "register": "Faça login ou registre-se para salvar e avaliar suas receitas favoritas."
     },
     "profile": {
-      "title": "Perfil"
+      "title": "Perfil",
+      "myRecipes": "Minhas receitas",
+      "language": "Idioma",
+      "rateApp": "Avalie o aplicativo",
+      "shareApp": "Compartilhe o aplicativo",
+      "reportProblem": "Encontrou algum problema no aplicativo?",
+      "privacyPolicy": "Política de Privacidade",
+      "termsOfUse": "Termos de Uso",
+      "logout": "Deslogar do App"
     }
   }
 }

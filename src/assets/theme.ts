@@ -82,7 +82,16 @@ const theme = extendTheme({
         },
         sm: {
           _text: {
-            fontSize: '16px',
+            fontSize: '15px',
+            fontWeight: '500',
+            textDecorationLine: 'underline',
+            borderBottomWidth: 1,
+            borderBottomColor: 'black',
+          },
+        },
+        xs: {
+          _text: {
+            fontSize: '14px',
           },
         },
       },
