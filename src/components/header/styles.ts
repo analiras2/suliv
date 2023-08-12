@@ -1,4 +1,4 @@
-import {Box} from 'native-base';
+import {Box, Image as NBImage} from 'native-base';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import styled from 'styled-components/native';
 
@@ -16,4 +16,12 @@ export const IconButton = styled(Icon).attrs(({theme, onPress}) => ({
 }))`
   padding: 0;
   align-items: center;
+`;
+
+export const Image = styled(NBImage).attrs(() => ({
+  height: '50px',
+  width: '90px',
+  mt: 2,
+}))`
+  align-self: flex-start;
 `;

@@ -1,13 +1,17 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {Button, Divider, Image, theme} from 'native-base';
+import {Button, Divider, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
-import {View} from 'react-native';
 import {RootStackParamList} from 'src/@types/navigation';
 import {SimpleItemList} from 'src/components';
 import BaseScreen from 'src/components/baseScreen';
+import ProfileHeader from 'src/components/profileHeader';
+import {FlexView} from 'src/components/shared';
+import {USER_MOCK} from 'src/mocks';
 import {StackNames} from 'src/navigation/stacks';
 
 import React from 'react';
+
+import * as St from './styles';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -20,6 +24,7 @@ type Props = {
 
 const ProfileScreen = ({navigation}: Props) => {
   const {t} = useTranslation();
+  const theme = useTheme();
 
   const menu = [
     [
@@ -42,18 +47,21 @@ const ProfileScreen = ({navigation}: Props) => {
   ];
 
   return (
-    <BaseScreen>
-      {menu.map((options, index) => (
-        <React.Fragment key={index}>
-          {index > 0 && (
-            <Divider marginY={theme.space[1]} color={theme.colors.red[500]} />
-          )}
-          {options.map((item, itemIndex) => (
-            <SimpleItemList key={itemIndex} {...item} />
-          ))}
-        </React.Fragment>
-      ))}
-      <View style={{flex: 1}} />
+    <BaseScreen hideHeader>
+      <ProfileHeader user={USER_MOCK} />
+      <>
+        {menu.map((options, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && (
+              <Divider marginY={theme.space[1]} color={theme.colors.red[500]} />
+            )}
+            {options.map((item, itemIndex) => (
+              <SimpleItemList key={itemIndex} {...item} />
+            ))}
+          </React.Fragment>
+        ))}
+      </>
+      <FlexView />
       <Button
         onPress={() => navigation.navigate(StackNames.FAVORITES)}
         variant="link"
@@ -62,14 +70,11 @@ const ProfileScreen = ({navigation}: Props) => {
         justifyContent="flex-start">
         {t('profile.logout')}
       </Button>
-      <Image
+      <St.Image
+        theme={theme}
         source={require('../../assets/icons/logo.png')}
-        height="60px"
-        width="100px"
         alt="Logotipo Suliv"
         resizeMode="contain"
-        marginY={theme.space[2]}
-        style={{alignSelf: 'center'}}
       />
     </BaseScreen>
   );

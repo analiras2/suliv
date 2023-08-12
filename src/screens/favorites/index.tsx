@@ -1,10 +1,10 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Button, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
-import {View} from 'react-native';
 import {RootStackParamList} from 'src/@types/navigation';
 import {Typography} from 'src/components';
 import BaseScreen from 'src/components/baseScreen';
+import {FlexView} from 'src/components/shared';
 import {StackNames} from 'src/navigation/stacks';
 
 import React from 'react';
@@ -44,9 +44,8 @@ const FavoritesScreen = ({navigation}: Props) => {
         justifyContent="flex-start">
         {t('login.forgotPassword')}
       </Button>
-      <View style={{flex: 1}} />
+      <FlexView />
       <Button
-        disabled
         mb={theme.space['1.5']}
         onPress={() => navigation.navigate(StackNames.FAVORITES)}>
         {t('goIn')}

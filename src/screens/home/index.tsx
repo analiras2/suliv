@@ -8,10 +8,12 @@ const HomeScreen = () => {
 
   return (
     <BaseScreen header={{showLogo: true}}>
-      <Typography type={TYPE.TITLE}>{t('home.popular')}</Typography>
-      {/* TODO: lista de receitas */}
-      <Typography type={TYPE.TITLE}>{t('home.recent')}</Typography>
-      {/* TODO: lista de receitas */}
+      <Typography mb={5} type={TYPE.TITLE}>
+        {t('home.popular')}
+      </Typography>
+      <Typography mb={5} type={TYPE.TITLE}>
+        {t('home.recent')}
+      </Typography>
     </BaseScreen>
   );
 };

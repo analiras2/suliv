@@ -1,4 +1,4 @@
-import {Box, Image, useTheme} from 'native-base';
+import {Box, useTheme} from 'native-base';
 import {GestureResponderEvent} from 'react-native';
 
 import React from 'react';
@@ -18,14 +18,10 @@ const Header = ({showLogo, title, onBackPress, onSearchPress}: HeaderProps) => {
 
   return showLogo ? (
     <St.Container theme={theme}>
-      <Image
+      <St.Image
         source={require('../../assets/icons/logo.png')}
-        height="50px"
-        width="90px"
         alt="Logotipo Suliv"
         resizeMode="contain"
-        mt={2}
-        style={{alignSelf: 'flex-start'}}
       />
     </St.Container>
   ) : (

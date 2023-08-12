@@ -16,6 +16,12 @@ export const Container = styled.SafeAreaView<Props>`
   background-color: ${({theme}) => theme.colors.secondary[100]};
 `;
 
+export const ScrollView = styled.ScrollView.attrs(() => ({
+  contentContainerStyle: {
+    flexGrow: 1,
+  },
+}))``;
+
 export const Body = styled.View`
   flex: 1;
   padding-horizontal: 20px;

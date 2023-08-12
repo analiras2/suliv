@@ -29,12 +29,7 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
 
     case TYPE.TITLE:
       return (
-        <Text
-          mb={5}
-          fontSize="22px"
-          fontFamily="body"
-          fontWeight={600}
-          {...props}>
+        <Text fontSize="22px" fontFamily="body" fontWeight={600} {...props}>
           {children}
         </Text>
       );
