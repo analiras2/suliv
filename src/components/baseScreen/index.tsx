@@ -16,7 +16,16 @@ const BaseScreen = ({children}: BaseScreenProps) => {
     <>
       <St.StatusBar theme={theme} />
       <St.Container theme={theme}>
-        <Header showLogo />
+        <Header
+          // showLogo
+          onSearchPress={() => {
+            // TODO
+          }}
+          onBackPress={() => {
+            // TODO
+          }}
+          title="Search"
+        />
         <St.Body>{children}</St.Body>
       </St.Container>
     </>

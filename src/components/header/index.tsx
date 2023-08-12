@@ -1,8 +1,9 @@
 import {Box, Image, Text, useTheme} from 'native-base';
 import {GestureResponderEvent} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import React from 'react';
+
+import * as St from './styles';
 
 type Props = {
   showLogo?: boolean;
@@ -15,35 +16,22 @@ const Header = ({showLogo, title, onBackPress, onSearchPress}: Props) => {
   const theme = useTheme();
 
   return showLogo ? (
-    <Box
-      paddingY={theme.space[1]}
-      paddingX={theme.space[0.5]}
-      bg={theme.colors.secondary[400]}>
+    <St.Container theme={theme}>
       <Image
         source={require('../../assets/icons/logo.png')}
         height="40px"
         alt="Logotipo Suliv"
         resizeMode="contain"
       />
-    </Box>
+    </St.Container>
   ) : (
-    <Box
-      flexDirection="row"
-      paddingY={theme.space[1]}
-      paddingX={theme.space[0.5]}
-      bg={theme.colors.secondary[400]}>
+    <St.Container flexDirection="row" theme={theme}>
       <Box width={9}>
         {onBackPress && (
-          <Icon
+          <St.IconButton
             name="chevron-left"
+            theme={theme}
             onPress={onBackPress}
-            color={theme.colors.black}
-            size={32}
-            style={{
-              padding: 0,
-              alignItems: 'center',
-              backgroundColor: 'yellow',
-            }}
           />
         )}
       </Box>
@@ -57,20 +45,14 @@ const Header = ({showLogo, title, onBackPress, onSearchPress}: Props) => {
       </Box>
       <Box width={9}>
         {onSearchPress && (
-          <Icon
+          <St.IconButton
             name="chevron-right"
+            theme={theme}
             onPress={onSearchPress}
-            color={theme.colors.black}
-            size={32}
-            style={{
-              padding: 0,
-              alignItems: 'center',
-              backgroundColor: 'yellow',
-            }}
           />
         )}
       </Box>
-    </Box>
+    </St.Container>
   );
 };
 
