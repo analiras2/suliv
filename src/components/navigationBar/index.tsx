@@ -2,7 +2,7 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StackNames} from 'src/navigation/stacks';
 import {FavoritesScreen, HomeScreen, ProfileScreen} from 'src/screens';
 
@@ -10,7 +10,7 @@ import React from 'react';
 
 const Tab = createBottomTabNavigator();
 
-const BottomTabs = () => {
+const NavigationBar = () => {
   const {t} = useTranslation();
   const theme = useTheme();
 
@@ -36,7 +36,7 @@ const BottomTabs = () => {
           headerShown: false,
           title: t('home'),
           tabBarIcon: ({color, size}) => (
-            <MaterialCommunityIcons name="home" color={color} size={size} />
+            <Icon name="home" color={color} size={size} />
           ),
         }}
       />
@@ -47,7 +47,7 @@ const BottomTabs = () => {
           headerShown: false,
           title: t('favorites.title'),
           tabBarIcon: ({color, size}) => (
-            <MaterialCommunityIcons name="heart" color={color} size={size} />
+            <Icon name="heart" color={color} size={size} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ const BottomTabs = () => {
           headerShown: false,
           title: t('profile.title'),
           tabBarIcon: ({color, size}) => (
-            <MaterialCommunityIcons name="account" color={color} size={size} />
+            <Icon name="account" color={color} size={size} />
           ),
         }}
       />
@@ -66,4 +66,4 @@ const BottomTabs = () => {
   );
 };
 
-export default BottomTabs;
+export default NavigationBar;

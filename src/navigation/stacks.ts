@@ -1,5 +1,5 @@
 // import {useTranslation} from 'react-i18next';
-import {BottomTabs} from 'src/components';
+import {NavigationBar} from 'src/components';
 
 export enum StackNames {
   BOTTOM_TABS = 'bottomTabs',
@@ -14,7 +14,7 @@ const Stacks = () => {
   return [
     {
       name: StackNames.BOTTOM_TABS,
-      component: BottomTabs,
+      component: NavigationBar,
       options: {headerShown: false},
     },
   ];

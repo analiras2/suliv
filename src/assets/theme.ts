@@ -16,7 +16,7 @@ const theme = extendTheme({
     },
     secondary: {
       50: '#fefdfa',
-      100: '#fdf9f1',
+      100: '#FFF9EF',
       200: '#fdf7ec',
       300: '#fcf5e7',
       400: '#FCF3E3',
