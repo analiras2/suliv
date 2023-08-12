@@ -17,5 +17,7 @@ export const Container = styled.SafeAreaView<Props>`
 `;
 
 export const Body = styled.View`
-  padding: 20px;
+  flex: 1;
+  padding-horizontal: 20px;
+  margin-bottom: 44px;
 `;

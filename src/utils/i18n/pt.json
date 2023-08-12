@@ -1,12 +1,14 @@
 {
   "translation": {
     "appName": "Suliv",
+    "goIn": "Entrar",
     "login": {
       "withEmail": "Entrar com email",
       "email": "Email",
       "password": "Senha",
       "forgotPassword": "Esqueci minha senha",
-      "login": "Entrar"
+      "login": "Entrar",
+      "register": "Criar uma conta agora"
     },
     "register": {
       "fullName": "Nome e sobrenome",
@@ -17,9 +19,14 @@
     "error": {
       "required": "Campo obrigatório"
     },
-    "home": "Home",
+    "home": {
+      "title": "Home",
+      "popular": "Populares",
+      "recent": "Recentes"
+    },
     "favorites": {
-      "title": "Favoritos"
+      "title": "Favoritos",
+      "register": "Faça login ou registre-se para salvar e avaliar suas receitas favoritas."
     },
     "profile": {
       "title": "Perfil"

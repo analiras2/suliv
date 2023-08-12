@@ -63,6 +63,11 @@ const theme = extendTheme({
     mono: 'NunitoSans',
   },
   components: {
+    Text: {
+      baseStyle: {
+        fontSize: 16,
+      },
+    },
     Button: {
       sizes: {
         lg: {
@@ -73,6 +78,11 @@ const theme = extendTheme({
         md: {
           _text: {
             fontSize: '18px',
+          },
+        },
+        sm: {
+          _text: {
+            fontSize: '16px',
           },
         },
       },

@@ -34,7 +34,7 @@ const NavigationBar = () => {
         component={HomeScreen}
         options={{
           headerShown: false,
-          title: t('home'),
+          title: t('home.title'),
           tabBarIcon: ({color, size}) => (
             <Icon name="home" color={color} size={size} />
           ),
