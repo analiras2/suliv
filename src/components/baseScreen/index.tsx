@@ -13,10 +13,13 @@ const BaseScreen = ({children}: BaseScreenProps) => {
   const theme = useTheme();
 
   return (
-    <St.Container theme={theme}>
-      <Header showLogo />
-      <St.Body>{children}</St.Body>
-    </St.Container>
+    <>
+      <St.StatusBar theme={theme} />
+      <St.Container theme={theme}>
+        <Header showLogo />
+        <St.Body>{children}</St.Body>
+      </St.Container>
+    </>
   );
 };
 

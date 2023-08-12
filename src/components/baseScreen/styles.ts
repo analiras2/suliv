@@ -5,8 +5,14 @@ type Props = {
   theme: CustomThemeType;
 };
 
+export const StatusBar = styled.SafeAreaView<Props>`
+  padding: -20px;
+  background-color: ${({theme}) => theme.colors.secondary[400]};
+`;
+
 export const Container = styled.SafeAreaView<Props>`
-  flex: 1;
+  height: 100%;
+  width: 100%;
   background-color: ${({theme}) => theme.colors.secondary[100]};
 `;
 
