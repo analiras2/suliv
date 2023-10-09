@@ -8,6 +8,8 @@ module.exports = {
           src: './src',
           types: './src/@types',
           assets: './src/assets',
+          components: './src/components',
+          entities: './src/entities',
           navigation: './src/navigation',
           screens: './src/screens',
           utils: './src/utils',
