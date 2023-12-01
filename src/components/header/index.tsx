@@ -1,23 +1,22 @@
 import {Box, useTheme} from 'native-base';
-import {GestureResponderEvent} from 'react-native';
 
 import React from 'react';
 
-import Typography, {TYPE} from '../typography';
+import Typography from '../typography';
 import * as St from './styles';
 
 export type HeaderProps = {
   showLogo?: boolean;
   title?: string;
-  onBackPress?: (event: GestureResponderEvent) => void;
-  onSearchPress?: (event: GestureResponderEvent) => void;
+  onBackPress?: () => void;
+  onSearchPress?: () => void;
 };
 
 const Header = ({showLogo, title, onBackPress, onSearchPress}: HeaderProps) => {
   const theme = useTheme();
 
   return showLogo ? (
-    <St.Container theme={theme}>
+    <St.Container testID="Analira" theme={theme}>
       <St.Image
         source={require('../../assets/icons/logo.png')}
         alt="Logotipo Suliv"
@@ -37,7 +36,9 @@ const Header = ({showLogo, title, onBackPress, onSearchPress}: HeaderProps) => {
       </Box>
 
       <Box flex={2} alignItems="center">
-        {title && <Typography type={TYPE.SCREEN_TITLE}>{title}</Typography>}
+        {title && (
+          <Typography type={Typography.TYPE.SCREEN_TITLE}>{title}</Typography>
+        )}
       </Box>
       <Box width={9}>
         {onSearchPress && (

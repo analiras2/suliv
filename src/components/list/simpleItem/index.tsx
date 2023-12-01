@@ -6,18 +6,18 @@ import React from 'react';
 import Typography from '../../typography';
 import * as St from './styles';
 
-type ItemListProps = {
+export interface IItemListProps {
   title: string;
   onPress: () => void;
   selectedItem?: string | null;
-};
+}
 
-const ItemList = ({title, onPress, selectedItem}: ItemListProps) => {
+const ItemList = ({title, onPress, selectedItem}: IItemListProps) => {
   const theme = useTheme();
   const color = theme.colors.primary[400];
 
   return (
-    <St.Container theme={theme} onPress={onPress}>
+    <St.Container theme={theme} onPress={onPress} activeOpacity={0.5}>
       <Text>{title}</Text>
       {selectedItem ? (
         <Typography color={color} fontWeight={500}>

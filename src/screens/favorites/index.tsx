@@ -1,29 +1,20 @@
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Button, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
-import {Typography} from 'src/components';
-import BaseScreen from 'src/components/baseScreen';
-import {FlexView} from 'src/components/shared';
+import {BaseScreen, FlexView, Typography} from 'src/components';
 import {StackNames} from 'src/navigation/stacks';
 
 import React from 'react';
 
-type FavoritesScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  StackNames.FAVORITES
->;
+type Props = NativeStackScreenProps<RootStackParamList, StackNames.FAVORITES>;
 
-type Props = {
-  navigation: FavoritesScreenNavigationProp;
-};
-
-const FavoritesScreen = ({navigation}: Props) => {
+const FavoritesScreen = ({navigation, route}: Props) => {
   const {t} = useTranslation();
   const theme = useTheme();
 
   return (
-    <BaseScreen header={{title: t('favorites.title')}}>
+    <BaseScreen id={route.name} header={{title: t('favorites.title')}}>
       <Typography>{t('favorites.register')}</Typography>
       <Typography mb={4} alignSelf="center">
         Google

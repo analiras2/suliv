@@ -1,13 +1,14 @@
 import {Avatar, useTheme} from 'native-base';
+import {IUser} from 'src/entities';
 import {getInitials} from 'src/utils';
 
 import React from 'react';
 
-import Typography, {TYPE} from '../typography';
+import Typography from '../../typography';
 import * as St from './styles';
 
 type Props = {
-  user: {name: string; email: string; nickname: string};
+  user: IUser;
 };
 
 const ProfileHeader = ({user}: Props) => {
@@ -16,7 +17,9 @@ const ProfileHeader = ({user}: Props) => {
   return (
     <St.Container theme={theme}>
       <Avatar size={71} bg={theme.colors.primary[100]}>
-        <Typography type={TYPE.TITLE}>{getInitials(user.name)}</Typography>
+        <Typography type={Typography.TYPE.TITLE}>
+          {getInitials(`${user.name} ${user.lastName}`)}
+        </Typography>
       </Avatar>
       <St.Info theme={theme}>
         <Typography fontSize="lg" fontWeight={500}>

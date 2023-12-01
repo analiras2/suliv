@@ -2,15 +2,17 @@ import {ITextProps, Text} from 'native-base';
 
 import React from 'react';
 
-export enum TYPE {
+enum TYPE {
   SCREEN_TITLE,
   TITLE,
   DEFAULT,
+  TINY,
+  VERY_TINY,
 }
 
 type Props = ITextProps & {
   type?: TYPE;
-  children: string;
+  children?: string | number;
 };
 
 const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
@@ -33,6 +35,18 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
           {children}
         </Text>
       );
+    case TYPE.TINY:
+      return (
+        <Text fontSize="14px" fontFamily="body" fontWeight={500} {...props}>
+          {children}
+        </Text>
+      );
+    case TYPE.VERY_TINY:
+      return (
+        <Text fontSize="10px" fontFamily="body" fontWeight={500} {...props}>
+          {children}
+        </Text>
+      );
 
     default:
       return (
@@ -42,5 +56,7 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
       );
   }
 };
+
+Typography.TYPE = TYPE;
 
 export default Typography;

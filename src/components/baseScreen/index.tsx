@@ -1,22 +1,30 @@
 import {useTheme} from 'native-base';
-import {Header, HeaderProps} from 'src/components';
 
 import React from 'react';
 
-import {FlexView} from '../shared';
+import FlexView from '../flexView';
+import Header, {HeaderProps} from '../header';
 import * as St from './styles';
 
-type BaseScreenProps = {
+interface Props {
+  id: string;
   hideHeader?: boolean;
   header?: HeaderProps;
-  children: JSX.Element | JSX.Element[];
-};
+  children?: React.ReactNode | React.ReactNode[];
+  hideScroll?: boolean;
+}
 
-const BaseScreen = ({hideHeader, header, children}: BaseScreenProps) => {
+const BaseScreen = ({
+  id,
+  hideHeader,
+  header,
+  children,
+  hideScroll = false,
+}: Props) => {
   const theme = useTheme();
 
   return (
-    <FlexView>
+    <FlexView testID={id}>
       <St.StatusBar theme={theme} />
       <St.Container theme={theme}>
         {!hideHeader && (
@@ -27,9 +35,13 @@ const BaseScreen = ({hideHeader, header, children}: BaseScreenProps) => {
             title={header?.title}
           />
         )}
-        <St.ScrollView>
+        {hideScroll ? (
           <St.Body>{children}</St.Body>
-        </St.ScrollView>
+        ) : (
+          <St.ScrollView>
+            <St.Body>{children}</St.Body>
+          </St.ScrollView>
+        )}
       </St.Container>
     </FlexView>
   );
