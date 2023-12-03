@@ -7,7 +7,9 @@ export {default as RecipeCard} from './list/recipeCard';
 export {default as SimpleItemList} from './list/simpleItem';
 export {default as NavigationBar} from './navigationBar';
 export {default as Typography} from './typography';
+export {default as SectionList} from './list/sectionList';
 
 export type {HeaderProps} from './header';
 export type {IRecipeCardProps} from './list/recipeCard';
 export type {IItemListProps} from './list/simpleItem';
+export type {ISectionList} from './list/sectionList';

@@ -1,4 +1,3 @@
-// import {useTranslation} from 'react-i18next';
 import {NavigationBar} from 'src/components';
 
 export enum StackNames {
@@ -8,16 +7,12 @@ export enum StackNames {
   PROFILE = 'profile',
 }
 
-const Stacks = () => {
-  // const {t} = useTranslation();
-
-  return [
-    {
-      name: StackNames.BOTTOM_TABS,
-      component: NavigationBar,
-      options: {headerShown: false},
-    },
-  ];
-};
+const Stacks = () => [
+  {
+    name: StackNames.BOTTOM_TABS,
+    component: NavigationBar,
+    options: {headerShown: false},
+  },
+];
 
 export default Stacks;

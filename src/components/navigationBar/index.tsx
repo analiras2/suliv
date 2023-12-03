@@ -35,8 +35,12 @@ const NavigationBar = () => {
         options={{
           headerShown: false,
           title: t('home.title'),
-          tabBarIcon: ({color, size}) => (
-            <Icon name="home" color={color} size={size} />
+          tabBarIcon: ({focused, color, size}) => (
+            <Icon
+              name={focused ? 'home' : 'home-outline'}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -46,8 +50,12 @@ const NavigationBar = () => {
         options={{
           headerShown: false,
           title: t('favorites.title'),
-          tabBarIcon: ({color, size}) => (
-            <Icon name="heart" color={color} size={size} />
+          tabBarIcon: ({focused, color, size}) => (
+            <Icon
+              name={focused ? 'heart' : 'heart-outline'}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -57,8 +65,12 @@ const NavigationBar = () => {
         options={{
           headerShown: false,
           title: t('profile.title'),
-          tabBarIcon: ({color, size}) => (
-            <Icon name="account" color={color} size={size} />
+          tabBarIcon: ({focused, color, size}) => (
+            <Icon
+              name={focused ? 'account' : 'account-outline'}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
