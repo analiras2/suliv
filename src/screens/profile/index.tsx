@@ -9,14 +9,14 @@ import {
   SimpleItemList,
 } from 'src/components';
 import {USER_MOCK} from 'src/mocks';
-import {StackNames} from 'src/navigation/stacks';
+import {StackRoutes} from 'src/navigation/stacks';
 
 import React from 'react';
 
 import * as St from './styles';
 import {menu} from './utils';
 
-type Props = NativeStackScreenProps<RootStackParamList, StackNames.PROFILE>;
+type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.PROFILE>;
 
 const ProfileScreen = ({navigation, route}: Props) => {
   const {t} = useTranslation();
@@ -39,7 +39,7 @@ const ProfileScreen = ({navigation, route}: Props) => {
       </>
       <FlexView />
       <Button
-        onPress={() => navigation.navigate(StackNames.FAVORITES)}
+        onPress={() => navigation.navigate(StackRoutes.FAVORITES)}
         variant="link"
         size="sm"
         pl={1}

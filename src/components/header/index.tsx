@@ -10,19 +10,35 @@ export type HeaderProps = {
   title?: string;
   onBackPress?: () => void;
   onSearchPress?: () => void;
+  actionButton?: {icon: string; onPress?: () => void; size?: number};
 };
 
-const Header = ({showLogo, title, onBackPress, onSearchPress}: HeaderProps) => {
+const Header = ({
+  showLogo,
+  title,
+  onBackPress,
+  onSearchPress,
+  actionButton,
+}: HeaderProps) => {
   const theme = useTheme();
 
   return showLogo ? (
-    <St.Container testID="Analira" theme={theme}>
+    <St.LogoContainer testID="Analira" theme={theme}>
       <St.Image
         source={require('../../assets/icons/logo.png')}
         alt="Logotipo Suliv"
         resizeMode="contain"
       />
-    </St.Container>
+
+      {onSearchPress && (
+        <St.IconButton
+          name="magnify"
+          theme={theme}
+          onPress={onSearchPress}
+          size={30}
+        />
+      )}
+    </St.LogoContainer>
   ) : (
     <St.Container flexDirection="row" theme={theme}>
       <Box width={9}>
@@ -31,21 +47,25 @@ const Header = ({showLogo, title, onBackPress, onSearchPress}: HeaderProps) => {
             name="chevron-left"
             theme={theme}
             onPress={onBackPress}
+            size={32}
           />
         )}
       </Box>
 
       <Box flex={2} alignItems="center">
         {title && (
-          <Typography type={Typography.TYPE.SCREEN_TITLE}>{title}</Typography>
+          <Typography numberOfLines={1} type={Typography.TYPE.SCREEN_TITLE}>
+            {title}
+          </Typography>
         )}
       </Box>
-      <Box width={9}>
-        {onSearchPress && (
+      <Box width={9} ml={2}>
+        {actionButton && (
           <St.IconButton
-            name="chevron-right"
+            name={actionButton.icon}
             theme={theme}
-            onPress={onSearchPress}
+            onPress={actionButton.onPress}
+            size={actionButton.size}
           />
         )}
       </Box>

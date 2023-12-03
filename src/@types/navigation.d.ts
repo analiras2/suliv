@@ -1,8 +1,10 @@
-import {StackNames} from 'src/navigation/stacks';
+import {IRecipe} from 'src/entities';
+import {StackRoutes} from 'src/navigation/stacks';
 
 type RootStackParamList = {
-  [StackNames.BOTTOM_TABS]: FunctionComponent<{}>;
-  [StackNames.HOME]: FunctionComponent<{}>;
-  [StackNames.FAVORITES]: FunctionComponent<{}>;
-  [StackNames.PROFILE]: FunctionComponent<{}>;
+  [StackRoutes.BOTTOM_TABS]: FunctionComponent<{}>;
+  [StackRoutes.HOME]: FunctionComponent<{}>;
+  [StackRoutes.FAVORITES]: FunctionComponent<{}>;
+  [StackRoutes.PROFILE]: FunctionComponent<{}>;
+  [StackRoutes.RECIPE]: IRecipe;
 };

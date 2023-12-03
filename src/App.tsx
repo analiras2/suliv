@@ -2,7 +2,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import theme from 'assets/theme';
 import {NativeBaseProvider} from 'native-base';
-import Stacks, {StackNames} from 'navigation/stacks';
+import Stacks, {StackRoutes} from 'navigation/stacks';
 import {RootStackParamList} from 'types/navigation';
 import 'utils/i18n/index';
 
@@ -14,7 +14,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <NativeBaseProvider theme={theme}>
-        <RootStack.Navigator initialRouteName={StackNames.BOTTOM_TABS}>
+        <RootStack.Navigator initialRouteName={StackRoutes.BOTTOM_TABS}>
           {Stacks().map(stack => (
             <RootStack.Screen
               key={stack.name}

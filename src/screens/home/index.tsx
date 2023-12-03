@@ -9,14 +9,14 @@ import {
 } from 'src/components';
 import {IRecipe} from 'src/entities';
 import {RECIPE_MOCK} from 'src/mocks';
-import {StackNames} from 'src/navigation/stacks';
+import {StackRoutes} from 'src/navigation/stacks';
 import {RootStackParamList} from 'types/navigation';
 
 import React from 'react';
 
-type Props = NativeStackScreenProps<RootStackParamList, StackNames.HOME>;
+type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.HOME>;
 
-const HomeScreen = ({route}: Props) => {
+const HomeScreen = ({route, navigation}: Props) => {
   const {t} = useTranslation();
 
   const section: ISectionList<IRecipe>[] = [
@@ -25,18 +25,24 @@ const HomeScreen = ({route}: Props) => {
   ];
 
   return (
-    <BaseScreen id={route.name} header={{showLogo: true}} hideScroll>
+    <BaseScreen
+      id={route.name}
+      header={{showLogo: true, onSearchPress: () => console.log('Pesquisar')}}
+      hideScroll>
       <SectionList
         sections={section}
         renderHeader={({title}) => {
           return (
-            <Typography mb={5} type={Typography.TYPE.TITLE}>
+            <Typography mb={2} type={Typography.TYPE.TITLE}>
               {title}
             </Typography>
           );
         }}
         renderItem={({item}) => (
-          <RecipeCard recipe={item} onPress={() => console.log('Aqui click')} />
+          <RecipeCard
+            recipe={item}
+            onPress={() => navigation.navigate(StackRoutes.RECIPE, item)}
+          />
         )}
       />
     </BaseScreen>

@@ -3,7 +3,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {StackNames} from 'src/navigation/stacks';
+import {StackRoutes} from 'src/navigation/stacks';
 import {FavoritesScreen, HomeScreen, ProfileScreen} from 'src/screens';
 
 import React from 'react';
@@ -30,7 +30,7 @@ const NavigationBar = () => {
         tabBarActiveTintColor: theme.colors.primary[400],
       })}>
       <Tab.Screen
-        name={StackNames.HOME}
+        name={StackRoutes.HOME}
         component={HomeScreen}
         options={{
           headerShown: false,
@@ -45,7 +45,7 @@ const NavigationBar = () => {
         }}
       />
       <Tab.Screen
-        name={StackNames.FAVORITES}
+        name={StackRoutes.FAVORITES}
         component={FavoritesScreen}
         options={{
           headerShown: false,
@@ -60,7 +60,7 @@ const NavigationBar = () => {
         }}
       />
       <Tab.Screen
-        name={StackNames.PROFILE}
+        name={StackRoutes.PROFILE}
         component={ProfileScreen}
         options={{
           headerShown: false,

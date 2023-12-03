@@ -33,6 +33,7 @@ const BaseScreen = ({
             onSearchPress={header?.onSearchPress}
             onBackPress={header?.onBackPress}
             title={header?.title}
+            actionButton={header?.actionButton}
           />
         )}
         {hideScroll ? (

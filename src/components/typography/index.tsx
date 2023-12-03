@@ -21,7 +21,7 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
       return (
         <Text
           mb={5}
-          fontSize="24px"
+          fontSize="20px"
           fontFamily="body"
           fontWeight={500}
           {...props}>

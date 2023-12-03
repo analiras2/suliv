@@ -3,11 +3,11 @@ import {Button, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
 import {BaseScreen, FlexView, Typography} from 'src/components';
-import {StackNames} from 'src/navigation/stacks';
+import {StackRoutes} from 'src/navigation/stacks';
 
 import React from 'react';
 
-type Props = NativeStackScreenProps<RootStackParamList, StackNames.FAVORITES>;
+type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.FAVORITES>;
 
 const FavoritesScreen = ({navigation, route}: Props) => {
   const {t} = useTranslation();
@@ -29,7 +29,7 @@ const FavoritesScreen = ({navigation, route}: Props) => {
         {t('register.password')}
       </Typography>
       <Button
-        onPress={() => navigation.navigate(StackNames.FAVORITES)}
+        onPress={() => navigation.navigate(StackRoutes.FAVORITES)}
         variant="link"
         size="sm"
         justifyContent="flex-start">
@@ -38,11 +38,11 @@ const FavoritesScreen = ({navigation, route}: Props) => {
       <FlexView />
       <Button
         mb={theme.space['1.5']}
-        onPress={() => navigation.navigate(StackNames.FAVORITES)}>
+        onPress={() => navigation.navigate(StackRoutes.FAVORITES)}>
         {t('goIn')}
       </Button>
       <Button
-        onPress={() => navigation.navigate(StackNames.FAVORITES)}
+        onPress={() => navigation.navigate(StackRoutes.FAVORITES)}
         variant="link"
         mb={5}
         size="sm">
