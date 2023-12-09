@@ -20,8 +20,8 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
     case TYPE.SCREEN_TITLE:
       return (
         <Text
-          mb={5}
-          fontSize="20px"
+          p={0}
+          fontSize="24px"
           fontFamily="body"
           fontWeight={500}
           {...props}>

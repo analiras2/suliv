@@ -70,13 +70,15 @@ const RecipeCard = ({recipe, onPress}: IRecipeCardProps) => {
           </St.RateContainer>
         </St.BottomIcons>
       </Box>
-      <Typography
-        type={Typography.TYPE.TINY}
-        textAlign="center"
-        numberOfLines={2}
-        padding={1}>
-        {recipe.title}
-      </Typography>
+      <Box justifyContent={'center'} flex={1}>
+        <Typography
+          type={Typography.TYPE.TINY}
+          textAlign="center"
+          numberOfLines={2}
+          padding={1}>
+          {recipe.title}
+        </Typography>
+      </Box>
     </St.Container>
   );
 };

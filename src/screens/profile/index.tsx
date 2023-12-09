@@ -2,12 +2,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Button, Divider, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
-import {
-  BaseScreen,
-  FlexView,
-  ProfileHeader,
-  SimpleItemList,
-} from 'src/components';
+import {BaseScreen, FlexView, Header, SimpleItemList} from 'src/components';
 import {USER_MOCK} from 'src/mocks';
 import {StackRoutes} from 'src/navigation/stacks';
 
@@ -23,8 +18,9 @@ const ProfileScreen = ({navigation, route}: Props) => {
   const theme = useTheme();
 
   return (
-    <BaseScreen id={route.name} hideHeader>
-      <ProfileHeader user={USER_MOCK} />
+    <BaseScreen
+      id={route.name}
+      header={{type: Header.TYPE.PROFILE, user: USER_MOCK}}>
       <>
         {menu(t).map((options, index) => (
           <React.Fragment key={index}>

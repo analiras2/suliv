@@ -8,18 +8,18 @@ import * as St from './styles';
 
 interface Props {
   id: string;
-  hideHeader?: boolean;
   header?: HeaderProps;
   children?: React.ReactNode | React.ReactNode[];
   hideScroll?: boolean;
+  noPadding?: boolean;
 }
 
 const BaseScreen = ({
   id,
-  hideHeader,
   header,
   children,
   hideScroll = false,
+  noPadding = false,
 }: Props) => {
   const theme = useTheme();
 
@@ -27,20 +27,12 @@ const BaseScreen = ({
     <FlexView testID={id}>
       <St.StatusBar theme={theme} />
       <St.Container theme={theme}>
-        {!hideHeader && (
-          <Header
-            showLogo={header?.showLogo}
-            onSearchPress={header?.onSearchPress}
-            onBackPress={header?.onBackPress}
-            title={header?.title}
-            actionButton={header?.actionButton}
-          />
-        )}
+        <Header {...header} />
         {hideScroll ? (
-          <St.Body>{children}</St.Body>
+          <St.Body noPadding={noPadding}>{children}</St.Body>
         ) : (
           <St.ScrollView>
-            <St.Body>{children}</St.Body>
+            <St.Body noPadding={noPadding}>{children}</St.Body>
           </St.ScrollView>
         )}
       </St.Container>

@@ -2,6 +2,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
 import {
   BaseScreen,
+  Header,
   ISectionList,
   RecipeCard,
   SectionList,
@@ -27,7 +28,10 @@ const HomeScreen = ({route, navigation}: Props) => {
   return (
     <BaseScreen
       id={route.name}
-      header={{showLogo: true, onSearchPress: () => console.log('Pesquisar')}}
+      header={{
+        type: Header.TYPE.LOGO,
+        onSearchPress: () => console.log('Pesquisar'),
+      }}
       hideScroll>
       <SectionList
         sections={section}

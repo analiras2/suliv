@@ -3,6 +3,7 @@ import styled from 'styled-components/native';
 
 type Props = {
   theme: CustomThemeType;
+  noPadding?: boolean;
 };
 
 export const StatusBar = styled.SafeAreaView<Props>`
@@ -22,8 +23,8 @@ export const ScrollView = styled.ScrollView.attrs(() => ({
   },
 }))``;
 
-export const Body = styled.View`
+export const Body = styled.View<Props>`
   flex: 1;
-  padding-horizontal: 20px;
+  padding-horizontal: ${({noPadding}) => (noPadding ? 0 : 20)}px;
   margin-bottom: 44px;
 `;

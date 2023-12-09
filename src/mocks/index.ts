@@ -43,6 +43,38 @@ export const RECIPE_MOCK: IRecipe[] = [
     ],
   },
   {
+    id: 2865,
+    authorId: 14784,
+    title: 'Torta de Frango com Legumes',
+    ingredients: [
+      {name: 'Açucar', quantity: 36},
+      {name: 'margarina', quantity: 2},
+      {name: 'ovo', quantity: 2},
+      {name: 'leite', quantity: 100},
+    ],
+    preparation: '',
+    social: {
+      averageScore: 4.5,
+      numberVotes: 535,
+      numberComment: 2,
+    },
+    yield: 10,
+    creationDate: '2005-12-03 00:00:00.000000',
+    time: {
+      setup: 60,
+      cooking: 0,
+      waiting: 0,
+      total: 60,
+    },
+    categories: {
+      primary: ['bolos_e_tortas_doces'],
+      others: ['bolos_e_tortas_doces'],
+    },
+    images: [
+      'https://static.itdg.com.br/images/1200-675/bd14ed0d98530fb34b6f60a295382a7a/348000-original.jpg',
+    ],
+  },
+  {
     id: 28,
     authorId: 14784,
     title: 'Torta de Chocolate',
@@ -75,9 +107,9 @@ export const RECIPE_MOCK: IRecipe[] = [
     ],
   },
   {
-    id: 2865,
+    id: 23,
     authorId: 14784,
-    title: 'Torta de Frango com Legumes',
+    title: 'Torta de Frango com Vegetais',
     ingredients: [
       {name: 'Açucar', quantity: 36},
       {name: 'margarina', quantity: 2},

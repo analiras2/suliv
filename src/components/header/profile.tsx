@@ -4,18 +4,14 @@ import {getInitials} from 'src/utils';
 
 import React from 'react';
 
-import Typography from '../../typography';
+import Typography from '../typography';
 import * as St from './styles';
 
-type Props = {
-  user: IUser;
-};
-
-const ProfileHeader = ({user}: Props) => {
+const ProfileHeader = ({user}: {user: IUser}) => {
   const theme = useTheme();
 
   return (
-    <St.Container theme={theme}>
+    <St.ProfileContainer theme={theme}>
       <Avatar size={71} bg={theme.colors.primary[100]}>
         <Typography type={Typography.TYPE.TITLE}>
           {getInitials(`${user.name} ${user.lastName}`)}
@@ -27,7 +23,7 @@ const ProfileHeader = ({user}: Props) => {
         </Typography>
         <Typography fontSize="sm">{user.email}</Typography>
       </St.Info>
-    </St.Container>
+    </St.ProfileContainer>
   );
 };
 
