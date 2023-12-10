@@ -19,10 +19,11 @@ interface IFunction<T> {
 
 interface Props<T> {
   sections: ISectionList<T>[];
+  list?: boolean;
   renderHeader: (section: IHeader) => React.ReactElement;
   renderItem: (data: IFunction<T>) => React.ReactElement;
 }
-function SectionList<T>({sections, renderHeader, renderItem}: Props<T>) {
+function SectionList<T>({sections, list, renderHeader, renderItem}: Props<T>) {
   return (
     <FlatList
       data={sections}
@@ -34,7 +35,7 @@ function SectionList<T>({sections, renderHeader, renderItem}: Props<T>) {
           <FlatList
             data={item.data}
             keyExtractor={(_, pos) => `recipe-${pos}`}
-            numColumns={2}
+            numColumns={list ? undefined : 2}
             renderItem={recipe => renderItem(recipe)}
           />
         </View>

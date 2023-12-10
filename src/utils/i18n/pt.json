@@ -38,6 +38,13 @@
       "privacyPolicy": "Política de Privacidade",
       "termsOfUse": "Termos de Uso",
       "logout": "Deslogar do App"
+    },
+    "recipe": {
+      "portion": "{{count}} porção",
+      "portion_plural": "{{count}} porções",
+      "ingredients": "Ingredientes",
+      "preparation": "Modo de Preparo",
+      "comments": "Comentários"
     }
   }
 }

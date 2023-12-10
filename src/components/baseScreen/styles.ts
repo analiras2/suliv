@@ -1,4 +1,5 @@
 import {CustomThemeType} from 'src/@types/theme';
+import {INNER_PADDING} from 'src/utils';
 import styled from 'styled-components/native';
 
 type Props = {
@@ -25,6 +26,6 @@ export const ScrollView = styled.ScrollView.attrs(() => ({
 
 export const Body = styled.View<Props>`
   flex: 1;
-  padding-horizontal: ${({noPadding}) => (noPadding ? 0 : 20)}px;
+  padding-horizontal: ${({noPadding}) => (noPadding ? 0 : INNER_PADDING)};
   margin-bottom: 44px;
 `;

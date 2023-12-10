@@ -1,3 +1,5 @@
+export const INNER_PADDING = '20px';
+
 export const getInitials = (name: string) => {
   if (!name || name.trim() === '') {
     return '?';

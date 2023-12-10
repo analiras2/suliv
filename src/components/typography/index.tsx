@@ -6,6 +6,7 @@ enum TYPE {
   SCREEN_TITLE,
   TITLE,
   DEFAULT,
+  TINY_TITLE,
   TINY,
   VERY_TINY,
 }
@@ -35,6 +36,12 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
           {children}
         </Text>
       );
+    case TYPE.TINY_TITLE:
+      return (
+        <Text fontSize="18px" fontFamily="body" fontWeight={500} {...props}>
+          {children}
+        </Text>
+      );
     case TYPE.TINY:
       return (
         <Text fontSize="14px" fontFamily="body" fontWeight={500} {...props}>
@@ -43,7 +50,7 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
       );
     case TYPE.VERY_TINY:
       return (
-        <Text fontSize="10px" fontFamily="body" fontWeight={500} {...props}>
+        <Text fontSize="11px" fontFamily="body" fontWeight={500} {...props}>
           {children}
         </Text>
       );

@@ -22,7 +22,7 @@ const HomeScreen = ({route, navigation}: Props) => {
 
   const section: ISectionList<IRecipe>[] = [
     {title: t('home.popular'), data: RECIPE_MOCK},
-    {title: 'Receitas', data: RECIPE_MOCK},
+    {title: t('home.recent'), data: RECIPE_MOCK},
   ];
 
   return (
