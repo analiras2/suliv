@@ -27,21 +27,18 @@ function SectionList<T>({sections, renderHeader, renderItem}: Props<T>) {
     <FlatList
       data={sections}
       keyExtractor={(_, index) => `category-${index}`}
-      renderItem={({item, index}) => {
-        console.log('Aqui index: ', index);
-        return (
-          // eslint-disable-next-line react-native/no-inline-styles
-          <View style={{paddingTop: index >= 1 ? 20 : 0}}>
-            {renderHeader({title: item.title, index})}
-            <FlatList
-              data={item.data}
-              keyExtractor={(_, pos) => `recipe-${pos}`}
-              numColumns={2}
-              renderItem={recipe => renderItem(recipe)}
-            />
-          </View>
-        );
-      }}
+      renderItem={({item, index}) => (
+        // eslint-disable-next-line react-native/no-inline-styles
+        <View style={{paddingTop: index >= 1 ? 20 : 0}}>
+          {renderHeader({title: item.title, index})}
+          <FlatList
+            data={item.data}
+            keyExtractor={(_, pos) => `recipe-${pos}`}
+            numColumns={2}
+            renderItem={recipe => renderItem(recipe)}
+          />
+        </View>
+      )}
     />
   );
 }
