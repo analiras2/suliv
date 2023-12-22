@@ -6,6 +6,7 @@ import {
   BaseScreen,
   Header,
   ISectionList,
+  IngredientItem,
   SectionList,
   Typography,
 } from 'src/components';
@@ -49,6 +50,7 @@ const RecipeScreen = ({navigation, route}: Props) => {
       />
       <InfoView recipe={route.params} />
       <St.Container>
+        <St.Rating onPress={() => console.log('Click')} />
         <SectionList
           list
           sections={section}
@@ -59,16 +61,7 @@ const RecipeScreen = ({navigation, route}: Props) => {
               </Typography>
             );
           }}
-          renderItem={({item}) => (
-            <St.Row>
-              <Typography type={Typography.TYPE.TINY} mr={2}>
-                {item.name}
-              </Typography>
-              <Typography type={Typography.TYPE.VERY_TINY}>
-                {item.quantity}
-              </Typography>
-            </St.Row>
-          )}
+          renderItem={({item}) => <IngredientItem item={item} />}
         />
       </St.Container>
     </BaseScreen>

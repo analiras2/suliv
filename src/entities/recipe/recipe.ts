@@ -1,11 +1,12 @@
+import {IAuthor} from './author';
 import {ICategories} from './categories';
 import {IIngredient} from './ingredient';
 import {ISocialRating} from './socialRating';
 import {ITimeInfo} from './timeInfo';
 
 export interface IRecipe {
-  id: number;
-  authorId: number;
+  id: string;
+  author: IAuthor;
   title: string;
   ingredients: IIngredient[];
   preparation: string;

@@ -1,7 +1,7 @@
 import {IRecipe, IUser} from 'src/entities';
 
 export const USER_MOCK: IUser = {
-  id: 1,
+  id: '1',
   name: 'Analira ',
   lastName: 'Scalabrini',
   nickname: 'analiras2',
@@ -11,14 +11,17 @@ export const USER_MOCK: IUser = {
 
 export const RECIPE_MOCK: IRecipe[] = [
   {
-    id: 2649,
-    authorId: 14784,
+    id: '2649',
+    author: {
+      id: '14784',
+      name: 'Analira Scalabrini',
+    },
     title: 'Torta de Abacaxi',
     ingredients: [
-      {name: 'Açucar', quantity: 36},
-      {name: 'margarina', quantity: 2},
-      {name: 'ovo', quantity: 2},
-      {name: 'leite', quantity: 100},
+      {name: 'Açucar', quantity: '36 g'},
+      {name: 'margarina', quantity: '2 colheres de sopa'},
+      {name: 'ovo', quantity: '2'},
+      {name: 'leite', quantity: '100 ml'},
     ],
     preparation: '',
     social: {
@@ -43,14 +46,17 @@ export const RECIPE_MOCK: IRecipe[] = [
     ],
   },
   {
-    id: 2865,
-    authorId: 14784,
+    id: '2865',
+    author: {
+      id: '14784',
+      name: 'Analira Scalabrini',
+    },
     title: 'Torta de Frango com Legumes',
     ingredients: [
-      {name: 'Açucar', quantity: 36},
-      {name: 'margarina', quantity: 2},
-      {name: 'ovo', quantity: 2},
-      {name: 'leite', quantity: 100},
+      {name: 'Açucar', quantity: '36 g'},
+      {name: 'margarina', quantity: '2 colheres de sopa'},
+      {name: 'ovo', quantity: '2'},
+      {name: 'leite', quantity: '100 ml'},
     ],
     preparation: '',
     social: {
@@ -75,14 +81,17 @@ export const RECIPE_MOCK: IRecipe[] = [
     ],
   },
   {
-    id: 28,
-    authorId: 14784,
+    id: '28',
+    author: {
+      id: '14784',
+      name: 'Analira Scalabrini',
+    },
     title: 'Torta de Chocolate',
     ingredients: [
-      {name: 'Açucar', quantity: 36},
-      {name: 'margarina', quantity: 2},
-      {name: 'ovo', quantity: 2},
-      {name: 'leite', quantity: 100},
+      {name: 'Açucar', quantity: '36 g'},
+      {name: 'margarina', quantity: '2 colheres de sopa'},
+      {name: 'ovo', quantity: '2'},
+      {name: 'leite', quantity: '100 ml'},
     ],
     preparation: '',
     social: {
@@ -107,14 +116,17 @@ export const RECIPE_MOCK: IRecipe[] = [
     ],
   },
   {
-    id: 23,
-    authorId: 14784,
+    id: '23',
+    author: {
+      id: '14784',
+      name: 'Analira Scalabrini',
+    },
     title: 'Torta de Frango com Vegetais',
     ingredients: [
-      {name: 'Açucar', quantity: 36},
-      {name: 'margarina', quantity: 2},
-      {name: 'ovo', quantity: 2},
-      {name: 'leite', quantity: 100},
+      {name: 'Açucar', quantity: '36 g'},
+      {name: 'margarina', quantity: '2 colheres de sopa'},
+      {name: 'ovo', quantity: '2'},
+      {name: 'leite', quantity: '100 ml'},
     ],
     preparation: '',
     social: {
