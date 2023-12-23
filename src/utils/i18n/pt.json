@@ -44,7 +44,12 @@
       "portion_plural": "{{count}} porções",
       "ingredients": "Ingredientes",
       "preparation": "Modo de Preparo",
-      "comments": "Comentários"
+      "comments": "Comentários",
+      "send": "Enviar"
+    },
+    "rating": {
+      "send": "Enviar",
+      "leaveComment": "Deixe seu comentário(opcional)"
     }
   }
 }

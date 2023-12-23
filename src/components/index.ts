@@ -9,6 +9,7 @@ export {default as Typography} from './typography';
 export {default as SectionList} from './list/sectionList';
 export {default as IngredientItem} from './list/ingredientItem';
 export {default as RecipeRating} from './recipeRating';
+export {default as Modal} from './modal';
 
 export type {HeaderProps} from './header';
 export type {IRecipeCardProps} from './list/recipeCard';

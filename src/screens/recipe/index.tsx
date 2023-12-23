@@ -7,13 +7,14 @@ import {
   Header,
   ISectionList,
   IngredientItem,
+  Modal,
   SectionList,
   Typography,
 } from 'src/components';
 import {IIngredient} from 'src/entities';
 import {StackRoutes} from 'src/navigation/stacks';
 
-import React from 'react';
+import React, {useState} from 'react';
 
 import InfoView from './components/InfoView';
 import * as St from './styles';
@@ -23,6 +24,10 @@ type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.RECIPE>;
 const RecipeScreen = ({navigation, route}: Props) => {
   const {t} = useTranslation();
   const theme = useTheme();
+
+  const [showRating, setShowRating] = useState(false);
+  const [comment, setComment] = useState('');
+  const [rating, setRating] = useState(1);
 
   const section: ISectionList<IIngredient>[] = [
     {title: t('recipe.ingredients'), data: route.params.ingredients},
@@ -44,13 +49,13 @@ const RecipeScreen = ({navigation, route}: Props) => {
         },
       }}>
       <St.Image
-        alt={`Foto prato ${route.params.title}`}
+        alt={`Foto receita ${route.params.title}`}
         theme={theme}
         source={{uri: 'https://wallpaperaccess.com/full/317501.jpg'}}
       />
       <InfoView recipe={route.params} />
       <St.Container>
-        <St.Rating onPress={() => console.log('Click')} />
+        <St.Rating onPress={() => setShowRating(true)} />
         <SectionList
           list
           sections={section}
@@ -64,6 +69,22 @@ const RecipeScreen = ({navigation, route}: Props) => {
           renderItem={({item}) => <IngredientItem item={item} />}
         />
       </St.Container>
+      {showRating && (
+        <Modal
+          visible={showRating}
+          onClose={() => setShowRating(false)}
+          onSubmit={() => console.log('Enviar', rating, 'Comment', comment)}>
+          <>
+            <St.Rating getRatting={setRating} />
+            <St.CommentInput
+              theme={theme}
+              onChangeText={(text: string) => setComment(text)}
+              value={comment}
+              placeholder={t('rating.leaveComment')}
+            />
+          </>
+        </Modal>
+      )}
     </BaseScreen>
   );
 };
