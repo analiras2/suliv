@@ -8,10 +8,12 @@ import {
   ISectionList,
   IngredientItem,
   Modal,
+  PreparationItem,
   SectionList,
   Typography,
 } from 'src/components';
 import {IIngredient} from 'src/entities';
+import {IPreparation} from 'src/entities/recipe/preparation';
 import {StackRoutes} from 'src/navigation/stacks';
 
 import React, {useState} from 'react';
@@ -29,9 +31,9 @@ const RecipeScreen = ({navigation, route}: Props) => {
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(1);
 
-  const section: ISectionList<IIngredient>[] = [
+  const section: ISectionList<IIngredient | IPreparation>[] = [
     {title: t('recipe.ingredients'), data: route.params.ingredients},
-    {title: t('recipe.preparation'), data: route.params.ingredients},
+    {title: t('recipe.preparation'), data: route.params.preparation},
   ];
 
   return (
@@ -66,14 +68,24 @@ const RecipeScreen = ({navigation, route}: Props) => {
               </Typography>
             );
           }}
-          renderItem={({item}) => <IngredientItem item={item} />}
+          renderItem={({item}) =>
+            'quantity' in item ? (
+              <IngredientItem item={item} />
+            ) : (
+              <PreparationItem item={item} />
+            )
+          }
         />
       </St.Container>
       {showRating && (
         <Modal
           visible={showRating}
           onClose={() => setShowRating(false)}
-          onSubmit={() => console.log('Enviar', rating, 'Comment', comment)}>
+          onSubmit={() => {
+            console.log('Enviar', rating, 'Comment', comment);
+            setShowRating(false);
+            setComment('');
+          }}>
           <>
             <St.Rating getRatting={setRating} />
             <St.CommentInput

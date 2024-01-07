@@ -11,9 +11,10 @@ import * as St from './styles';
 export interface IRecipeCardProps {
   recipe: IRecipe;
   onPress: () => void;
+  onFavPress: () => void;
 }
 
-const RecipeCard = ({recipe, onPress}: IRecipeCardProps) => {
+const RecipeCard = ({recipe, onPress, onFavPress}: IRecipeCardProps) => {
   const theme = useTheme();
   const [lastPress, setLastPress] = useState<number | null>(null);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -46,8 +47,6 @@ const RecipeCard = ({recipe, onPress}: IRecipeCardProps) => {
       }, doublePressDelay);
     }
   };
-
-  const onFavPress = () => console.log('Favoritou');
 
   return (
     <St.Container theme={theme} onPress={handlePress}>

@@ -8,6 +8,7 @@ export {default as NavigationBar} from './navigationBar';
 export {default as Typography} from './typography';
 export {default as SectionList} from './list/sectionList';
 export {default as IngredientItem} from './list/ingredientItem';
+export {default as PreparationItem} from './list/preparationItem';
 export {default as RecipeRating} from './recipeRating';
 export {default as Modal} from './modal';
 

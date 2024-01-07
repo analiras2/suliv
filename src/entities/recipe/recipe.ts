@@ -1,6 +1,7 @@
 import {IAuthor} from './author';
 import {ICategories} from './categories';
 import {IIngredient} from './ingredient';
+import {IPreparation} from './preparation';
 import {ISocialRating} from './socialRating';
 import {ITimeInfo} from './timeInfo';
 
@@ -9,7 +10,7 @@ export interface IRecipe {
   author: IAuthor;
   title: string;
   ingredients: IIngredient[];
-  preparation: string;
+  preparation: IPreparation[];
   yield: number;
   creationDate: string;
   time: ITimeInfo;

@@ -18,12 +18,12 @@ export const RECIPE_MOCK: IRecipe[] = [
     },
     title: 'Torta de Abacaxi',
     ingredients: [
-      {name: 'Açucar', quantity: '36 g'},
-      {name: 'margarina', quantity: '2 colheres de sopa'},
-      {name: 'ovo', quantity: '2'},
-      {name: 'leite', quantity: '100 ml'},
+      {title: 'Açucar', quantity: '36 g'},
+      {title: 'margarina', quantity: '2 colheres de sopa'},
+      {title: 'ovo', quantity: '2'},
+      {title: 'leite', quantity: '100 ml'},
     ],
-    preparation: '',
+    preparation: [{title: 'Passo 1', content: 'Mexe mexe mexe'}],
     social: {
       averageScore: 4.8,
       numberVotes: 535,

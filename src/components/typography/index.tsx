@@ -7,6 +7,7 @@ enum TYPE {
   TITLE,
   DEFAULT,
   TINY_TITLE,
+  TINY_BOLD,
   TINY,
   VERY_TINY,
 }
@@ -39,6 +40,12 @@ const Typography = ({type = TYPE.DEFAULT, children, ...props}: Props) => {
     case TYPE.TINY_TITLE:
       return (
         <Text fontSize="18px" fontFamily="body" fontWeight={500} {...props}>
+          {children}
+        </Text>
+      );
+    case TYPE.TINY_BOLD:
+      return (
+        <Text fontSize="14px" fontFamily="body" fontWeight={600} {...props}>
           {children}
         </Text>
       );

@@ -46,6 +46,7 @@ const HomeScreen = ({route, navigation}: Props) => {
           <RecipeCard
             recipe={item}
             onPress={() => navigation.navigate(StackRoutes.RECIPE, item)}
+            onFavPress={() => console.log('onFavPress', item)}
           />
         )}
       />
