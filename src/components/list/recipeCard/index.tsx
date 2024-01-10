@@ -49,7 +49,7 @@ const RecipeCard = ({recipe, onPress, onFavPress}: IRecipeCardProps) => {
   };
 
   return (
-    <St.Container theme={theme} onPress={handlePress}>
+    <St.Container theme={theme} onPress={handlePress} isFlex>
       <Box>
         <St.Image
           source={{uri: 'https://wallpaperaccess.com/full/317501.jpg'}}

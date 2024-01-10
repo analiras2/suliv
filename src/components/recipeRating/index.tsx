@@ -46,9 +46,9 @@ const RecipeRating = ({onPress, style, getRatting}: Props) => {
   );
 
   return onPress ? (
-    <St.TouchableContainer theme={theme} onPress={onPress} style={style}>
+    <St.PressableContainer theme={theme} onPress={onPress} style={style}>
       {renderContent()}
-    </St.TouchableContainer>
+    </St.PressableContainer>
   ) : (
     <St.Container theme={theme} style={style}>
       {renderContent()}

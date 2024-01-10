@@ -3,6 +3,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {CustomThemeType} from 'src/@types/theme';
 import styled from 'styled-components/native';
 
+import AnimatedPressableView from '../animated/animatedPressableView';
+
 type Props = {
   theme: CustomThemeType;
 };
@@ -19,9 +21,7 @@ const commonStyles = (theme: CustomThemeType) => `
   shadow-radius: 2px;
 `;
 
-export const TouchableContainer = styled.TouchableOpacity.attrs(() => ({
-  activeOpacity: 0.8,
-}))<Props>`
+export const PressableContainer = styled(AnimatedPressableView)<Props>`
   background-color: ${({theme}) => theme.colors.white};
   ${({theme}) => commonStyles(theme)};
 `;

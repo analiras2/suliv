@@ -1,12 +1,13 @@
 import {HStack} from 'native-base';
 import {CustomThemeType} from 'src/@types/theme';
+import AnimatedPressableView from 'src/components/animated/animatedPressableView';
 import styled from 'styled-components/native';
 
 type Props = {
   theme: CustomThemeType;
 };
 
-export const Container = styled.TouchableOpacity<Props>`
+export const Container = styled(AnimatedPressableView)<Props>`
   border-radius: 8px;
   background-color: ${({theme}) => theme.colors.white};
   flex: 1;

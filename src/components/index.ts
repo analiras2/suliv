@@ -11,6 +11,8 @@ export {default as IngredientItem} from './list/ingredientItem';
 export {default as PreparationItem} from './list/preparationItem';
 export {default as RecipeRating} from './recipeRating';
 export {default as Modal} from './modal';
+export {default as SearchBar} from './searchBar';
+export {default as AnimatedPressableView} from './animated/animatedPressableView';
 
 export type {HeaderProps} from './header';
 export type {IRecipeCardProps} from './list/recipeCard';

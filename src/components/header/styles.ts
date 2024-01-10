@@ -1,6 +1,7 @@
 import {Box, Image as NBImage} from 'native-base';
 import {View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {INNER_PADDING} from 'src/utils';
 import styled from 'styled-components/native';
 
 export const LogoContainer = styled(Box).attrs(({theme}) => ({
@@ -11,6 +12,7 @@ export const LogoContainer = styled(Box).attrs(({theme}) => ({
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
+  padding: ${INNER_PADDING};
 `;
 
 export const Container = styled(View)`
@@ -29,7 +31,7 @@ export const IconButton = styled(Icon).attrs(({onPress, size = 24}) => ({
 export const Image = styled(NBImage).attrs(() => ({
   height: '50px',
   width: '90px',
-  mt: 2,
+  ml: -2,
 }))`
   align-self: flex-start;
 `;

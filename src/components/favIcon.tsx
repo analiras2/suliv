@@ -4,6 +4,8 @@ import styled from 'styled-components/native';
 
 import React from 'react';
 
+import AnimatedPressableView from './animated/animatedPressableView';
+
 interface FavIconProps {
   onPress: () => void;
   isActive?: boolean;
@@ -23,9 +25,7 @@ const FavIcon = ({isActive, onPress}: FavIconProps) => {
   );
 };
 
-export const Container = styled.TouchableOpacity.attrs({
-  activeOpacity: 0.5,
-})`
+export const Container = styled(AnimatedPressableView)`
   padding: 4px;
   background-color: rgba(212, 212, 212, 0.6);
   border-radius: 32px;
