@@ -1,21 +1,58 @@
 {
   "translation": {
+    "language": "English",
     "appName": "Suliv",
+    "goIn": "Sign In",
     "login": {
-      "withEmail": "Login with email",
+      "withEmail": "Sign In with Email",
       "email": "Email",
       "password": "Password",
-      "forgotPassword": "I forgot my password",
-      "login": "Login"
+      "forgotPassword": "Forgot Password",
+      "login": "Login",
+      "register": "Create an account now"
     },
     "register": {
-      "fullName": "Name and surname",
+      "fullName": "Full Name",
       "email": "Email",
       "password": "Password",
-      "passwordConfirmation": "Confirm password"
+      "passwordConfirmation": "Confirm Password"
     },
     "error": {
       "required": "Required field"
+    },
+    "home": {
+      "title": "Home",
+      "popular": "Popular",
+      "recent": "Recent",
+      "cancel": "Cancel",
+      "searchFor": "You are searching for"
+    },
+    "favorites": {
+      "title": "Favorites",
+      "register": "Sign in or register to save and rate your favorite recipes."
+    },
+    "profile": {
+      "title": "Profile",
+      "myRecipes": "My Recipes",
+      "language": "Language",
+      "rateApp": "Rate the app",
+      "shareApp": "Share the app",
+      "reportProblem": "Found an issue in the app?",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "logout": "Logout from the App"
+    },
+    "recipe": {
+      "portion": "{{count}} portion",
+      "portion_plural": "{{count}} portions",
+      "ingredients": "Ingredients",
+      "preparation": "Preparation",
+      "comments": "Comments",
+      "send": "Send"
+    },
+    "rating": {
+      "send": "Send",
+      "leaveComment": "Leave your comment (optional)"
     }
-  } 
+  }
 }

@@ -3,6 +3,7 @@ import {Button, Divider, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
 import {BaseScreen, FlexView, Header, SimpleItemList} from 'src/components';
+import {useAppState} from 'src/hooks/AppContext';
 import {USER_MOCK} from 'src/mocks';
 import {StackRoutes} from 'src/navigation/stacks';
 
@@ -16,13 +17,14 @@ type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.PROFILE>;
 const ProfileScreen = ({navigation, route}: Props) => {
   const {t} = useTranslation();
   const theme = useTheme();
+  const {language, setLanguage} = useAppState();
 
   return (
     <BaseScreen
       id={route.name}
       header={{type: Header.TYPE.PROFILE, user: USER_MOCK}}>
       <>
-        {menu(t).map((options, index) => (
+        {menu(t, language, setLanguage).map((options, index) => (
           <React.Fragment key={index}>
             {index > 0 && (
               <Divider marginY={theme.space[1]} color={theme.colors.red[500]} />

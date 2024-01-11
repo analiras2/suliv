@@ -9,7 +9,7 @@ import * as St from './styles';
 export interface IItemListProps {
   title: string;
   onPress: () => void;
-  selectedItem?: string | null;
+  selectedItem?: string;
 }
 
 const ItemList = ({title, onPress, selectedItem}: IItemListProps) => {

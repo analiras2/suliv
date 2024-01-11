@@ -31,7 +31,7 @@ const SearchBar = ({
     <Row>
       <Input
         placeholder={t('home.searchFor')}
-        width="75%"
+        flex={1}
         borderRadius="4"
         py="3"
         px="1"

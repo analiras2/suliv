@@ -1,21 +1,58 @@
 {
   "translation": {
+    "language": "Español",
     "appName": "Suliv",
+    "goIn": "Ingresar",
     "login": {
-      "withEmail": "Iniciar sesión con email",
-      "email": "Email",
+      "withEmail": "Ingresar con correo electrónico",
+      "email": "Correo electrónico",
       "password": "Contraseña",
-      "forgotPassword": "Olvide mi contraseña",
-      "login": "Entrar"
+      "forgotPassword": "Olvidé mi contraseña",
+      "login": "Ingresar",
+      "register": "Crear una cuenta ahora"
     },
     "register": {
       "fullName": "Nombre y apellido",
-      "email": "Email",
+      "email": "Correo electrónico",
       "password": "Contraseña",
-      "passwordConfirmation": "Confirmar seña"
+      "passwordConfirmation": "Confirmar contraseña"
     },
     "error": {
       "required": "Campo obligatorio"
+    },
+    "home": {
+      "title": "Inicio",
+      "popular": "Populares",
+      "recent": "Recientes",
+      "cancel": "Cancelar",
+      "searchFor": "Estás buscando por"
+    },
+    "favorites": {
+      "title": "Favoritos",
+      "register": "Inicia sesión o regístrate para guardar y calificar tus recetas favoritas."
+    },
+    "profile": {
+      "title": "Perfil",
+      "myRecipes": "Mis recetas",
+      "language": "Idioma",
+      "rateApp": "Califica la aplicación",
+      "shareApp": "Comparte la aplicación",
+      "reportProblem": "¿Encontraste algún problema en la aplicación?",
+      "privacyPolicy": "Política de privacidad",
+      "termsOfUse": "Términos de uso",
+      "logout": "Cerrar sesión de la aplicación"
+    },
+    "recipe": {
+      "portion": "{{count}} porción",
+      "portion_plural": "{{count}} porciones",
+      "ingredients": "Ingredientes",
+      "preparation": "Modo de preparo",
+      "comments": "Comentarios",
+      "send": "Enviar"
+    },
+    "rating": {
+      "send": "Enviar",
+      "leaveComment": "Deja tu comentario (opcional)"
     }
-  } 
+  }
 }

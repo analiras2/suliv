@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from 'i18next';
 import {initReactI18next} from 'react-i18next';
 
@@ -11,15 +12,18 @@ export const resources = {
   pt: pt,
 };
 
-export const defaultNS = 'pt';
+export const defaultNS = 'en'; // TODO: get mobile language || 'en'
 
-i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v3',
-  interpolation: {
-    escapeValue: false,
-  },
-  lng: 'pt',
-  resources,
+AsyncStorage.getItem('language').then(language => {
+  i18n.use(initReactI18next).init({
+    compatibilityJSON: 'v3',
+    interpolation: {
+      escapeValue: false,
+    },
+    lng: language || defaultNS,
+    fallbackLng: defaultNS,
+    resources,
+  });
 });
 
 export default i18n;
