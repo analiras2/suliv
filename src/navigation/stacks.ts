@@ -1,5 +1,5 @@
 import {NavigationBar} from 'src/components';
-import {RecipeScreen} from 'src/screens';
+import {MyRecipesScreen, RecipeScreen} from 'src/screens';
 
 export enum StackRoutes {
   BOTTOM_TABS = 'bottomTabs',
@@ -7,6 +7,7 @@ export enum StackRoutes {
   FAVORITES = 'favorites',
   PROFILE = 'profile',
   RECIPE = 'recipe',
+  MY_RECIPES = 'myRecipes',
 }
 
 const Stacks = () => [
@@ -18,6 +19,11 @@ const Stacks = () => [
   {
     name: StackRoutes.RECIPE,
     component: RecipeScreen,
+    options: {headerShown: false},
+  },
+  {
+    name: StackRoutes.MY_RECIPES,
+    component: MyRecipesScreen,
     options: {headerShown: false},
   },
 ];

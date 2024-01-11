@@ -27,11 +27,18 @@ const ActionHeader = ({title, onBackPress, actionButton}: ActionProps) => {
         {title}
       </Typography>
 
-      {actionButton && (
+      {actionButton ? (
         <St.IconButton
           name={actionButton.icon}
           onPress={actionButton.onPress}
           size={actionButton.size}
+        />
+      ) : (
+        <St.IconButton
+          disabled
+          name="chevron-left"
+          size={32}
+          style={{opacity: 0}}
         />
       )}
     </St.Container>

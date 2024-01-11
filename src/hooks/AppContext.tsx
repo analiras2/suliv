@@ -55,7 +55,7 @@ export const AppProvider = ({
         console.error('Error saving language:', error);
       }
     };
-    i18n.changeLanguage(language);
+    i18n?.changeLanguage(language);
     saveLanguage();
   }, [i18n, language]);
 

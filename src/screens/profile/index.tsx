@@ -10,7 +10,6 @@ import {StackRoutes} from 'src/navigation/stacks';
 import React from 'react';
 
 import * as St from './styles';
-import {menu} from './utils';
 
 type Props = NativeStackScreenProps<RootStackParamList, StackRoutes.PROFILE>;
 
@@ -19,12 +18,42 @@ const ProfileScreen = ({navigation, route}: Props) => {
   const theme = useTheme();
   const {language, setLanguage} = useAppState();
 
+  const menu = [
+    [
+      {
+        title: t('profile.myRecipes'),
+        onPress: () => navigation.navigate(StackRoutes.MY_RECIPES),
+      },
+      {
+        title: t('profile.language'),
+        onPress: () =>
+          setLanguage(
+            language === 'pt'
+              ? LANGUAGES.EN
+              : language === 'en'
+              ? LANGUAGES.ES
+              : LANGUAGES.PT,
+          ),
+        selectedItem: t('language'),
+      },
+    ],
+    [
+      {title: t('profile.rateApp'), onPress: () => {}},
+      {title: t('profile.shareApp'), onPress: () => {}},
+      {title: t('profile.reportProblem'), onPress: () => {}},
+    ],
+    [
+      {title: t('profile.privacyPolicy'), onPress: () => {}},
+      {title: t('profile.termsOfUse'), onPress: () => {}},
+    ],
+  ];
+
   return (
     <BaseScreen
       id={route.name}
       header={{type: Header.TYPE.PROFILE, user: USER_MOCK}}>
       <>
-        {menu(t, language, setLanguage).map((options, index) => (
+        {menu.map((options, index) => (
           <React.Fragment key={index}>
             {index > 0 && (
               <Divider marginY={theme.space[1]} color={theme.colors.red[500]} />
