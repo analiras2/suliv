@@ -22,7 +22,9 @@
     "home": {
       "title": "Home",
       "popular": "Populares",
-      "recent": "Recentes"
+      "recent": "Recentes",
+      "cancel": "Cancelar",
+      "searchFor": "Você está buscando por"
     },
     "favorites": {
       "title": "Favoritos",
