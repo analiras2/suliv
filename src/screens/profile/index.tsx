@@ -3,7 +3,7 @@ import {Button, Divider, useTheme} from 'native-base';
 import {useTranslation} from 'react-i18next';
 import {RootStackParamList} from 'src/@types/navigation';
 import {BaseScreen, FlexView, Header, SimpleItemList} from 'src/components';
-import {useAppState} from 'src/hooks/AppContext';
+import {LANGUAGES, useAppState} from 'src/hooks/AppContext';
 import {USER_MOCK} from 'src/mocks';
 import {StackRoutes} from 'src/navigation/stacks';
 
@@ -51,6 +51,7 @@ const ProfileScreen = ({navigation, route}: Props) => {
   return (
     <BaseScreen
       id={route.name}
+      withBgImg
       header={{type: Header.TYPE.PROFILE, user: USER_MOCK}}>
       <>
         {menu.map((options, index) => (
@@ -66,7 +67,7 @@ const ProfileScreen = ({navigation, route}: Props) => {
       </>
       <FlexView />
       <Button
-        onPress={() => navigation.navigate(StackRoutes.FAVORITES)}
+        onPress={() => navigation.navigate(StackRoutes.HOME)}
         variant="link"
         size="sm"
         pl={1}

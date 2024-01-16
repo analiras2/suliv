@@ -1,7 +1,16 @@
 import {NavigationBar} from 'src/components';
-import {MyRecipesScreen, RecipeScreen} from 'src/screens';
+import {
+  LoginEmailScreen,
+  MyRecipesScreen,
+  RecipeScreen,
+  SingUpScreen,
+} from 'src/screens';
+import LoginScreen from 'src/screens/auth';
 
 export enum StackRoutes {
+  LOGIN = 'login',
+  EMAIL = 'login-email',
+  SING_UP = 'sing-up',
   BOTTOM_TABS = 'bottomTabs',
   HOME = 'home',
   FAVORITES = 'favorites',
@@ -11,6 +20,21 @@ export enum StackRoutes {
 }
 
 const Stacks = () => [
+  {
+    name: StackRoutes.LOGIN,
+    component: LoginScreen,
+    options: {headerShown: false},
+  },
+  {
+    name: StackRoutes.EMAIL,
+    component: LoginEmailScreen,
+    options: {headerShown: false},
+  },
+  {
+    name: StackRoutes.SING_UP,
+    component: SingUpScreen,
+    options: {headerShown: false},
+  },
   {
     name: StackRoutes.BOTTOM_TABS,
     component: NavigationBar,

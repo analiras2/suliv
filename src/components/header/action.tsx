@@ -38,6 +38,7 @@ const ActionHeader = ({title, onBackPress, actionButton}: ActionProps) => {
           disabled
           name="chevron-left"
           size={32}
+          // eslint-disable-next-line react-native/no-inline-styles
           style={{opacity: 0}}
         />
       )}

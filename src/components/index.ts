@@ -13,6 +13,7 @@ export {default as RecipeRating} from './recipeRating';
 export {default as Modal} from './modal';
 export {default as SearchBar} from './searchBar';
 export {default as AnimatedPressableView} from './animated/animatedPressableView';
+export {default as TextInput} from './textInput';
 
 export type {HeaderProps} from './header';
 export type {IRecipeCardProps} from './list/recipeCard';

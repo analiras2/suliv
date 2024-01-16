@@ -8,14 +8,16 @@
       "email": "Email",
       "password": "Password",
       "forgotPassword": "Forgot Password",
-      "login": "Login",
-      "register": "Create an account now"
+      "enter": "Login",
+      "singUp": "Create an account now"
     },
-    "register": {
+    "singUp": {
+      "title": "Cadastro",
       "fullName": "Full Name",
       "email": "Email",
       "password": "Password",
-      "passwordConfirmation": "Confirm Password"
+      "passwordConfirmation": "Confirm Password",
+      "register": "Sing Up"
     },
     "error": {
       "required": "Required field"

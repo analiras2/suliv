@@ -8,14 +8,16 @@
       "email": "Email",
       "password": "Senha",
       "forgotPassword": "Esqueci minha senha",
-      "login": "Entrar",
-      "register": "Criar uma conta agora"
+      "enter": "Entrar",
+      "singUp": "Criar uma conta agora"
     },
-    "register": {
+    "singUp": {
+      "title": "Cadastro",
       "fullName": "Nome e sobrenome",
       "email": "Email",
       "password": "Senha",
-      "passwordConfirmation": "Confirmar senha"
+      "passwordConfirmation": "Confirmar senha",
+      "register": "Cadastrar"
     },
     "error": {
       "required": "Campo obrigatório"

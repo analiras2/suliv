@@ -51,11 +51,12 @@ export const AppProvider = ({
     const saveLanguage = async () => {
       try {
         await AsyncStorage.setItem(STORAGE_KEY_LANGUAGE, language);
+        i18n?.changeLanguage(language);
       } catch (error) {
         console.error('Error saving language:', error);
       }
     };
-    i18n?.changeLanguage(language);
+
     saveLanguage();
   }, [i18n, language]);
 

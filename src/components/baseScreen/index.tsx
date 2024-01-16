@@ -6,34 +6,51 @@ import FlexView from '../flexView';
 import Header, {HeaderProps} from '../header';
 import * as St from './styles';
 
-interface Props {
-  id: string;
+interface ComponentProps {
   header?: HeaderProps;
   children?: React.ReactNode | React.ReactNode[];
   hideScroll?: boolean;
   noPadding?: boolean;
 }
 
-const BaseScreen = ({
-  id,
+interface Props extends ComponentProps {
+  id: string;
+  withBgImg?: boolean;
+}
+
+const Component = ({
   header,
   children,
   hideScroll = false,
   noPadding = false,
-}: Props) => {
+}: ComponentProps) => (
+  <>
+    <Header {...header} />
+    {hideScroll ? (
+      <St.Body noPadding={noPadding}>{children}</St.Body>
+    ) : (
+      <St.ScrollView>
+        <St.Body noPadding={noPadding}>{children}</St.Body>
+      </St.ScrollView>
+    )}
+  </>
+);
+
+const BaseScreen = ({id, withBgImg = false, ...props}: Props) => {
   const theme = useTheme();
 
   return (
     <FlexView testID={id}>
       <St.StatusBar theme={theme} />
       <St.Container theme={theme}>
-        <Header {...header} />
-        {hideScroll ? (
-          <St.Body noPadding={noPadding}>{children}</St.Body>
+        {withBgImg ? (
+          <St.Image
+            source={require('src/assets/imgs/bbg.png')}
+            resizeMode="cover">
+            <Component {...props} />
+          </St.Image>
         ) : (
-          <St.ScrollView>
-            <St.Body noPadding={noPadding}>{children}</St.Body>
-          </St.ScrollView>
+          <Component {...props} />
         )}
       </St.Container>
     </FlexView>

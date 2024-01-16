@@ -71,7 +71,6 @@ const SearchBar = ({
       <Button
         onPress={onClose}
         variant="link"
-        textDecoration={false}
         size="sm"
         justifyContent="flex-start">
         {t('home.cancel')}
