@@ -14,7 +14,10 @@ const LoginScreen = ({navigation}: Props) => {
   const {t} = useTranslation();
 
   return (
-    <St.Image source={require('src/assets/imgs/bg.png')} resizeMode="cover">
+    <St.Background
+      source={require('src/assets/imgs/bg.png')}
+      resizeMode="cover">
+      <St.Logo source={require('src/assets/imgs/login.png')} />
       <Button mx={4} onPress={() => navigation.navigate(StackRoutes.EMAIL)}>
         {t('login.withEmail')}
       </Button>
@@ -25,7 +28,7 @@ const LoginScreen = ({navigation}: Props) => {
         size="sm">
         {t('login.singUp')}
       </Button>
-    </St.Image>
+    </St.Background>
   );
 };
 

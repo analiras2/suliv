@@ -30,7 +30,9 @@ const LoginEmailScreen = ({route, navigation}: Props) => {
         justifyContent="flex-start">
         {t('login.forgotPassword')}
       </Button>
-      <Button>{t('login.enter')}</Button>
+      <Button onPress={() => navigation.navigate(StackRoutes.BOTTOM_TABS)}>
+        {t('login.enter')}
+      </Button>
     </BaseScreen>
   );
 };

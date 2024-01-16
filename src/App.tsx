@@ -19,7 +19,7 @@ export default function App() {
     <AppProvider i18n={i18n}>
       <NavigationContainer>
         <NativeBaseProvider theme={theme}>
-          <RootStack.Navigator initialRouteName={StackRoutes.BOTTOM_TABS}>
+          <RootStack.Navigator initialRouteName={StackRoutes.LOGIN}>
             {Stacks().map(stack => (
               <RootStack.Screen
                 key={stack.name}
