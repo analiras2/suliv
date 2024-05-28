@@ -6,6 +6,9 @@ Com um compromisso inabalável com o meio ambiente e o bem-estar animal, buscamo
 
 Junte-se a nós na Suliv para ser parte de um movimento que promove mudanças reais. Juntos, podemos cultivar um futuro onde cada prato é uma declaração de sustentabilidade e respeito pela vida em todas as suas formas.
 
+## Design do Aplicativo
+O design do Suliv pode ser visualizado no Figma. Clique [aqui](https://www.figma.com/design/TiSVAyEMzCgZTX7MJW7TSA/Suliv?node-id=31-3) para acessar o layout no Figma.
+
 ## Principais Tecnologias Utilizadas
 
 - [React Native](https://reactnative.dev/)
