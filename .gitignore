@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+*.pem
+
+# Testing
+coverage/
+
+# Prisma
+packages/db/prisma/migrations/
+
+# React Native
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/.expo/
+*.jsbundle
+
+# IDE
+.vscode/
+.idea/
+
+# AI
+.claude/
+.specs/

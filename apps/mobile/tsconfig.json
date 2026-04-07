@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@suliv/auth": ["../../packages/auth/src/index.ts"],
+      "@suliv/db": ["../../packages/db/src/index.ts"],
+      "@suliv/design-system": ["../../packages/design-system/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
+}
