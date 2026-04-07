@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum Provider {
+  google
+  apple
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailConfirmed Boolean   @default(false)
+  passwordHash   String?   // null for social-only users
+  avatarUrl      String?
+  createdAt      DateTime  @default(now())
+  lastActiveAt   DateTime  @default(now()) @updatedAt
+
+  profile       UserProfile?
+  accounts      Account[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                  String     @id @default(cuid())
+  userId              String     @unique
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dietaryRestrictions String[]
+  allergens           String[]
+  preferredCuisines   String[]
+  skillLevel          SkillLevel?
+  avgCookTimeMin      Int?
+  householdSize       Int?
+  onboardingCompleted Boolean    @default(false)
+  updatedAt           DateTime   @updatedAt
+
+  @@map("user_profiles")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          Provider
+  providerAccountId String
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // hash of raw token — never store raw
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime? // null = active
+
+  @@map("refresh_tokens")
+}

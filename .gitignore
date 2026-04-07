@@ -31,8 +31,8 @@ yarn-error.log*
 # Testing
 coverage/
 
-# Prisma
-packages/db/prisma/migrations/
+# Prisma generated client (regenerated from schema)
+packages/db/node_modules/.prisma/
 
 # React Native
 apps/mobile/android/
