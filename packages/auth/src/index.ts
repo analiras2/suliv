@@ -1,3 +1,3 @@
-// @suliv/auth — JWT, password hashing, and validators
-// Populated in T03 (jwt.ts), T04 (password.ts), T05 (validators.ts)
-export {};
+export * from "./jwt.js";
+export * from "./password.js";
+export * from "./validators.js";
