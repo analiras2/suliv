@@ -12,9 +12,9 @@ import {
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { tokens } from "@suliv/design-system";
-import { useAuthStore } from "../store/authStore.js";
+import { useAuthStore } from "../store/authStore";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { AuthStackParamList } from "../../../navigation/types.js";
+import type { AuthStackParamList } from "../../../navigation/types";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Onboarding">;
 

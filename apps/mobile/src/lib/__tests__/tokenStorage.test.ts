@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { saveTokens, getTokens, clearTokens } from "../tokenStorage.js";
+import { saveTokens, getTokens, clearTokens } from "../tokenStorage";
 
 const store: Record<string, string> = {};
 

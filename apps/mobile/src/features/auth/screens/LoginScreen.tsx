@@ -10,11 +10,11 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { tokens } from "@suliv/design-system";
-import { useAuthStore } from "../store/authStore.js";
-import { AuthInput } from "../components/AuthInput.js";
+import { useAuthStore } from "../store/authStore";
+import { AuthInput } from "../components/AuthInput";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { AuthStackParamList } from "../../../navigation/types.js";
-import { AuthError } from "../../../services/authApi.js";
+import type { AuthStackParamList } from "../../../navigation/types";
+import { AuthError } from "../../../services/authApi";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 

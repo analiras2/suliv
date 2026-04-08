@@ -69,7 +69,7 @@ vi.stubGlobal("fetch", vi.fn());
 // Import store AFTER mocks are registered
 // ---------------------------------------------------------------------------
 
-import { useAuthStore } from "../authStore.js";
+import { useAuthStore } from "../authStore";
 
 function resetStore() {
   useAuthStore.setState({

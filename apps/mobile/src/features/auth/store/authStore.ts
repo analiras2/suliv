@@ -10,8 +10,8 @@ import {
   type OnboardingData,
   type SocialProvider,
   AuthError,
-} from "../../../services/authApi.js";
-import { getTokens, clearTokens } from "../../../lib/tokenStorage.js";
+} from "../../../services/authApi";
+import { getTokens, clearTokens } from "../../../lib/tokenStorage";
 
 // ---------------------------------------------------------------------------
 // State & actions

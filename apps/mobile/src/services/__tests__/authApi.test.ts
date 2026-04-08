@@ -12,7 +12,7 @@ import {
   ValidationError,
   NetworkError,
   onSessionExpired,
-} from "../authApi.js";
+} from "../authApi";
 
 // ---------------------------------------------------------------------------
 // Mocks
