@@ -1,7 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
     "baseUrl": ".",
     "paths": {
       "@suliv/auth": ["../../packages/auth/src/index.ts"],
@@ -9,6 +10,6 @@
       "@suliv/design-system": ["../../packages/design-system/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "index.js"],
   "exclude": ["node_modules"]
 }

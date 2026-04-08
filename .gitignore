@@ -35,8 +35,7 @@ coverage/
 packages/db/node_modules/.prisma/
 
 # React Native
-apps/mobile/android/
-apps/mobile/ios/
+# ios/ and android/ are intentionally committed (bare workflow)
 apps/mobile/.expo/
 *.jsbundle
 

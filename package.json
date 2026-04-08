@@ -11,7 +11,11 @@
     "dev": "turbo dev",
     "test": "turbo test",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "web": "npm run dev -w @suliv/web",
+    "mobile": "npm run start:dev -w @suliv/mobile",
+    "mobile:ios": "npm run ios -w @suliv/mobile",
+    "mobile:android": "npm run android -w @suliv/mobile"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Suliv",
+    "slug": "suliv",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.suliv.app"
+    },
+    "android": {
+      "package": "com.suliv.app"
+    }
+  }
+}
