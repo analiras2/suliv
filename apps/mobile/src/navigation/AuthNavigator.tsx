@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useAuthStore } from "../features/auth/store/authStore.js";
-import { LoginScreen } from "../features/auth/screens/LoginScreen.js";
-import { RegisterScreen } from "../features/auth/screens/RegisterScreen.js";
-import { OnboardingScreen } from "../features/auth/screens/OnboardingScreen.js";
-import { SplashScreen } from "./SplashScreen.js";
-import type { AuthStackParamList } from "./types.js";
+import { useAuthStore } from "../features/auth/store/authStore";
+import { LoginScreen } from "../features/auth/screens/LoginScreen";
+import { RegisterScreen } from "../features/auth/screens/RegisterScreen";
+import { OnboardingScreen } from "../features/auth/screens/OnboardingScreen";
+import { SplashScreen } from "./SplashScreen";
+import type { AuthStackParamList } from "./types";
 import { tokens } from "@suliv/design-system";
 
 // ---------------------------------------------------------------------------

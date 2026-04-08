@@ -1,4 +1,4 @@
-import { getTokens, saveTokens } from "../lib/tokenStorage.js";
+import { getTokens, saveTokens } from "../lib/tokenStorage";
 
 // ---------------------------------------------------------------------------
 // Types
