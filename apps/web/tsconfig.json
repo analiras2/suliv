@@ -3,11 +3,35 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@suliv/auth": ["../../packages/auth/src/index.ts"],
-      "@suliv/db": ["../../packages/db/src/index.ts"],
-      "@suliv/design-system": ["../../packages/design-system/src/index.ts"]
-    }
+      "@/*": ["./src/*"],
+      "@suliv/auth": [
+        "../../packages/auth/src/index.ts"
+      ],
+      "@suliv/db": [
+        "../../packages/db/src/index.ts"
+      ],
+      "@suliv/design-system": [
+        "../../packages/design-system/src/index.ts"
+      ]
+    },
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
