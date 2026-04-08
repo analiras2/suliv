@@ -3,14 +3,18 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@suliv/auth": "*",
     "@suliv/db": "*",
-    "@suliv/design-system": "*"
+    "@suliv/design-system": "*",
+    "react-native-keychain": "^9.2.2"
   },
   "devDependencies": {
-    "typescript": "*"
+    "@types/react-native-keychain": "*",
+    "typescript": "*",
+    "vitest": "*"
   }
 }
