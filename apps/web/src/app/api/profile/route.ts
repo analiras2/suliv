@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@suliv/db";
 import { profileUpdateSchema } from "@suliv/auth";
-import { requireAuth, AuthError } from "../../lib/auth-middleware";
+import { requireAuth, AuthError } from "../../../lib/auth-middleware";
 
 export async function GET(req: NextRequest) {
   let userId: string;
