@@ -15,8 +15,8 @@
     "apple-signin-auth": "^1.7.7",
     "google-auth-library": "^9.15.1",
     "next": "^15.2.4",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.1",

@@ -1,7 +1,4 @@
 import type { NextConfig } from "next";
-import path from "path";
-
-const appRoot = __dirname;
 
 const config: NextConfig = {
   // Allow Next.js webpack to import TypeScript source from workspace packages
@@ -12,13 +9,6 @@ const config: NextConfig = {
     webpackConfig.resolve.extensionAlias = {
       ".js": [".ts", ".js"],
       ".jsx": [".tsx", ".jsx"],
-    };
-    // Ensure the web app always resolves its own pinned React runtime rather than
-    // another workspace copy.
-    webpackConfig.resolve.alias = {
-      ...(webpackConfig.resolve.alias ?? {}),
-      react: path.resolve(appRoot, "node_modules/react"),
-      "react-dom": path.resolve(appRoot, "node_modules/react-dom"),
     };
     return webpackConfig;
   },
