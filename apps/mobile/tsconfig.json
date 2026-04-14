@@ -1,15 +1,25 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "jsx": "react-native",
+    "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@suliv/auth": ["../../packages/auth/src/index.ts"],
-      "@suliv/db": ["../../packages/db/src/index.ts"],
-      "@suliv/design-system": ["../../packages/design-system/src/index.ts"]
+      "@/*": [
+        "./*"
+      ],
+      "@suliv/auth": [
+        "../../packages/auth/src/index.ts"
+      ],
+      "@suliv/db": [
+        "../../packages/db/src/index.ts"
+      ],
+      "@suliv/design-system": [
+        "../../packages/design-system/src/index.ts"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "index.js"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }

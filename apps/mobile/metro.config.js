@@ -9,7 +9,8 @@ const config = getDefaultConfig(projectRoot);
 // Watch all packages in the monorepo
 config.watchFolders = [workspaceRoot];
 
-// Resolve node_modules from both the app and workspace root
+// Resolve node_modules from both the app and workspace root.
+// Mobile's own node_modules comes first so it takes priority.
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),

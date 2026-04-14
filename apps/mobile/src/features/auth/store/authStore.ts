@@ -141,7 +141,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       // Fire-and-forget server revocation — tokens are cleared locally regardless
       const tokens = await getTokens().catch(() => null);
       if (tokens) {
-        const { configureAuthApi } = await import("../../../services/authApi.js");
+        const { configureAuthApi } = await import("../../../services/authApi");
         void configureAuthApi; // already configured externally
         try {
           await fetch("/api/auth/logout", {
