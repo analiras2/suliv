@@ -42,6 +42,7 @@ model User {
   profile       UserProfile?
   accounts      Account[]
   refreshTokens RefreshToken[]
+  favorites     UserFavorite[]
 
   @@map("users")
 }
@@ -83,4 +84,79 @@ model RefreshToken {
   revokedAt DateTime? // null = active
 
   @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Recipe models
+// ---------------------------------------------------------------------------
+
+model Recipe {
+  id                 String    @id @default(cuid())
+  title              String
+  slug               String    @unique
+  tags               String[]
+  prepTimeMin        Int
+  cookTimeMin        Int
+  difficulty         SkillLevel
+  category           String    // 'cafe' | 'almoco' | 'jantar' | 'lanche' | 'sobremesa'
+  servings           Int
+  nutritionPerServing Json?
+  imageUrl           String?
+  createdAt          DateTime  @default(now())
+
+  ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  favorites   UserFavorite[]
+
+  @@map("recipes")
+}
+
+model Ingredient {
+  id              String  @id @default(cuid())
+  name            String  @unique
+  category        String?
+  unitDefault     String?
+  co2Per100g      Float?
+  nutritionPer100g Json?
+
+  recipeIngredients RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  recipeId     String
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  quantity     Float
+  unit         String
+  optional     Boolean    @default(false)
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model RecipeStep {
+  id           String  @id @default(cuid())
+  recipeId     String
+  recipe       Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  order        Int
+  instruction  String
+  timerSeconds Int?
+
+  @@map("recipe_steps")
+}
+
+model UserFavorite {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId String
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  savedAt  DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@map("user_favorites")
 }

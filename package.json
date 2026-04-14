@@ -16,7 +16,8 @@
     "mobile": "npm run start -w @suliv/mobile",
     "mobile:clear": "npm run start:dev:clear -w @suliv/mobile",
     "mobile:ios": "npm run ios -w @suliv/mobile",
-    "mobile:android": "npm run android -w @suliv/mobile"
+    "mobile:android": "npm run android -w @suliv/mobile",
+    "db:seed": "npm run db:seed -w @suliv/db"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
