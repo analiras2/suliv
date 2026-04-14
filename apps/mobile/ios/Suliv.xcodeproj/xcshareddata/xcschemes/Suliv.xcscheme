@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "Suliv.app"
-               BlueprintName = "Suliv"
-               ReferencedContainer = "container:Suliv.xcodeproj">
+               BuildableName = "suliv.app"
+               BlueprintName = "suliv"
+               ReferencedContainer = "container:suliv.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "SulivTests.xctest"
-               BlueprintName = "SulivTests"
-               ReferencedContainer = "container:Suliv.xcodeproj">
+               BuildableName = "sulivTests.xctest"
+               BlueprintName = "sulivTests"
+               ReferencedContainer = "container:suliv.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Suliv.app"
-            BlueprintName = "Suliv"
-            ReferencedContainer = "container:Suliv.xcodeproj">
+            BuildableName = "suliv.app"
+            BlueprintName = "suliv"
+            ReferencedContainer = "container:suliv.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Suliv.app"
-            BlueprintName = "Suliv"
-            ReferencedContainer = "container:Suliv.xcodeproj">
+            BuildableName = "suliv.app"
+            BlueprintName = "suliv"
+            ReferencedContainer = "container:suliv.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
