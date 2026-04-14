@@ -38,6 +38,5 @@ yarn-error.*
 
 app-example
 
-# generated native folders
-/ios
-/android
+# Native folders are intentionally committed (bare workflow)
+# /ios and /android are tracked — do not add them here
