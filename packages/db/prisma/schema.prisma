@@ -112,11 +112,12 @@ model Recipe {
 }
 
 model Ingredient {
-  id              String  @id @default(cuid())
-  name            String  @unique
-  category        String?
-  unitDefault     String?
-  co2Per100g      Float?
+  id               String  @id @default(cuid())
+  name             String  @unique
+  category         String?
+  allergenGroup    String? // e.g. "glúten" | "soja" | "amendoim" | "oleaginosas" | "leite" | "ovo"
+  unitDefault      String?
+  co2Per100g       Float?
   nutritionPer100g Json?
 
   recipeIngredients RecipeIngredient[]

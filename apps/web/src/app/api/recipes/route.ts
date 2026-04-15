@@ -48,13 +48,13 @@ export async function GET(req: NextRequest) {
     // Filter by total time — we'll handle this with a raw query workaround
   }
 
-  // Recipes whose ingredients match the allergen list to exclude
+  // Recipes whose ingredients belong to one of the user's allergen groups
   const allergenRecipeIds =
     allergens.length > 0
       ? (
           await prisma.recipeIngredient.findMany({
             where: {
-              ingredient: { name: { in: allergens } },
+              ingredient: { allergenGroup: { in: allergens } },
             },
             select: { recipeId: true },
           })

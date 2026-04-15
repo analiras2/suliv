@@ -6,12 +6,19 @@ import { tokens } from "@suliv/design-system";
 const DIETARY_OPTIONS = [
   { value: "vegan", label: "Vegano" },
   { value: "vegetarian", label: "Vegetariano" },
-  { value: "gluten_free", label: "Sem glúten" },
-  { value: "lactose_free", label: "Sem lactose" },
-  { value: "nut_free", label: "Sem oleaginosas" },
-  { value: "peanut_free", label: "Sem amendoim" },
-  { value: "soy_free", label: "Sem soja" },
-  { value: "egg_free", label: "Sem ovo" },
+  { value: "low_carb", label: "Low carb" },
+  { value: "sem_acucar", label: "Sem açúcar" },
+];
+
+// Values match Ingredient.allergenGroup in the database
+const ALLERGEN_OPTIONS = [
+  { value: "glúten", label: "Glúten" },
+  { value: "soja", label: "Soja" },
+  { value: "amendoim", label: "Amendoim" },
+  { value: "oleaginosas", label: "Oleaginosas" },
+  { value: "leite", label: "Leite" },
+  { value: "ovo", label: "Ovo" },
+  { value: "frutos-do-mar", label: "Frutos do mar" },
 ];
 
 const SKILL_LEVELS = [
@@ -309,7 +316,7 @@ export default function ProfileSettingsPage() {
         <div style={s.section}>
           <h2 style={s.sectionTitle}>Alergias</h2>
           <div style={s.optionsGrid}>
-            {DIETARY_OPTIONS.map((opt) => (
+            {ALLERGEN_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"

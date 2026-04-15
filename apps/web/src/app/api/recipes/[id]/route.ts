@@ -54,7 +54,7 @@ export async function GET(
         quantity: ri.quantity,
         unit: ri.unit,
         optional: ri.optional,
-        isAllergen: allergens.includes(ingredient.name),
+        isAllergen: ingredient.allergenGroup != null && allergens.includes(ingredient.allergenGroup),
       })),
       steps: steps.map((s) => ({
         id: s.id,
