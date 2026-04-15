@@ -4,8 +4,14 @@ export const registerSchema = z.object({
   email: z.string().email("E-mail inválido"),
   password: z
     .string()
-    .min(8, "A senha deve ter pelo menos 8 caracteres")
-    .regex(/\d/, "A senha deve conter pelo menos 1 número"),
+    .min(6, "A senha deve ter pelo menos 6 caracteres")
+    .regex(/[a-zA-Z]/, "A senha deve conter pelo menos uma letra")
+    .regex(/\d/, "A senha deve conter pelo menos um número")
+    .regex(/[^a-zA-Z0-9]/, "A senha deve conter pelo menos um caractere especial")
+    .refine(
+      (val) => !/(?:012|123|234|345|456|567|678|789|890|987|876|765|654|543|432|321|210)/.test(val),
+      "A senha não pode conter sequência de números"
+    ),
   name: z.string().optional(),
 });
 

@@ -14,13 +14,17 @@ import { useAuthStore } from "../store/authStore";
 import { AuthInput } from "../components/AuthInput";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
-import { AuthError } from "../../../services/authApi";
+import { AuthError, ValidationError } from "../../../services/authApi";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
 function validatePassword(value: string): string | null {
-  if (value.length < 8 || !/\d/.test(value)) {
-    return "Senha deve ter 8+ caracteres e ao menos um número";
+  if (value.length < 6) return "Mínimo 6 caracteres";
+  if (!/[a-zA-Z]/.test(value)) return "Inclua pelo menos uma letra";
+  if (!/\d/.test(value)) return "Inclua pelo menos um número";
+  if (!/[^a-zA-Z0-9]/.test(value)) return "Inclua pelo menos um caractere especial";
+  if (/(?:012|123|234|345|456|567|678|789|890|987|876|765|654|543|432|321|210)/.test(value)) {
+    return "Não use sequências de números";
   }
   return null;
 }
@@ -81,6 +85,14 @@ export function RegisterScreen({ navigation }: Props) {
     } catch (err) {
       if (err instanceof AuthError && err.code === "email_taken") {
         setEmailTaken(true);
+      } else if (err instanceof ValidationError) {
+        const details = err.details as { fieldErrors?: { password?: string[] } };
+        const pwdErrors = details?.fieldErrors?.password;
+        if (pwdErrors?.length) {
+          setPasswordError(pwdErrors[0]);
+        } else {
+          setGlobalError("Dados inválidos. Verifique os campos.");
+        }
       } else {
         setGlobalError("Não foi possível criar a conta. Tente novamente.");
       }
@@ -127,7 +139,7 @@ export function RegisterScreen({ navigation }: Props) {
             onChangeText={setPassword}
             isPassword
             textContentType="newPassword"
-            placeholder="Mínimo 8 caracteres e um número"
+            placeholder="Ex: Abc@123"
             accessibilityLabel="Campo de senha"
             error={passwordError ?? undefined}
             onBlur={handlePasswordBlur}
