@@ -4,6 +4,7 @@ import {
   register as apiRegister,
   socialLogin as apiSocialLogin,
   refreshTokens,
+  getProfile as apiGetProfile,
   saveOnboarding as apiSaveOnboarding,
   onSessionExpired,
   type UserInfo,
@@ -170,10 +171,26 @@ export const useAuthStore = create<AuthStore>((set, get) => {
 
         // Try to get a fresh token pair (refresh if access token is stale)
         const data = await refreshTokens();
+        if (!data.user) {
+          throw new Error("refresh_missing_user");
+        }
+
+        let hasProfile = data.has_profile ?? false;
+        if (data.has_profile == null) {
+          try {
+            await apiGetProfile();
+            hasProfile = true;
+          } catch (err) {
+            if (!(err instanceof AuthError && err.code === "profile_not_found" && err.status === 404)) {
+              throw err;
+            }
+          }
+        }
+
         set({
           user: {
             ...data.user,
-            hasProfile: data.has_profile ?? false,
+            hasProfile,
           },
           isAuthenticated: true,
           isLoading: false,

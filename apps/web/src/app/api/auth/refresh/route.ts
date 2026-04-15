@@ -33,13 +33,32 @@ export async function POST(req: NextRequest) {
   // 3. Rotate: revoke old token
   await prisma.refreshToken.update({ where: { id: storedToken.id }, data: { revokedAt: new Date() } })
 
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      profile: { select: { onboardingCompleted: true } },
+    },
+  })
+
+  if (!user) {
+    return NextResponse.json({ error: "invalid_refresh_token" }, { status: 401 })
+  }
+
   // 4. Issue new token pair
-  const newAccessToken = await signAccessToken({ sub: userId })
+  const newAccessToken = await signAccessToken({ sub: userId, email: user.email })
   const newRefreshToken = await signRefreshToken(userId)
   const newTokenHash = createHash("sha256").update(newRefreshToken).digest("hex")
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
   await prisma.refreshToken.create({ data: { userId, tokenHash: newTokenHash, expiresAt } })
 
-  return NextResponse.json({ access_token: newAccessToken, refresh_token: newRefreshToken })
+  return NextResponse.json({
+    access_token: newAccessToken,
+    refresh_token: newRefreshToken,
+    user: { id: user.id, email: user.email, name: user.name },
+    has_profile: user.profile?.onboardingCompleted ?? false,
+  })
 }

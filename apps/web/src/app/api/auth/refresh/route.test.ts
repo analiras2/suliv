@@ -20,6 +20,9 @@ const mockPrisma = vi.hoisted(() => ({
     update: vi.fn(),
     create: vi.fn(),
   },
+  user: {
+    findUnique: vi.fn(),
+  },
 }))
 
 vi.mock("@suliv/db", () => ({ prisma: mockPrisma }))
@@ -52,6 +55,12 @@ describe("POST /api/auth/refresh", () => {
       revokedAt: null,
     })
     mockPrisma.refreshToken.update.mockResolvedValue({})
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: "user-123",
+      email: "user@example.com",
+      name: "User",
+      profile: { onboardingCompleted: true },
+    })
     mockSignAccessToken.mockResolvedValue("new-access-token")
     mockSignRefreshToken.mockResolvedValue("new-refresh-token")
     mockPrisma.refreshToken.create.mockResolvedValue({})
@@ -64,6 +73,8 @@ describe("POST /api/auth/refresh", () => {
     expect(json).toEqual({
       access_token: "new-access-token",
       refresh_token: "new-refresh-token",
+      user: { id: "user-123", email: "user@example.com", name: "User" },
+      has_profile: true,
     })
 
     expect(mockVerifyRefreshToken).toHaveBeenCalledWith("valid-refresh-token")
@@ -73,7 +84,7 @@ describe("POST /api/auth/refresh", () => {
         data: { revokedAt: expect.any(Date) },
       })
     )
-    expect(mockSignAccessToken).toHaveBeenCalledWith({ sub: "user-123" })
+    expect(mockSignAccessToken).toHaveBeenCalledWith({ sub: "user-123", email: "user@example.com" })
     expect(mockSignRefreshToken).toHaveBeenCalledWith("user-123")
     expect(mockPrisma.refreshToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -88,6 +99,27 @@ describe("POST /api/auth/refresh", () => {
     // tokenHash do novo token não deve ser o token em texto puro
     const { data } = mockPrisma.refreshToken.create.mock.calls[0][0]
     expect(data.tokenHash).not.toBe("new-refresh-token")
+  })
+
+  it("401 — usuário do refresh token não existe", async () => {
+    mockVerifyRefreshToken.mockResolvedValue({ userId: "user-123" })
+    mockPrisma.refreshToken.findUnique.mockResolvedValue({
+      id: "token-id-1",
+      userId: "user-123",
+      tokenHash: expect.any(String),
+      expiresAt: FUTURE_DATE,
+      revokedAt: null,
+    })
+    mockPrisma.refreshToken.update.mockResolvedValue({})
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+
+    const req = makeRequest({ refresh_token: "valid-refresh-token" })
+    const res = await POST(req as any)
+    const json = await res.json()
+
+    expect(res.status).toBe(401)
+    expect(json).toEqual({ error: "invalid_refresh_token" })
+    expect(mockPrisma.refreshToken.create).not.toHaveBeenCalled()
   })
 
   it("401 — token revogado (revokedAt != null): detecta reuse attack", async () => {
