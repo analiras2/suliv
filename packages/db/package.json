@@ -13,10 +13,10 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
+    "db:generate": "sh -c 'set -a; [ -f ../../.env ] && . ../../.env; set +a; prisma generate'",
+    "db:migrate": "sh -c 'set -a; [ -f ../../.env ] && . ../../.env; set +a; prisma migrate dev'",
+    "db:studio": "sh -c 'set -a; [ -f ../../.env ] && . ../../.env; set +a; prisma studio'",
+    "db:seed": "sh -c 'set -a; [ -f ../../.env ] && . ../../.env; set +a; ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed.ts'"
   },
   "prisma": {
     "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"

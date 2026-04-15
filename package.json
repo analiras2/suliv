@@ -17,6 +17,9 @@
     "mobile:clear": "npm run start:dev:clear -w @suliv/mobile",
     "mobile:ios": "npm run ios -w @suliv/mobile",
     "mobile:android": "npm run android -w @suliv/mobile",
+    "db:generate": "npm run db:generate -w @suliv/db",
+    "db:migrate": "npm run db:migrate -w @suliv/db",
+    "db:studio": "npm run db:studio -w @suliv/db",
     "db:seed": "npm run db:seed -w @suliv/db"
   },
   "devDependencies": {
