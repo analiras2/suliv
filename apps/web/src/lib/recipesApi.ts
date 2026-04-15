@@ -103,9 +103,25 @@ async function apiFetch<T>(
   url: string,
   options: RequestInit & { signal?: AbortSignal } = {},
 ): Promise<T> {
+  const headers = new Headers(options.headers);
+
+  // In server-rendered requests, forward the auth cookie as Bearer token
+  // so internal API calls keep the authenticated context.
+  if (typeof window === "undefined" && !headers.has("Authorization")) {
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get("suliv_access")?.value;
+      if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+    } catch {
+      // Ignore when outside Next request context.
+    }
+  }
+
   const res = await fetch(url, {
     credentials: "include", // httpOnly cookies sent automatically
     ...options,
+    headers,
   });
 
   if (res.status === 401) throw new UnauthorizedError();
