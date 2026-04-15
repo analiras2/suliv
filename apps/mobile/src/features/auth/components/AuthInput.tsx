@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { useState } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
 
 interface AuthInputProps extends TextInputProps {
@@ -37,7 +38,11 @@ export function AuthInput({ label, error, isPassword, ...props }: AuthInputProps
             accessibilityLabel={visible ? "Ocultar senha" : "Mostrar senha"}
             accessibilityRole="button"
           >
-            <Text style={styles.eyeText}>{visible ? "🙈" : "👁"}</Text>
+            <MaterialCommunityIcons
+              name={visible ? "eye-off" : "eye"}
+              size={20}
+              color={tokens.colors.textPrimary + "99"}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -77,9 +82,6 @@ const styles = StyleSheet.create({
   },
   eyeBtn: {
     padding: tokens.spacing.xs,
-  },
-  eyeText: {
-    fontSize: 16,
   },
   errorText: {
     fontSize: tokens.typography.fontSizes.sm,
