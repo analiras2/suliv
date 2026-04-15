@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
 
 interface AllergenWarningIconProps {
@@ -8,19 +8,12 @@ interface AllergenWarningIconProps {
 
 export function AllergenWarningIcon({ size = 16 }: AllergenWarningIconProps) {
   return (
-    <Text
-      style={[styles.icon, { fontSize: size }]}
+    <MaterialCommunityIcons
+      name="alert-circle"
+      size={size}
+      color={tokens.colors.error}
       accessibilityLabel="Contém alérgeno"
       accessibilityRole="image"
-    >
-      ⚠
-    </Text>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  icon: {
-    color: tokens.colors.error,
-    lineHeight: undefined,
-  },
-});

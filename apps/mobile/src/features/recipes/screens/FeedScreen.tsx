@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { tokens } from "@suliv/design-system";
@@ -121,17 +122,25 @@ export function FeedScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Search + Filter bar */}
       <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Buscar receitas…"
-          placeholderTextColor={tokens.colors.textPrimary + "66"}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
+        <View style={styles.searchInputWrapper}>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color={tokens.colors.textPrimary + "66"}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Buscar receitas…"
+            placeholderTextColor={tokens.colors.textPrimary + "66"}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+        </View>
         <Pressable
           onPress={() => setFilterSheetVisible(true)}
           style={[styles.filterButton, activeCount > 0 && styles.filterButtonActive]}
@@ -140,14 +149,14 @@ export function FeedScreen() {
             activeCount > 0 ? `Filtros, ${activeCount} ativos` : "Abrir filtros"
           }
         >
-          <Text
-            style={[
-              styles.filterButtonText,
-              activeCount > 0 && styles.filterButtonTextActive,
-            ]}
-          >
-            {activeCount > 0 ? `Filtros (${activeCount})` : "Filtros"}
-          </Text>
+          <MaterialCommunityIcons
+            name="tune-variant"
+            size={18}
+            color={activeCount > 0 ? tokens.colors.primary : tokens.colors.textPrimary}
+          />
+          {activeCount > 0 && (
+            <Text style={styles.filterBadgeText}>{activeCount}</Text>
+          )}
         </Pressable>
       </View>
 
@@ -229,18 +238,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: tokens.colors.background,
   },
-  searchInput: {
+  searchInputWrapper: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     height: 40,
     backgroundColor: tokens.colors.background,
     borderRadius: tokens.borderRadius.sm,
-    paddingHorizontal: tokens.spacing.md,
+    paddingHorizontal: tokens.spacing.sm,
+    gap: tokens.spacing.xs,
+  },
+  searchIcon: {
+    lineHeight: undefined,
+  },
+  searchInput: {
+    flex: 1,
+    height: "100%",
     fontSize: tokens.typography.fontSizes.md,
     color: tokens.colors.textPrimary,
   },
   filterButton: {
+    width: 40,
     height: 40,
-    paddingHorizontal: tokens.spacing.md,
     borderRadius: tokens.borderRadius.sm,
     borderWidth: 1,
     borderColor: tokens.colors.textPrimary + "33",
@@ -251,13 +270,20 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.primary,
     backgroundColor: tokens.colors.primary + "1A",
   },
-  filterButtonText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary,
-    fontWeight: tokens.typography.fontWeights.medium,
-  },
-  filterButtonTextActive: {
-    color: tokens.colors.primary,
+  filterBadgeText: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: tokens.colors.primary,
+    color: tokens.colors.surface,
+    fontSize: 10,
+    fontWeight: tokens.typography.fontWeights.bold,
+    textAlign: "center",
+    lineHeight: 16,
+    paddingHorizontal: 2,
   },
   listContent: {
     padding: tokens.spacing.md,

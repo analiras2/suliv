@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
 
 interface RecipeStepItemProps {
@@ -27,7 +28,13 @@ export function RecipeStepItem({ order, instruction, timerSeconds }: RecipeStepI
         <Text style={styles.instruction}>{instruction}</Text>
         {timerSeconds != null && timerSeconds > 0 && (
           <View style={styles.timerBadge}>
-            <Text style={styles.timerText}>⏱ {formatTimer(timerSeconds)}</Text>
+            <MaterialCommunityIcons
+              name="timer-outline"
+              size={14}
+              color="#8A6000"
+              style={styles.timerIcon}
+            />
+            <Text style={styles.timerText}>{formatTimer(timerSeconds)}</Text>
           </View>
         )}
       </View>
@@ -67,10 +74,16 @@ const styles = StyleSheet.create({
   },
   timerBadge: {
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: "#FFF3CD",
     borderRadius: tokens.borderRadius.sm,
     paddingHorizontal: tokens.spacing.sm,
     paddingVertical: 2,
+  },
+  timerIcon: {
+    lineHeight: undefined,
   },
   timerText: {
     fontSize: tokens.typography.fontSizes.sm,

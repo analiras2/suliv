@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
 
 interface PortionControlProps {
@@ -27,7 +28,7 @@ export function PortionControl({
         accessibilityRole="button"
         hitSlop={8}
       >
-        <Text style={styles.buttonText}>−</Text>
+        <MaterialCommunityIcons name="minus" size={18} color={tokens.colors.primary} />
       </Pressable>
 
       <Text style={styles.value}>{value}</Text>
@@ -40,7 +41,7 @@ export function PortionControl({
         accessibilityRole="button"
         hitSlop={8}
       >
-        <Text style={styles.buttonText}>+</Text>
+        <MaterialCommunityIcons name="plus" size={18} color={tokens.colors.primary} />
       </Pressable>
     </View>
   );
@@ -63,12 +64,6 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.35,
-  },
-  buttonText: {
-    fontSize: tokens.typography.fontSizes.lg,
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.medium,
-    lineHeight: 20,
   },
   value: {
     fontSize: tokens.typography.fontSizes.md,

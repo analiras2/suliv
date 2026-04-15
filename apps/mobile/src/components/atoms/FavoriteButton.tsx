@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
 
 interface FavoriteButtonProps {
@@ -24,9 +25,11 @@ export function FavoriteButton({
       accessibilityState={{ checked: isFavorite }}
       hitSlop={8}
     >
-      <Text style={[styles.icon, isFavorite && styles.iconActive]}>
-        {isFavorite ? "★" : "☆"}
-      </Text>
+      <MaterialCommunityIcons
+        name={isFavorite ? "heart" : "heart-outline"}
+        size={24}
+        color={isFavorite ? tokens.colors.primary : tokens.colors.textPrimary}
+      />
     </Pressable>
   );
 }
@@ -37,12 +40,5 @@ const styles = StyleSheet.create({
   },
   loading: {
     opacity: 0.6,
-  },
-  icon: {
-    fontSize: 22,
-    color: tokens.colors.textPrimary,
-  },
-  iconActive: {
-    color: tokens.colors.primary,
   },
 });

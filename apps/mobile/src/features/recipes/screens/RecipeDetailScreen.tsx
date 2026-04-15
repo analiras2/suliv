@@ -12,6 +12,7 @@ import {
 import { useRoute, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useSWR from "swr";
 import { tokens } from "@suliv/design-system";
 import { FavoriteButton } from "../../../components/atoms/FavoriteButton";
@@ -109,7 +110,11 @@ export function RecipeDetailScreen() {
           hitSlop={8}
           style={styles.backPressable}
         >
-          <Text style={styles.backIcon}>‹</Text>
+          <MaterialCommunityIcons
+            name="chevron-left"
+            size={28}
+            color={tokens.colors.primary}
+          />
           <Text style={styles.backLabel}>Voltar</Text>
         </Pressable>
         <FavoriteButton
@@ -258,11 +263,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: tokens.colors.primary,
-    lineHeight: 32,
   },
   backLabel: {
     fontSize: tokens.typography.fontSizes.md,
