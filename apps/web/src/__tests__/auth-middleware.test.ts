@@ -7,12 +7,24 @@ vi.mock("@suliv/auth", () => ({
   verifyAccessToken: mockVerifyAccessToken,
 }));
 
-function makeRequest(authHeader?: string): { headers: { get: (k: string) => string | null } } {
+function makeRequest(
+  authHeader?: string,
+  cookieToken?: string
+): {
+  headers: { get: (k: string) => string | null };
+  cookies?: { get: (k: string) => { value: string } | undefined };
+} {
   return {
     headers: {
       get: (key: string) =>
         key.toLowerCase() === "authorization" ? (authHeader ?? null) : null,
     },
+    cookies: cookieToken
+      ? {
+          get: (key: string) =>
+            key === "suliv_access" ? { value: cookieToken } : undefined,
+        }
+      : undefined,
   };
 }
 
@@ -34,6 +46,15 @@ describe("requireAuth", () => {
     await expect(requireAuth(makeRequest())).rejects.toThrow(AuthError);
     await expect(requireAuth(makeRequest())).rejects.toMatchObject({ status: 401 });
     expect(mockVerifyAccessToken).not.toHaveBeenCalled();
+  });
+
+  it("aceita token vindo de cookie quando não há Authorization header", async () => {
+    mockVerifyAccessToken.mockResolvedValueOnce({ sub: "user-cookie" });
+
+    const result = await requireAuth(makeRequest(undefined, "cookie.token"));
+
+    expect(result).toEqual({ userId: "user-cookie" });
+    expect(mockVerifyAccessToken).toHaveBeenCalledWith("cookie.token");
   });
 
   it("lança AuthError 401 quando o header não começa com Bearer", async () => {

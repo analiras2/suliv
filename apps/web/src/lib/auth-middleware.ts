@@ -7,6 +7,9 @@ interface AuthRequest {
   headers: {
     get(name: string): string | null;
   };
+  cookies?: {
+    get(name: string): { value: string } | undefined;
+  };
 }
 
 export class AuthError extends Error {
@@ -28,12 +31,18 @@ export async function requireAuth(
   req: AuthRequest
 ): Promise<{ userId: string }> {
   const authHeader = req.headers.get("authorization");
+  const cookieToken = req.cookies?.get("suliv_access")?.value;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    throw new AuthError("Missing or invalid Authorization header");
+  let token: string | undefined;
+  if (authHeader?.startsWith("Bearer ")) {
+    token = authHeader.slice("Bearer ".length);
+  } else if (cookieToken) {
+    token = cookieToken;
   }
 
-  const token = authHeader.slice("Bearer ".length);
+  if (!token) {
+    throw new AuthError("Missing authentication token");
+  }
 
   try {
     const payload = await verifyAccessToken(token);
