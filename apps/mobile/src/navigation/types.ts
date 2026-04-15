@@ -6,6 +6,7 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Feed: undefined;
+  RecipeDetail: { id: string };
 };
 
 export type RootStackParamList = {

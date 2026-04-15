@@ -6,35 +6,9 @@ import { LoginScreen } from "../features/auth/screens/LoginScreen";
 import { RegisterScreen } from "../features/auth/screens/RegisterScreen";
 import { OnboardingScreen } from "../features/auth/screens/OnboardingScreen";
 import { SplashScreen } from "./SplashScreen";
-import type { AuthStackParamList } from "./types";
-import { tokens } from "@suliv/design-system";
-
-// ---------------------------------------------------------------------------
-// Placeholder Feed screen — replaced when Feed feature is implemented
-// ---------------------------------------------------------------------------
-import { StyleSheet, Text, View } from "react-native";
-
-function FeedScreen() {
-  return (
-    <View style={feedStyles.container}>
-      <Text style={feedStyles.text}>Feed 🌿</Text>
-    </View>
-  );
-}
-
-const feedStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: {
-    fontSize: tokens.typography.fontSizes.xl,
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.bold,
-  },
-});
+import { FeedScreen } from "../features/recipes/screens/FeedScreen";
+import { RecipeDetailScreen } from "../features/recipes/screens/RecipeDetailScreen";
+import type { AuthStackParamList, AppStackParamList } from "./types";
 
 // ---------------------------------------------------------------------------
 // Stacks
@@ -51,6 +25,17 @@ function AuthStackNavigator() {
   );
 }
 
+const AppStack = createNativeStackNavigator<AppStackParamList>();
+
+function AppStackNavigator() {
+  return (
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      <AppStack.Screen name="Feed" component={FeedScreen} />
+      <AppStack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
+    </AppStack.Navigator>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Root Navigator — driven entirely by auth state
 // No conditional rendering tricks: use a single navigator with conditional
@@ -61,7 +46,7 @@ type RootStack = {
   Splash: undefined;
   Auth: undefined;
   Onboarding: undefined;
-  Feed: undefined;
+  App: undefined;
 };
 
 const Root = createNativeStackNavigator<RootStack>();
@@ -87,8 +72,8 @@ export function AuthNavigator() {
           // Logged in but onboarding not completed
           <Root.Screen name="Onboarding" component={OnboardingScreen} />
         ) : (
-          // Fully authenticated + onboarded
-          <Root.Screen name="Feed" component={FeedScreen} />
+          // Fully authenticated + onboarded — recipe feature
+          <Root.Screen name="App" component={AppStackNavigator} />
         )}
       </Root.Navigator>
     </NavigationContainer>
