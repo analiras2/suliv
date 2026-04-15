@@ -12,7 +12,7 @@
     "test": "turbo test",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "web": "npm run dev -w @suliv/web",
+    "web": "sh -c 'set -a; [ -f ./.env ] && . ./.env; set +a; npm run dev -w @suliv/web'",
     "mobile": "npm run start -w @suliv/mobile",
     "mobile:clear": "npm run start:dev:clear -w @suliv/mobile",
     "mobile:ios": "npm run ios -w @suliv/mobile",
