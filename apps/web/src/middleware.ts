@@ -13,6 +13,7 @@ export const config = {
     "/profile/:path*",
     "/onboarding/:path*",
     "/recipes/:path*",
+    "/favorites/:path*",
   ],
 };
 

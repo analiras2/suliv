@@ -104,7 +104,7 @@ export function configureAuthApi(baseUrl: string): void {
 
 let _refreshPromise: Promise<AuthResponse> | null = null;
 
-async function fetchWithAuth(
+export async function fetchWithAuth(
   path: string,
   init: RequestInit,
   retried = false
@@ -143,7 +143,7 @@ async function fetchWithAuth(
   return response;
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+export async function handleResponse<T>(response: Response): Promise<T> {
   let body: unknown;
   try {
     body = await response.json();
