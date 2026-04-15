@@ -247,7 +247,7 @@ describe("saveOnboarding", () => {
     });
     mockSaveOnboarding.mockResolvedValueOnce({ profile: {} });
 
-    await useAuthStore.getState().saveOnboarding({ skillLevel: "iniciante" });
+    await useAuthStore.getState().saveOnboarding({ skillLevel: "BEGINNER" });
 
     expect(useAuthStore.getState().user?.hasProfile).toBe(true);
   });

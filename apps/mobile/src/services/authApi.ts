@@ -23,8 +23,9 @@ export interface AuthResponse {
 export interface OnboardingData {
   dietaryRestrictions?: string[];
   allergens?: string[];
-  skillLevel?: "iniciante" | "intermediario" | "avancado";
-  availableTime?: number;
+  skillLevel?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  cookingFrequencyPerWeek?: number;
+  avgCookTimeMin?: number;
   householdSize?: number;
 }
 

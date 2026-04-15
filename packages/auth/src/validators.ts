@@ -24,9 +24,11 @@ export const socialSchema = z.object({
 export const onboardingSchema = z.object({
   dietaryRestrictions: z.array(z.string()),
   allergens: z.array(z.string()),
+  // Optional — user may skip
   skillLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"], {
     errorMap: () => ({ message: "Nível de habilidade inválido" }),
-  }),
+  }).optional(),
+  cookingFrequencyPerWeek: z.number().int().min(0).max(7).optional(),
   avgCookTimeMin: z.number().int().positive().optional(),
   householdSize: z.number().int().positive().optional(),
   preferredCuisines: z.array(z.string()).optional(),
@@ -38,6 +40,7 @@ export const profileUpdateSchema = z.object({
   dietaryRestrictions: z.array(z.string()).optional(),
   allergens: z.array(z.string()).optional(),
   skillLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  cookingFrequencyPerWeek: z.number().int().min(0).max(7).optional(),
   avgCookTimeMin: z.number().int().positive().optional(),
   householdSize: z.number().int().positive().optional(),
   preferredCuisines: z.array(z.string()).optional(),

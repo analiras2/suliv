@@ -190,7 +190,7 @@ describe("silent refresh interceptor", () => {
       refresh_token: "new-ref",
       user: { id: "1", email: "a@b.com", name: null },
     };
-    const profilePayload = { profile: { skillLevel: "iniciante" } };
+    const profilePayload = { profile: { skillLevel: "BEGINNER" } };
 
     mockFetch
       .mockResolvedValueOnce(errorResponse({ error: "unauthorized" }, 401)) // initial GET /api/profile
@@ -199,7 +199,7 @@ describe("silent refresh interceptor", () => {
 
     const result = await getProfile();
 
-    expect(result.profile).toEqual({ skillLevel: "iniciante" });
+    expect(result.profile).toEqual({ skillLevel: "BEGINNER" });
     expect(mockFetch).toHaveBeenCalledTimes(3);
     expect(storedTokens).toEqual({ accessToken: "new-acc", refreshToken: "new-ref" });
   });
@@ -230,7 +230,7 @@ describe("saveOnboarding", () => {
     storedTokens = { accessToken: "acc", refreshToken: "ref" };
     mockFetch.mockResolvedValueOnce(okResponse({ profile: {} }));
 
-    await saveOnboarding({ skillLevel: "iniciante" });
+    await saveOnboarding({ skillLevel: "BEGINNER" });
 
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const headers = new Headers(init.headers);

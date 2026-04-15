@@ -27,11 +27,19 @@ const SKILL_LEVELS = [
   { value: "ADVANCED", label: "Avançado" },
 ];
 
+const COOKING_FREQUENCY = [
+  { value: 1, label: "1–2×" },
+  { value: 3, label: "3–4×" },
+  { value: 5, label: "5–6×" },
+  { value: 7, label: "Todo dia" },
+];
+
 interface ProfileData {
   dietaryRestrictions: string[];
   allergens: string[];
   preferredCuisines: string[];
   skillLevel: string;
+  cookingFrequencyPerWeek: number | null;
   avgCookTimeMin: number | null;
   householdSize: number | null;
 }
@@ -41,6 +49,7 @@ const EMPTY_PROFILE: ProfileData = {
   allergens: [],
   preferredCuisines: [],
   skillLevel: "",
+  cookingFrequencyPerWeek: null,
   avgCookTimeMin: null,
   householdSize: null,
 };
@@ -168,6 +177,7 @@ export default function ProfileSettingsPage() {
           allergens: (p.allergens as string[]) ?? [],
           preferredCuisines: (p.preferredCuisines as string[]) ?? [],
           skillLevel: (p.skillLevel as string) ?? "",
+          cookingFrequencyPerWeek: (p.cookingFrequencyPerWeek as number | null) ?? null,
           avgCookTimeMin: (p.avgCookTimeMin as number | null) ?? null,
           householdSize: (p.householdSize as number | null) ?? null,
         };
@@ -225,6 +235,7 @@ export default function ProfileSettingsPage() {
       };
 
       if (form.skillLevel) body.skillLevel = form.skillLevel;
+      if (form.cookingFrequencyPerWeek != null) body.cookingFrequencyPerWeek = form.cookingFrequencyPerWeek;
       if (form.avgCookTimeMin != null) body.avgCookTimeMin = form.avgCookTimeMin;
       if (form.householdSize != null) body.householdSize = form.householdSize;
 
@@ -246,6 +257,7 @@ export default function ProfileSettingsPage() {
         allergens: (p.allergens as string[]) ?? [],
         preferredCuisines: (p.preferredCuisines as string[]) ?? [],
         skillLevel: (p.skillLevel as string) ?? "",
+        cookingFrequencyPerWeek: (p.cookingFrequencyPerWeek as number | null) ?? null,
         avgCookTimeMin: (p.avgCookTimeMin as number | null) ?? null,
         householdSize: (p.householdSize as number | null) ?? null,
       };
@@ -356,6 +368,28 @@ export default function ProfileSettingsPage() {
             }
             style={s.input}
           />
+        </div>
+
+        {/* Cooking frequency */}
+        <div style={s.section}>
+          <h2 style={s.sectionTitle}>Quantas vezes você cozinha por semana?</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: tokens.spacing.sm }}>
+            {COOKING_FREQUENCY.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                style={optionBtnStyle(form.cookingFrequencyPerWeek === opt.value)}
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    cookingFrequencyPerWeek: prev.cookingFrequencyPerWeek === opt.value ? null : opt.value,
+                  }))
+                }
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Skill level */}

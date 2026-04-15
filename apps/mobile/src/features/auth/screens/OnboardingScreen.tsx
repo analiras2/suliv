@@ -3,7 +3,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
@@ -18,25 +17,39 @@ import type { AuthStackParamList } from "../../../navigation/types";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Onboarding">;
 
-type SkillLevel = "iniciante" | "intermediario" | "avancado";
+type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 
 const DRAFT_KEY = "onboarding_draft";
 
 const DIETARY_OPTIONS = [
-  "Vegano",
-  "Vegetariano",
-  "Sem glúten",
-  "Sem lactose",
-  "Sem oleaginosas",
-  "Sem amendoim",
-  "Sem soja",
-  "Sem ovo",
+  { value: "vegan", label: "Vegano" },
+  { value: "vegetarian", label: "Vegetariano" },
+  { value: "low_carb", label: "Low carb" },
+  { value: "sem_acucar", label: "Sem açúcar" },
+];
+
+// Values match Ingredient.allergenGroup
+const ALLERGEN_OPTIONS = [
+  { value: "glúten", label: "Glúten" },
+  { value: "soja", label: "Soja" },
+  { value: "amendoim", label: "Amendoim" },
+  { value: "oleaginosas", label: "Oleaginosas" },
+  { value: "leite", label: "Leite" },
+  { value: "ovo", label: "Ovo" },
+  { value: "frutos-do-mar", label: "Frutos do mar" },
 ];
 
 const SKILL_LEVELS: { label: string; value: SkillLevel }[] = [
-  { label: "Iniciante", value: "iniciante" },
-  { label: "Intermediário", value: "intermediario" },
-  { label: "Avançado", value: "avancado" },
+  { label: "Iniciante", value: "BEGINNER" },
+  { label: "Intermediário", value: "INTERMEDIATE" },
+  { label: "Avançado", value: "ADVANCED" },
+];
+
+const COOKING_FREQUENCY: { label: string; value: number }[] = [
+  { label: "1–2×", value: 1 },
+  { label: "3–4×", value: 3 },
+  { label: "5–6×", value: 5 },
+  { label: "Todo dia", value: 7 },
 ];
 
 interface DraftData {
@@ -44,14 +57,17 @@ interface DraftData {
   dietaryRestrictions: string[];
   allergens: string[];
   skillLevel: SkillLevel | null;
-  availableTime: string;
-  householdSize: string;
+  cookingFrequency: number | null;
 }
 
-function ProgressDots({ currentStep }: { currentStep: number }) {
+// ---------------------------------------------------------------------------
+// Progress dots
+// ---------------------------------------------------------------------------
+
+function ProgressDots({ currentStep, total }: { currentStep: number; total: number }) {
   return (
-    <View style={styles.dotsContainer} accessibilityLabel={`Passo ${currentStep + 1} de 3`}>
-      {[0, 1, 2].map((i) => (
+    <View style={styles.dotsContainer} accessibilityLabel={`Passo ${currentStep + 1} de ${total}`}>
+      {Array.from({ length: total }, (_, i) => (
         <View
           key={i}
           style={[styles.dot, i === currentStep ? styles.dotFilled : styles.dotOutline]}
@@ -61,6 +77,10 @@ function ProgressDots({ currentStep }: { currentStep: number }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// OnboardingScreen
+// ---------------------------------------------------------------------------
+
 export function OnboardingScreen({ navigation: _navigation }: Props) {
   const { saveOnboarding, isLoading } = useAuthStore();
 
@@ -68,8 +88,7 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
   const [allergens, setAllergens] = useState<string[]>([]);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
-  const [availableTime, setAvailableTime] = useState("");
-  const [householdSize, setHouseholdSize] = useState("");
+  const [cookingFrequency, setCookingFrequency] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Load draft on mount
@@ -83,74 +102,47 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
           setDietaryRestrictions(draft.dietaryRestrictions ?? []);
           setAllergens(draft.allergens ?? []);
           setSkillLevel(draft.skillLevel ?? null);
-          setAvailableTime(draft.availableTime ?? "");
-          setHouseholdSize(draft.householdSize ?? "");
+          setCookingFrequency(draft.cookingFrequency ?? null);
         } catch {
-          // Ignore corrupt draft
+          // ignore corrupt draft
         }
       })
       .catch(() => undefined);
   }, []);
 
-  // Persist draft whenever state changes
+  // Persist draft on state change
   useEffect(() => {
-    const draft: DraftData = {
-      step,
-      dietaryRestrictions,
-      allergens,
-      skillLevel,
-      availableTime,
-      householdSize,
-    };
+    const draft: DraftData = { step, dietaryRestrictions, allergens, skillLevel, cookingFrequency };
     AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft)).catch(() => undefined);
-  }, [step, dietaryRestrictions, allergens, skillLevel, availableTime, householdSize]);
+  }, [step, dietaryRestrictions, allergens, skillLevel, cookingFrequency]);
 
-  function toggleDietary(option: string) {
-    setDietaryRestrictions((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
-    );
+  function toggle<T>(setter: React.Dispatch<React.SetStateAction<T[]>>, value: T) {
+    setter((prev) => prev.includes(value) ? prev.filter((o) => o !== value) : [...prev, value]);
   }
 
-  function toggleAllergen(option: string) {
-    setAllergens((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
-    );
-  }
-
-  async function handleFinish() {
-    if (!skillLevel) return;
+  async function finish(opts?: { skipAll?: boolean }) {
     setError(null);
 
-    const data: {
-      dietaryRestrictions: string[];
-      allergens: string[];
-      skillLevel: SkillLevel;
-      availableTime?: number;
-      householdSize?: number;
-    } = {
-      dietaryRestrictions,
-      allergens,
-      skillLevel,
+    const data: Parameters<typeof saveOnboarding>[0] = {
+      dietaryRestrictions: opts?.skipAll ? [] : dietaryRestrictions,
+      allergens: opts?.skipAll ? [] : allergens,
     };
 
-    const parsedTime = parseInt(availableTime, 10);
-    if (!isNaN(parsedTime) && parsedTime > 0) {
-      data.availableTime = parsedTime;
-    }
-
-    const parsedHousehold = parseInt(householdSize, 10);
-    if (!isNaN(parsedHousehold) && parsedHousehold > 0) {
-      data.householdSize = parsedHousehold;
+    if (!opts?.skipAll) {
+      if (skillLevel) data.skillLevel = skillLevel;
+      if (cookingFrequency != null) data.cookingFrequencyPerWeek = cookingFrequency;
     }
 
     try {
       await saveOnboarding(data);
       await AsyncStorage.removeItem(DRAFT_KEY);
-      // Navigation happens automatically via authStore (hasProfile -> Feed)
+      // Navigation happens automatically via authStore (hasProfile → Feed)
     } catch {
-      setError("Não foi possível salvar suas preferências. Tente novamente.");
+      setError("Não foi possível salvar. Tente novamente.");
     }
   }
+
+  const TOTAL = 3;
 
   return (
     <KeyboardAvoidingView
@@ -161,298 +153,174 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <ProgressDots currentStep={step} />
+        {/* Top bar: dots + skip all */}
+        <View style={styles.topBar}>
+          <ProgressDots currentStep={step} total={TOTAL} />
+          <TouchableOpacity
+            onPress={() => finish({ skipAll: true })}
+            disabled={isLoading}
+            accessibilityLabel="Configurar depois"
+            accessibilityRole="button"
+          >
+            <Text style={styles.skipAllText}>Configurar depois</Text>
+          </TouchableOpacity>
+        </View>
 
+        {/* ── Step 0 — Restrições alimentares ── */}
         {step === 0 && (
-          <StepDietary
-            selected={dietaryRestrictions}
-            onToggle={toggleDietary}
-            onNext={() => setStep(1)}
-            onSkip={() => setStep(1)}
-          />
+          <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Restrições alimentares</Text>
+            <Text style={styles.stepSubtitle}>Selecione as que se aplicam. Pode pular.</Text>
+            <View style={styles.optionsGrid}>
+              {DIETARY_OPTIONS.map((opt) => {
+                const sel = dietaryRestrictions.includes(opt.value);
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.chip, sel && styles.chipSelected]}
+                    onPress={() => toggle(setDietaryRestrictions, opt.value)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: sel }}
+                  >
+                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.navRow}>
+              <TouchableOpacity
+                style={styles.skipBtn}
+                onPress={() => { setDietaryRestrictions([]); setStep(1); }}
+              >
+                <Text style={styles.skipText}>Pular</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => setStep(1)}>
+                <Text style={styles.btnPrimaryText}>Próximo</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
+        {/* ── Step 1 — Alergias ── */}
         {step === 1 && (
-          <StepAllergens
-            selected={allergens}
-            onToggle={toggleAllergen}
-            onNext={() => setStep(2)}
-            onBack={() => setStep(0)}
-            onSkip={() => setStep(2)}
-          />
+          <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Alergias</Text>
+            <Text style={styles.stepSubtitle}>
+              Ingredientes com essas alergias serão destacados. Pode pular.
+            </Text>
+            <View style={styles.optionsGrid}>
+              {ALLERGEN_OPTIONS.map((opt) => {
+                const sel = allergens.includes(opt.value);
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.chip, sel && styles.chipSelected]}
+                    onPress={() => toggle(setAllergens, opt.value)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: sel }}
+                  >
+                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.navRow}>
+              <TouchableOpacity style={styles.backBtn} onPress={() => setStep(0)}>
+                <Text style={styles.backText}>Voltar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.skipBtn}
+                onPress={() => { setAllergens([]); setStep(2); }}
+              >
+                <Text style={styles.skipText}>Pular</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => setStep(2)}>
+                <Text style={styles.btnPrimaryText}>Próximo</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
+        {/* ── Step 2 — Na cozinha ── */}
         {step === 2 && (
-          <StepPreferences
-            skillLevel={skillLevel}
-            onSkillLevelChange={setSkillLevel}
-            availableTime={availableTime}
-            onAvailableTimeChange={setAvailableTime}
-            householdSize={householdSize}
-            onHouseholdSizeChange={setHouseholdSize}
-            onBack={() => setStep(1)}
-            onFinish={handleFinish}
-            isLoading={isLoading}
-            error={error}
-          />
+          <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Na cozinha</Text>
+            <Text style={styles.stepSubtitle}>Só mais duas perguntas rápidas.</Text>
+
+            <Text style={styles.sectionLabel}>
+              Quantas vezes você cozinha por semana?
+            </Text>
+            <View style={styles.frequencyRow}>
+              {COOKING_FREQUENCY.map((opt) => {
+                const sel = cookingFrequency === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.chip, sel && styles.chipSelected]}
+                    onPress={() => setCookingFrequency(sel ? null : opt.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: sel }}
+                  >
+                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.sectionLabel, { marginTop: tokens.spacing.lg }]}>
+              Nível de habilidade
+            </Text>
+            <View style={styles.skillRow}>
+              {SKILL_LEVELS.map(({ label, value }) => {
+                const sel = skillLevel === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[styles.skillBtn, sel && styles.skillBtnSelected]}
+                    onPress={() => setSkillLevel(value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: sel }}
+                  >
+                    <Text style={[styles.skillBtnText, sel && styles.skillBtnTextSelected]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.navRow}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => setStep(1)}
+                disabled={isLoading}
+              >
+                <Text style={styles.backText}>Voltar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnPrimary, isLoading && styles.btnDisabled]}
+                onPress={() => finish()}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color={tokens.colors.surface} />
+                ) : (
+                  <Text style={styles.btnPrimaryText}>Concluir</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
       </ScrollView>
     </KeyboardAvoidingView>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Step 1 — Dietary Restrictions
-// ---------------------------------------------------------------------------
-
-interface StepDietaryProps {
-  selected: string[];
-  onToggle: (option: string) => void;
-  onNext: () => void;
-  onSkip: () => void;
-}
-
-function StepDietary({ selected, onToggle, onNext, onSkip }: StepDietaryProps) {
-  return (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Restrições alimentares</Text>
-      <Text style={styles.stepSubtitle}>
-        Selecione todas que se aplicam a você (opcional)
-      </Text>
-
-      <View style={styles.optionsGrid}>
-        {DIETARY_OPTIONS.map((option) => {
-          const isSelected = selected.includes(option);
-          return (
-            <TouchableOpacity
-              key={option}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              onPress={() => onToggle(option)}
-              accessibilityLabel={`${option}${isSelected ? ", selecionado" : ""}`}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isSelected }}
-            >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                {option}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <View style={styles.navigationRow}>
-        <TouchableOpacity
-          style={styles.skipBtn}
-          onPress={onSkip}
-          accessibilityLabel="Pular restrições alimentares"
-          accessibilityRole="button"
-        >
-          <Text style={styles.skipText}>Pular</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.btn, styles.btnPrimary]}
-          onPress={onNext}
-          accessibilityLabel="Próximo passo"
-          accessibilityRole="button"
-        >
-          <Text style={styles.btnPrimaryText}>Próximo</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Step 2 — Allergens
-// ---------------------------------------------------------------------------
-
-interface StepAllergensProps {
-  selected: string[];
-  onToggle: (option: string) => void;
-  onNext: () => void;
-  onBack: () => void;
-  onSkip: () => void;
-}
-
-function StepAllergens({ selected, onToggle, onNext, onBack, onSkip }: StepAllergensProps) {
-  return (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Alergias</Text>
-      <Text style={styles.stepSubtitle}>
-        Selecione todas que se aplicam a você (opcional)
-      </Text>
-
-      <View style={styles.optionsGrid}>
-        {DIETARY_OPTIONS.map((option) => {
-          const isSelected = selected.includes(option);
-          return (
-            <TouchableOpacity
-              key={option}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              onPress={() => onToggle(option)}
-              accessibilityLabel={`${option}${isSelected ? ", selecionado" : ""}`}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isSelected }}
-            >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                {option}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <View style={styles.navigationRow}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={onBack}
-          accessibilityLabel="Voltar ao passo anterior"
-          accessibilityRole="button"
-        >
-          <Text style={styles.backText}>Voltar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.skipBtn}
-          onPress={onSkip}
-          accessibilityLabel="Pular alergias"
-          accessibilityRole="button"
-        >
-          <Text style={styles.skipText}>Pular</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.btn, styles.btnPrimary]}
-          onPress={onNext}
-          accessibilityLabel="Próximo passo"
-          accessibilityRole="button"
-        >
-          <Text style={styles.btnPrimaryText}>Próximo</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Step 3 — Preferences
-// ---------------------------------------------------------------------------
-
-interface StepPreferencesProps {
-  skillLevel: SkillLevel | null;
-  onSkillLevelChange: (level: SkillLevel) => void;
-  availableTime: string;
-  onAvailableTimeChange: (value: string) => void;
-  householdSize: string;
-  onHouseholdSizeChange: (value: string) => void;
-  onBack: () => void;
-  onFinish: () => void;
-  isLoading: boolean;
-  error: string | null;
-}
-
-function StepPreferences({
-  skillLevel,
-  onSkillLevelChange,
-  availableTime,
-  onAvailableTimeChange,
-  householdSize,
-  onHouseholdSizeChange,
-  onBack,
-  onFinish,
-  isLoading,
-  error,
-}: StepPreferencesProps) {
-  const canFinish = skillLevel !== null && !isLoading;
-
-  return (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Preferências</Text>
-      <Text style={styles.stepSubtitle}>
-        Personalize sua experiência
-      </Text>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Nível de habilidade</Text>
-        <View style={styles.skillRow}>
-          {SKILL_LEVELS.map(({ label, value }) => {
-            const isSelected = skillLevel === value;
-            return (
-              <TouchableOpacity
-                key={value}
-                style={[styles.skillBtn, isSelected && styles.skillBtnSelected]}
-                onPress={() => onSkillLevelChange(value)}
-                accessibilityLabel={`Nível ${label}${isSelected ? ", selecionado" : ""}`}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: isSelected }}
-              >
-                <Text style={[styles.skillBtnText, isSelected && styles.skillBtnTextSelected]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>
-          Tempo disponível por receita (min) (opcional)
-        </Text>
-        <TextInput
-          style={styles.numberInput}
-          value={availableTime}
-          onChangeText={onAvailableTimeChange}
-          keyboardType="number-pad"
-          placeholder="Ex: 30"
-          placeholderTextColor={tokens.colors.textPrimary + "66"}
-          accessibilityLabel="Tempo disponível por receita em minutos"
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Pessoas no domicílio (opcional)</Text>
-        <TextInput
-          style={styles.numberInput}
-          value={householdSize}
-          onChangeText={onHouseholdSizeChange}
-          keyboardType="number-pad"
-          placeholder="Ex: 2"
-          placeholderTextColor={tokens.colors.textPrimary + "66"}
-          accessibilityLabel="Número de pessoas no domicílio"
-        />
-      </View>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-      <View style={styles.navigationRow}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={onBack}
-          disabled={isLoading}
-          accessibilityLabel="Voltar ao passo anterior"
-          accessibilityRole="button"
-        >
-          <Text style={styles.backText}>Voltar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.btn, styles.btnPrimary, !canFinish && styles.btnDisabled]}
-          onPress={onFinish}
-          disabled={!canFinish}
-          accessibilityLabel="Concluir configuração"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canFinish }}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={tokens.colors.surface} />
-          ) : (
-            <Text style={styles.btnPrimaryText}>Concluir</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
   );
 }
 
@@ -467,28 +335,29 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.xl,
     gap: tokens.spacing.xl,
   },
-  dotsContainer: {
+  topBar: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: tokens.spacing.sm,
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: tokens.spacing.xl,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  dotsContainer: {
+    flexDirection: "row",
+    gap: tokens.spacing.sm,
   },
-  dotFilled: {
-    backgroundColor: tokens.colors.primary,
-  },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  dotFilled: { backgroundColor: tokens.colors.primary },
   dotOutline: {
     borderWidth: 2,
     borderColor: tokens.colors.primary,
     backgroundColor: "transparent",
   },
-  stepContainer: {
-    gap: tokens.spacing.xl,
+  skipAllText: {
+    fontSize: tokens.typography.fontSizes.sm,
+    color: tokens.colors.textPrimary + "66",
+    textDecorationLine: "underline",
   },
+  stepContainer: { gap: tokens.spacing.xl },
   stepTitle: {
     fontSize: tokens.typography.fontSizes.xl,
     fontWeight: tokens.typography.fontWeights.bold,
@@ -496,12 +365,21 @@ const styles = StyleSheet.create({
   },
   stepSubtitle: {
     fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary + "99",
+    color: tokens.colors.textPrimary + "88",
     marginTop: -tokens.spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: tokens.typography.fontSizes.sm,
+    fontWeight: tokens.typography.fontWeights.semibold,
+    color: tokens.colors.textPrimary,
   },
   optionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: tokens.spacing.sm,
+  },
+  frequencyRow: {
+    flexDirection: "row",
     gap: tokens.spacing.sm,
   },
   chip: {
@@ -512,36 +390,27 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.primary,
     backgroundColor: tokens.colors.surface,
   },
-  chipSelected: {
-    backgroundColor: tokens.colors.primary,
-  },
+  chipSelected: { backgroundColor: tokens.colors.primary },
   chipText: {
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.primary,
     fontWeight: tokens.typography.fontWeights.medium,
   },
-  chipTextSelected: {
-    color: tokens.colors.surface,
-  },
-  navigationRow: {
+  chipTextSelected: { color: tokens.colors.surface },
+  navRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: tokens.spacing.md,
     marginTop: tokens.spacing.sm,
   },
-  skipBtn: {
-    padding: tokens.spacing.sm,
-  },
+  skipBtn: { padding: tokens.spacing.sm },
   skipText: {
     fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary + "99",
+    color: tokens.colors.textPrimary + "88",
     fontWeight: tokens.typography.fontWeights.medium,
   },
-  backBtn: {
-    padding: tokens.spacing.sm,
-    marginRight: "auto",
-  },
+  backBtn: { padding: tokens.spacing.sm, marginRight: "auto" },
   backText: {
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.primary,
@@ -561,18 +430,7 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.fontSizes.md,
     fontWeight: tokens.typography.fontWeights.semibold,
   },
-  section: {
-    gap: tokens.spacing.sm,
-  },
-  sectionLabel: {
-    fontSize: tokens.typography.fontSizes.sm,
-    fontWeight: tokens.typography.fontWeights.medium,
-    color: tokens.colors.textPrimary,
-  },
-  skillRow: {
-    flexDirection: "row",
-    gap: tokens.spacing.sm,
-  },
+  skillRow: { flexDirection: "row", gap: tokens.spacing.sm },
   skillBtn: {
     flex: 1,
     height: 44,
@@ -583,27 +441,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  skillBtnSelected: {
-    backgroundColor: tokens.colors.primary,
-  },
+  skillBtnSelected: { backgroundColor: tokens.colors.primary },
   skillBtnText: {
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.primary,
     fontWeight: tokens.typography.fontWeights.medium,
   },
-  skillBtnTextSelected: {
-    color: tokens.colors.surface,
-  },
-  numberInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: tokens.borderRadius.sm,
-    backgroundColor: tokens.colors.surface,
-    paddingHorizontal: tokens.spacing.md,
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary,
-  },
+  skillBtnTextSelected: { color: tokens.colors.surface },
   errorText: {
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.error,
