@@ -26,15 +26,16 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: tokens.borderRadius.lg,
-    paddingHorizontal: tokens.spacing.sm,
-    paddingVertical: tokens.spacing.xs,
-    backgroundColor: "#EAF0FB",
+    borderRadius: tokens.radius.pill,
+    paddingHorizontal: tokens.space.sm,
+    paddingVertical: tokens.space.xs,
+    backgroundColor: tokens.color.semantic.surface.subtle,
     alignSelf: "flex-start",
   },
   label: {
-    fontSize: tokens.typography.fontSizes.sm,
-    fontWeight: tokens.typography.fontWeights.medium,
-    color: "#2C5BB4",
+    fontSize: tokens.typography.scale.label.md.fontSize,
+    lineHeight: tokens.typography.scale.label.md.lineHeight,
+    fontWeight: tokens.typography.weight.medium,
+    color: tokens.color.semantic.text.secondary,
   },
 });

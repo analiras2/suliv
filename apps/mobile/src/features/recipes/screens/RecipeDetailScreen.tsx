@@ -15,7 +15,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useSWR from "swr";
 import { tokens } from "@suliv/design-system";
-import { FavoriteButton } from "../../../components/atoms/FavoriteButton";
+import { FavoriteToggle } from "../../../components/atoms/FavoriteToggle";
 import { PortionControl } from "../../../components/atoms/PortionControl";
 import { RecipeIngredientList } from "../../../components/organisms/RecipeIngredientList";
 import { RecipeStepList } from "../../../components/organisms/RecipeStepList";
@@ -117,7 +117,7 @@ export function RecipeDetailScreen() {
           />
           <Text style={styles.backLabel}>Voltar</Text>
         </Pressable>
-        <FavoriteButton
+        <FavoriteToggle
           isFavorite={isFavorite}
           onToggle={toggle}
           isLoading={isFavLoading}

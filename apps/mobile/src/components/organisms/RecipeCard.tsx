@@ -7,8 +7,8 @@ import {
   View,
 } from "react-native";
 import { tokens } from "@suliv/design-system";
-import { FavoriteButton } from "../atoms/FavoriteButton";
-import { RecipeCardMeta } from "../molecules/RecipeCardMeta";
+import { FavoriteToggle } from "../atoms/FavoriteToggle";
+import { RecipeMetaRow } from "../molecules/RecipeMetaRow";
 
 type Difficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 type Category = "cafe" | "almoco" | "jantar" | "lanche" | "sobremesa";
@@ -65,7 +65,7 @@ export function RecipeCard({ recipe, isFavorite, onPress, onFavoriteToggle }: Re
           <Text style={styles.title} numberOfLines={2}>
             {recipe.title}
           </Text>
-          <FavoriteButton
+          <FavoriteToggle
             isFavorite={isFavorite}
             onToggle={onFavoriteToggle}
             accessibilityLabel={
@@ -75,7 +75,7 @@ export function RecipeCard({ recipe, isFavorite, onPress, onFavoriteToggle }: Re
             }
           />
         </View>
-        <RecipeCardMeta
+        <RecipeMetaRow
           prepTimeMin={recipe.prepTimeMin}
           cookTimeMin={recipe.cookTimeMin}
           difficulty={recipe.difficulty}
@@ -88,14 +88,10 @@ export function RecipeCard({ recipe, isFavorite, onPress, onFavoriteToggle }: Re
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: tokens.borderRadius.md,
+    backgroundColor: tokens.color.semantic.surface.elevated,
+    borderRadius: tokens.radius.md,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    ...tokens.elevation.md,
   },
   pressed: {
     opacity: 0.92,
@@ -103,7 +99,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: 160,
     width: "100%",
-    backgroundColor: tokens.colors.background,
+    backgroundColor: tokens.color.semantic.surface.subtle,
   },
   image: {
     width: "100%",
@@ -112,22 +108,22 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: tokens.colors.background,
+    backgroundColor: tokens.color.semantic.surface.subtle,
   },
   content: {
-    padding: tokens.spacing.md,
-    gap: tokens.spacing.sm,
+    padding: tokens.space.md,
+    gap: tokens.space.sm,
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: tokens.spacing.sm,
+    gap: tokens.space.sm,
   },
   title: {
     flex: 1,
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
-    color: tokens.colors.textPrimary,
-    lineHeight: 22,
+    fontSize: tokens.typography.scale.title.md.fontSize,
+    lineHeight: tokens.typography.scale.title.md.lineHeight,
+    fontWeight: tokens.typography.weight.semibold,
+    color: tokens.color.semantic.text.primary,
   },
 });

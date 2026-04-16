@@ -15,15 +15,15 @@ const LABEL: Record<Difficulty, string> = {
 };
 
 const BG_COLOR: Record<Difficulty, string> = {
-  BEGINNER: "#E8F5E0",
-  INTERMEDIATE: "#FFF3CD",
-  ADVANCED: "#FDECEA",
+  BEGINNER: tokens.color.semantic.feedback.successSoft,
+  INTERMEDIATE: tokens.color.semantic.feedback.warningSoft,
+  ADVANCED: tokens.color.semantic.feedback.errorSoft,
 };
 
 const TEXT_COLOR: Record<Difficulty, string> = {
-  BEGINNER: "#4A8C2A",
-  INTERMEDIATE: "#8A6000",
-  ADVANCED: "#C0392B",
+  BEGINNER: tokens.color.semantic.feedback.success,
+  INTERMEDIATE: tokens.color.semantic.feedback.warning,
+  ADVANCED: tokens.color.semantic.feedback.error,
 };
 
 export function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
@@ -38,13 +38,14 @@ export function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: tokens.borderRadius.lg,
-    paddingHorizontal: tokens.spacing.sm,
-    paddingVertical: tokens.spacing.xs,
+    borderRadius: tokens.radius.pill,
+    paddingHorizontal: tokens.space.sm,
+    paddingVertical: tokens.space.xs,
     alignSelf: "flex-start",
   },
   label: {
-    fontSize: tokens.typography.fontSizes.sm,
-    fontWeight: tokens.typography.fontWeights.medium,
+    fontSize: tokens.typography.scale.label.md.fontSize,
+    lineHeight: tokens.typography.scale.label.md.lineHeight,
+    fontWeight: tokens.typography.weight.medium,
   },
 });
