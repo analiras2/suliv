@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Platform,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import { useState } from "react";
 import { tokens } from "@suliv/design-system";
 import { useAuthStore } from "../store/authStore";
 import { AuthInput } from "../components/AuthInput";
+import { Button } from "../../../components/atoms/Button";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
 import { AuthError } from "../../../services/authApi";
@@ -112,34 +112,27 @@ export function LoginScreen({ navigation }: Props) {
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <TouchableOpacity
-            style={[styles.btn, styles.btnPrimary, isLoading && styles.btnDisabled]}
+          <Button
+            label="Entrar"
+            variant="primary"
+            loading={isLoading}
             onPress={handleLogin}
-            disabled={isLoading}
+            fullWidth
             accessibilityLabel="Entrar"
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isLoading }}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={tokens.colors.surface} />
-            ) : (
-              <Text style={styles.btnPrimaryText}>Entrar</Text>
-            )}
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={[styles.btn, styles.btnOutline]}
+          <Button
+            label="Entrar com Google"
+            variant="outline"
             onPress={handleGoogleLogin}
             disabled={isLoading}
+            fullWidth
             accessibilityLabel="Entrar com Google"
-            accessibilityRole="button"
-          >
-            <Text style={styles.btnOutlineText}>Entrar com Google</Text>
-          </TouchableOpacity>
+          />
 
           {Platform.OS === "ios" && (
             <TouchableOpacity
-              style={[styles.btn, styles.btnApple]}
+              style={styles.btnApple}
               onPress={handleAppleLogin}
               disabled={isLoading}
               accessibilityLabel="Entrar com Apple"
@@ -188,29 +181,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.error,
     textAlign: "center",
-  },
-  btn: {
-    height: 52,
-    borderRadius: tokens.borderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnPrimary: { backgroundColor: tokens.colors.primary },
-  btnDisabled: { opacity: 0.6 },
-  btnPrimaryText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
-  },
-  btnOutline: {
-    borderWidth: 1.5,
-    borderColor: tokens.colors.primary,
-    backgroundColor: tokens.colors.surface,
-  },
-  btnOutlineText: {
-    color: tokens.colors.primary,
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
   },
   btnApple: { backgroundColor: "#000" },
   btnAppleText: {

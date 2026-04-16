@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Platform,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import { useState } from "react";
 import { tokens } from "@suliv/design-system";
 import { useAuthStore } from "../store/authStore";
 import { AuthInput } from "../components/AuthInput";
+import { Button } from "../../../components/atoms/Button";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
 import { AuthError, ValidationError } from "../../../services/authApi";
@@ -176,20 +176,14 @@ export function RegisterScreen({ navigation }: Props) {
             <Text style={styles.errorText}>{globalError}</Text>
           ) : null}
 
-          <TouchableOpacity
-            style={[styles.btn, styles.btnPrimary, isLoading && styles.btnDisabled]}
+          <Button
+            label="Criar conta"
+            variant="primary"
+            loading={isLoading}
             onPress={handleRegister}
-            disabled={isLoading}
+            fullWidth
             accessibilityLabel="Criar conta"
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isLoading }}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={tokens.colors.surface} />
-            ) : (
-              <Text style={styles.btnPrimaryText}>Criar conta</Text>
-            )}
-          </TouchableOpacity>
+          />
         </View>
 
         <TouchableOpacity
@@ -242,19 +236,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.error,
     fontWeight: tokens.typography.fontWeights.semibold,
     textDecorationLine: "underline",
-  },
-  btn: {
-    height: 52,
-    borderRadius: tokens.borderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnPrimary: { backgroundColor: tokens.colors.primary },
-  btnDisabled: { opacity: 0.6 },
-  btnPrimaryText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
   },
   linkText: {
     textAlign: "center",

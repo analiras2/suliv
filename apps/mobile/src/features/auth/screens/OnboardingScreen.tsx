@@ -12,6 +12,8 @@ import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { tokens } from "@suliv/design-system";
 import { useAuthStore } from "../store/authStore";
+import { Button } from "../../../components/atoms/Button";
+import { Chip } from "../../../components/atoms/Chip";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
 
@@ -175,30 +177,26 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
               {DIETARY_OPTIONS.map((opt) => {
                 const sel = dietaryRestrictions.includes(opt.value);
                 return (
-                  <TouchableOpacity
+                  <Chip
                     key={opt.value}
-                    style={[styles.chip, sel && styles.chipSelected]}
+                    label={opt.label}
+                    variant="input"
+                    selected={sel}
                     onPress={() => toggle(setDietaryRestrictions, opt.value)}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: sel }}
-                  >
-                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
             <View style={styles.navRow}>
-              <TouchableOpacity
-                style={styles.skipBtn}
+              <Button
+                label="Pular"
+                variant="text"
+                size="md"
                 onPress={() => { setDietaryRestrictions([]); setStep(1); }}
-              >
-                <Text style={styles.skipText}>Pular</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => setStep(1)}>
-                <Text style={styles.btnPrimaryText}>Próximo</Text>
-              </TouchableOpacity>
+              />
+              <Button label="Próximo" variant="primary" onPress={() => setStep(1)} />
             </View>
           </View>
         )}
@@ -214,33 +212,27 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
               {ALLERGEN_OPTIONS.map((opt) => {
                 const sel = allergens.includes(opt.value);
                 return (
-                  <TouchableOpacity
+                  <Chip
                     key={opt.value}
-                    style={[styles.chip, sel && styles.chipSelected]}
+                    label={opt.label}
+                    variant="input"
+                    selected={sel}
                     onPress={() => toggle(setAllergens, opt.value)}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: sel }}
-                  >
-                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
             <View style={styles.navRow}>
-              <TouchableOpacity style={styles.backBtn} onPress={() => setStep(0)}>
-                <Text style={styles.backText}>Voltar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.skipBtn}
+              <Button label="Voltar" variant="text" size="md" style={styles.backButton} onPress={() => setStep(0)} />
+              <Button
+                label="Pular"
+                variant="text"
+                size="md"
                 onPress={() => { setAllergens([]); setStep(2); }}
-              >
-                <Text style={styles.skipText}>Pular</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => setStep(2)}>
-                <Text style={styles.btnPrimaryText}>Próximo</Text>
-              </TouchableOpacity>
+              />
+              <Button label="Próximo" variant="primary" onPress={() => setStep(2)} />
             </View>
           </View>
         )}
@@ -258,17 +250,15 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
               {COOKING_FREQUENCY.map((opt) => {
                 const sel = cookingFrequency === opt.value;
                 return (
-                  <TouchableOpacity
+                  <Chip
                     key={opt.value}
-                    style={[styles.chip, sel && styles.chipSelected]}
+                    label={opt.label}
+                    variant="input"
+                    selected={sel}
                     onPress={() => setCookingFrequency(sel ? null : opt.value)}
                     accessibilityRole="radio"
                     accessibilityState={{ checked: sel }}
-                  >
-                    <Text style={[styles.chipText, sel && styles.chipTextSelected]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -280,17 +270,16 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
               {SKILL_LEVELS.map(({ label, value }) => {
                 const sel = skillLevel === value;
                 return (
-                  <TouchableOpacity
+                  <Chip
                     key={value}
-                    style={[styles.skillBtn, sel && styles.skillBtnSelected]}
+                    label={label}
+                    variant="input"
+                    selected={sel}
+                    style={styles.skillChip}
                     onPress={() => setSkillLevel(value)}
                     accessibilityRole="radio"
                     accessibilityState={{ checked: sel }}
-                  >
-                    <Text style={[styles.skillBtnText, sel && styles.skillBtnTextSelected]}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -298,24 +287,21 @@ export function OnboardingScreen({ navigation: _navigation }: Props) {
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <View style={styles.navRow}>
-              <TouchableOpacity
-                style={styles.backBtn}
+              <Button
+                label="Voltar"
+                variant="text"
+                size="md"
+                style={styles.backButton}
                 onPress={() => setStep(1)}
                 disabled={isLoading}
-              >
-                <Text style={styles.backText}>Voltar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.btn, styles.btnPrimary, isLoading && styles.btnDisabled]}
+              />
+              <Button
+                label="Concluir"
+                variant="primary"
+                loading={isLoading}
                 onPress={() => finish()}
                 disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color={tokens.colors.surface} />
-                ) : (
-                  <Text style={styles.btnPrimaryText}>Concluir</Text>
-                )}
-              </TouchableOpacity>
+              />
             </View>
           </View>
         )}
@@ -382,21 +368,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: tokens.spacing.sm,
   },
-  chip: {
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
-    borderRadius: tokens.borderRadius.lg,
-    borderWidth: 1.5,
-    borderColor: tokens.colors.primary,
-    backgroundColor: tokens.colors.surface,
-  },
-  chipSelected: { backgroundColor: tokens.colors.primary },
-  chipText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.medium,
-  },
-  chipTextSelected: { color: tokens.colors.surface },
   navRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -404,50 +375,14 @@ const styles = StyleSheet.create({
     gap: tokens.spacing.md,
     marginTop: tokens.spacing.sm,
   },
-  skipBtn: { padding: tokens.spacing.sm },
-  skipText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary + "88",
-    fontWeight: tokens.typography.fontWeights.medium,
-  },
-  backBtn: { padding: tokens.spacing.sm, marginRight: "auto" },
-  backText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.medium,
-  },
-  btn: {
-    height: 52,
-    paddingHorizontal: tokens.spacing["2xl"],
-    borderRadius: tokens.borderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnPrimary: { backgroundColor: tokens.colors.primary },
-  btnDisabled: { opacity: 0.6 },
-  btnPrimaryText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
+  backButton: {
+    marginRight: "auto",
   },
   skillRow: { flexDirection: "row", gap: tokens.spacing.sm },
-  skillBtn: {
+  skillChip: {
     flex: 1,
-    height: 44,
-    borderRadius: tokens.borderRadius.sm,
-    borderWidth: 1.5,
-    borderColor: tokens.colors.primary,
-    backgroundColor: tokens.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: tokens.radius.sm,
   },
-  skillBtnSelected: { backgroundColor: tokens.colors.primary },
-  skillBtnText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.medium,
-  },
-  skillBtnTextSelected: { color: tokens.colors.surface },
   errorText: {
     fontSize: tokens.typography.fontSizes.sm,
     color: tokens.colors.error,

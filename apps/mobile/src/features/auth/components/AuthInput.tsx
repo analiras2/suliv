@@ -1,7 +1,6 @@
 import {
   StyleSheet,
   Text,
-  TextInput,
   TextInputProps,
   TouchableOpacity,
   View,
@@ -9,6 +8,7 @@ import {
 import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { tokens } from "@suliv/design-system";
+import { Input } from "../../../components/atoms/Input";
 
 interface AuthInputProps extends TextInputProps {
   label: string;
@@ -22,30 +22,27 @@ export function AuthInput({ label, error, isPassword, ...props }: AuthInputProps
   return (
     <View style={styles.wrapper}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, error ? styles.inputError : styles.inputNormal]}>
-        <TextInput
-          style={styles.input}
-          placeholderTextColor={tokens.colors.textPrimary + "66"}
-          secureTextEntry={isPassword && !visible}
-          autoCorrect={false}
-          autoCapitalize="none"
-          {...props}
-        />
-        {isPassword && (
-          <TouchableOpacity
-            onPress={() => setVisible((v) => !v)}
-            style={styles.eyeBtn}
-            accessibilityLabel={visible ? "Ocultar senha" : "Mostrar senha"}
-            accessibilityRole="button"
-          >
-            <MaterialCommunityIcons
-              name={visible ? "eye-off" : "eye"}
-              size={20}
-              color={tokens.colors.textPrimary + "99"}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
+      <Input
+        error={Boolean(error)}
+        secureTextEntry={isPassword && !visible}
+        rightAccessory={
+          isPassword ? (
+            <TouchableOpacity
+              onPress={() => setVisible((v) => !v)}
+              style={styles.eyeBtn}
+              accessibilityLabel={visible ? "Ocultar senha" : "Mostrar senha"}
+              accessibilityRole="button"
+            >
+              <MaterialCommunityIcons
+                name={visible ? "eye-off" : "eye"}
+                size={20}
+                color={tokens.color.semantic.text.secondary}
+              />
+            </TouchableOpacity>
+          ) : null
+        }
+        {...props}
+      />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -59,26 +56,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.fontSizes.sm,
     fontWeight: tokens.typography.fontWeights.medium,
     color: tokens.colors.textPrimary,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: tokens.borderRadius.sm,
-    backgroundColor: tokens.colors.surface,
-    paddingHorizontal: tokens.spacing.md,
-  },
-  inputNormal: {
-    borderColor: "#D1D5DB",
-  },
-  inputError: {
-    borderColor: tokens.colors.error,
-  },
-  input: {
-    flex: 1,
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary,
-    paddingVertical: tokens.spacing.md,
   },
   eyeBtn: {
     padding: tokens.spacing.xs,

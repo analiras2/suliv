@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { tokens } from "@suliv/design-system";
+import { Chip } from "../atoms/Chip";
 
 interface Option {
   value: string;
@@ -22,17 +23,12 @@ export function FilterGroup({ label, options, selected, onSelect }: FilterGroupP
         {options.map((opt) => {
           const isSelected = opt.value === selected;
           return (
-            <Pressable
+            <Chip
               key={opt.value}
+              label={opt.label}
+              selected={isSelected}
               onPress={() => onSelect(isSelected ? null : opt.value)}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                {opt.label}
-              </Text>
-            </Pressable>
+            />
           );
         })}
       </ScrollView>
@@ -53,25 +49,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: tokens.spacing.sm,
     paddingBottom: tokens.spacing.xs,
-  },
-  chip: {
-    borderRadius: tokens.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: tokens.colors.textPrimary,
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.xs,
-  },
-  chipSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
-  },
-  chipText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary,
-    fontWeight: tokens.typography.fontWeights.regular,
-  },
-  chipTextSelected: {
-    color: tokens.colors.surface,
-    fontWeight: tokens.typography.fontWeights.medium,
   },
 });
