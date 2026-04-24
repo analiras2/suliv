@@ -1,333 +1,86 @@
-import React, { useState, useCallback } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { tokens } from "@suliv/design-system";
-import { RecipeCard } from "../../../components/organisms/RecipeCard";
-import { FilterSheet, type ActiveFilters } from "../../../components/organisms/FilterSheet";
-import { useRecipes } from "../hooks/useRecipes";
-import { useFavorite } from "../hooks/useFavorite";
-import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
+import { FeedHeader } from "../../../components/organisms/FeedHeader";
+import { DailyCarousel } from "../../../components/organisms/DailyCarousel";
+import { CategoriesSection } from "../../../components/organisms/CategoriesSection";
+import { NewsSection } from "../../../components/organisms/NewsSection";
+import { TopRecipesSection } from "../../../components/organisms/TopRecipesSection";
+import { BottomNav, type FeedTab } from "../../../components/organisms/BottomNav";
 import type { AppStackParamList } from "../../../navigation/types";
+import { useFeed } from "../hooks/useFeed";
 
 type FeedNavProp = NativeStackNavigationProp<AppStackParamList, "Feed">;
 
-const EMPTY_FILTERS: ActiveFilters = {
-  maxTime: null,
-  difficulty: null,
-  category: null,
-  mainIngredient: null,
-};
-
-function countActive(f: ActiveFilters): number {
-  return [f.maxTime, f.difficulty, f.category, f.mainIngredient].filter(
-    (v) => v != null && v !== "",
-  ).length;
-}
-
-// ---------------------------------------------------------------------------
-// Single-recipe row wrapper — mounts useFavorite per card
-// ---------------------------------------------------------------------------
-
-interface RecipeRowProps {
-  recipe: {
-    id: string;
-    title: string;
-    slug: string;
-    imageUrl: string | null;
-    prepTimeMin: number;
-    cookTimeMin: number;
-    difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-    category: string;
-    tags: string[];
-    servings: number;
-    isFavorite: boolean;
-  };
-  onPress: (id: string) => void;
-}
-
-function RecipeRow({ recipe, onPress }: RecipeRowProps) {
-  const { isFavorite, toggle } = useFavorite(recipe.id, recipe.isFavorite);
-  return (
-    <RecipeCard
-      recipe={recipe as Parameters<typeof RecipeCard>[0]["recipe"]}
-      isFavorite={isFavorite}
-      onPress={() => onPress(recipe.id)}
-      onFavoriteToggle={toggle}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// FeedScreen
-// ---------------------------------------------------------------------------
-
 export function FeedScreen() {
   const navigation = useNavigation<FeedNavProp>();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
-  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<FeedTab>("feed");
+  const { feed, isLoading, error } = useFeed();
 
-  const { recipes, isLoading, isFetchingMore, hasMore, error, fetchMore, refresh } =
-    useRecipes({ searchQuery, filters });
-
-  const { onEndReached } = useInfiniteScroll(fetchMore, {
-    isLoading: isFetchingMore,
-    hasMore,
-  });
-
-  const handleNavigateToDetail = useCallback(
+  const handleRecipePress = useCallback(
     (id: string) => {
       navigation.navigate("RecipeDetail", { id });
     },
     [navigation],
   );
 
-  const handleApplyFilters = useCallback((applied: ActiveFilters) => {
-    setFilters(applied);
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setFilters(EMPTY_FILTERS);
-  }, []);
-
-  const activeCount = countActive(filters);
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Pressable onPress={refresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Tentar novamente</Text>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Search + Filter bar */}
-      <View style={styles.searchBar}>
-        <View style={styles.searchInputWrapper}>
-          <MaterialCommunityIcons
-            name="magnify"
-            size={20}
-            color={tokens.colors.textPrimary + "66"}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Buscar receitas…"
-            placeholderTextColor={tokens.colors.textPrimary + "66"}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-        </View>
-        <Pressable
-          onPress={() => setFilterSheetVisible(true)}
-          style={[styles.filterButton, activeCount > 0 && styles.filterButtonActive]}
-          accessibilityRole="button"
-          accessibilityLabel={
-            activeCount > 0 ? `Filtros, ${activeCount} ativos` : "Abrir filtros"
-          }
-        >
-          <MaterialCommunityIcons
-            name="tune-variant"
-            size={18}
-            color={activeCount > 0 ? tokens.colors.primary : tokens.colors.textPrimary}
-          />
-          {activeCount > 0 && (
-            <Text style={styles.filterBadgeText}>{activeCount}</Text>
-          )}
-        </Pressable>
-      </View>
+    <SafeAreaView style={styles.root} edges={["top"]}>
+      <FeedHeader />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {isLoading && !feed ? (
+          <View style={styles.centeredState}>
+            <ActivityIndicator size="small" color={tokens.color.primitive.moss[600]} />
+          </View>
+        ) : null}
 
-      {/* Recipe list */}
-      <FlatList
-        data={recipes}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <RecipeRow recipe={item} onPress={handleNavigateToDetail} />
-        )}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.3}
-        onRefresh={refresh}
-        refreshing={isLoading && recipes.length === 0}
-        ListEmptyComponent={
-          isLoading ? (
-            <ActivityIndicator
-              size="large"
-              color={tokens.colors.primary}
-              style={styles.loader}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>Nenhuma receita encontrada</Text>
-              <Text style={styles.emptySubtitle}>
-                Tente ajustar os filtros ou a busca.
-              </Text>
-            </View>
-          )
-        }
-        ListFooterComponent={
-          isFetchingMore ? (
-            <ActivityIndicator
-              size="small"
-              color={tokens.colors.primary}
-              style={styles.footerLoader}
-            />
-          ) : null
-        }
-      />
+        {error && !feed ? (
+          <View style={styles.centeredState}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
 
-      {/* Filter Sheet */}
-      <FilterSheet
-        filters={filters}
-        onApply={handleApplyFilters}
-        onClear={handleClearFilters}
-        visible={filterSheetVisible}
-        onClose={() => setFilterSheetVisible(false)}
-      />
+        <DailyCarousel items={feed?.dailyRecipes ?? []} onCardPress={handleRecipePress} />
+        <CategoriesSection categories={feed?.categories ?? []} />
+        <NewsSection items={feed?.news ?? []} />
+        <TopRecipesSection items={feed?.topRecipes ?? []} onRecipePress={handleRecipePress} />
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+      <BottomNav active={activeTab} onChange={setActiveTab} />
     </SafeAreaView>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
-    backgroundColor: tokens.colors.background,
+    backgroundColor: tokens.color.semantic.surface.base,
   },
-  centered: {
+  scroll: {
     flex: 1,
-    backgroundColor: tokens.colors.background,
+  },
+  content: {
+    paddingTop: tokens.space.xs,
+    gap: tokens.space["2xl"],
+  },
+  centeredState: {
     alignItems: "center",
     justifyContent: "center",
-    padding: tokens.spacing.xl,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing.sm,
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.background,
-  },
-  searchInputWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    height: 40,
-    backgroundColor: tokens.colors.background,
-    borderRadius: tokens.borderRadius.sm,
-    paddingHorizontal: tokens.spacing.sm,
-    gap: tokens.spacing.xs,
-  },
-  searchIcon: {
-    lineHeight: undefined,
-  },
-  searchInput: {
-    flex: 1,
-    height: "100%",
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary,
-  },
-  filterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: tokens.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: tokens.colors.textPrimary + "33",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  filterButtonActive: {
-    borderColor: tokens.colors.primary,
-    backgroundColor: tokens.colors.primary + "1A",
-  },
-  filterBadgeText: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
-    color: tokens.colors.surface,
-    fontSize: 10,
-    fontWeight: tokens.typography.fontWeights.bold,
-    textAlign: "center",
-    lineHeight: 16,
-    paddingHorizontal: 2,
-  },
-  listContent: {
-    padding: tokens.spacing.md,
-    paddingBottom: tokens.spacing.xl,
-  },
-  separator: {
-    height: tokens.spacing.md,
-  },
-  loader: {
-    marginTop: tokens.spacing["2xl"],
-  },
-  footerLoader: {
-    marginVertical: tokens.spacing.lg,
-  },
-  emptyState: {
-    marginTop: tokens.spacing["2xl"],
-    alignItems: "center",
-    gap: tokens.spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: tokens.typography.fontSizes.lg,
-    fontWeight: tokens.typography.fontWeights.semibold,
-    color: tokens.colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary + "99",
-    textAlign: "center",
+    paddingHorizontal: tokens.space.md,
+    paddingVertical: tokens.space.lg,
   },
   errorText: {
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.error,
+    color: tokens.color.semantic.text.secondary,
     textAlign: "center",
-    marginBottom: tokens.spacing.lg,
   },
-  retryButton: {
-    paddingHorizontal: tokens.spacing.xl,
-    paddingVertical: tokens.spacing.md,
-    backgroundColor: tokens.colors.primary,
-    borderRadius: tokens.borderRadius.md,
-  },
-  retryText: {
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
-    color: tokens.colors.surface,
+  bottomSpacer: {
+    height: tokens.space.xl,
   },
 });
