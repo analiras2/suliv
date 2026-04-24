@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { setSessionCookies, clearSessionCookies } from "@/lib/session";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 export async function loginAction(
   email: string,

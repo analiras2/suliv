@@ -85,7 +85,7 @@ export class UnauthorizedError extends Error {
 // ---------------------------------------------------------------------------
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
 
 function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
   const url = new URL(path, BASE_URL);

@@ -61,7 +61,7 @@ export async function getServerSession(): Promise<{
   // Try to refresh the token pair
   try {
     const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+      process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
     const res = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: "POST",

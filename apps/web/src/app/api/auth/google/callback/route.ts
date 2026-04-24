@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { setSessionCookies } from "@/lib/session";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { searchParams } = req.nextUrl;

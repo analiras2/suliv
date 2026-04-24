@@ -50,7 +50,7 @@ function errorResponse(body: unknown, status: number): Response {
 beforeEach(() => {
   storedTokens = null;
   mockFetch.mockReset();
-  configureAuthApi("http://localhost:3000");
+  configureAuthApi("http://localhost:3001");
 });
 
 // ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ describe("register", () => {
     expect(result.is_new_user).toBe(true);
     expect(storedTokens).toEqual({ accessToken: "acc", refreshToken: "ref" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://localhost:3000/api/auth/register",
+      "http://localhost:3001/api/auth/register",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -249,7 +249,7 @@ describe("updateProfile", () => {
 
     expect(result.profile).toEqual({ allergens: ["gluten"] });
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("http://localhost:3000/api/profile");
+    expect(url).toBe("http://localhost:3001/api/profile");
     expect(init.method).toBe("PATCH");
   });
 });
