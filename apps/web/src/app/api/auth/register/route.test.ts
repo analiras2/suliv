@@ -48,7 +48,7 @@ describe("POST /api/auth/register", () => {
     mockSignRefreshToken.mockResolvedValue("refresh-token-xyz")
     mockPrisma.refreshToken.create.mockResolvedValue({})
 
-    const req = makeRequest({ email: "test@example.com", password: "password1", name: "Test User" })
+    const req = makeRequest({ email: "test@example.com", password: "password1!", name: "Test User" })
     const res = await POST(req as any)
     const json = await res.json()
 
@@ -60,7 +60,7 @@ describe("POST /api/auth/register", () => {
       is_new_user: true,
     })
 
-    expect(mockHashPassword).toHaveBeenCalledWith("password1")
+    expect(mockHashPassword).toHaveBeenCalledWith("password1!")
     expect(mockPrisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -92,7 +92,7 @@ describe("POST /api/auth/register", () => {
   it("409 — returns email_taken when email already exists", async () => {
     mockPrisma.user.findUnique.mockResolvedValue({ id: "existing-user" })
 
-    const req = makeRequest({ email: "taken@example.com", password: "password1" })
+    const req = makeRequest({ email: "taken@example.com", password: "Passw0rd!@#" })
     const res = await POST(req as any)
     const json = await res.json()
 
@@ -103,7 +103,7 @@ describe("POST /api/auth/register", () => {
   })
 
   it("422 — returns validation_error for invalid email", async () => {
-    const req = makeRequest({ email: "not-an-email", password: "password1" })
+    const req = makeRequest({ email: "not-an-email", password: "Passw0rd!@#" })
     const res = await POST(req as any)
     const json = await res.json()
 
@@ -113,7 +113,7 @@ describe("POST /api/auth/register", () => {
     expect(json.details.fieldErrors.email).toBeDefined()
   })
 
-  it("422 — returns validation_error for password shorter than 8 characters", async () => {
+  it("422 — returns validation_error for password shorter than 6 characters", async () => {
     const req = makeRequest({ email: "test@example.com", password: "abc1" })
     const res = await POST(req as any)
     const json = await res.json()
@@ -124,7 +124,7 @@ describe("POST /api/auth/register", () => {
   })
 
   it("422 — returns validation_error for password without a number", async () => {
-    const req = makeRequest({ email: "test@example.com", password: "passwordnodigit" })
+    const req = makeRequest({ email: "test@example.com", password: "PasswordNoDigit!" })
     const res = await POST(req as any)
     const json = await res.json()
 

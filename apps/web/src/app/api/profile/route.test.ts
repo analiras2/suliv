@@ -12,7 +12,7 @@ const { mockRequireAuth, MockAuthError } = vi.hoisted(() => {
   }
   return { mockRequireAuth: vi.fn(), MockAuthError };
 });
-vi.mock("../../lib/auth-middleware", () => ({
+vi.mock("../../../lib/auth-middleware", () => ({
   requireAuth: mockRequireAuth,
   AuthError: MockAuthError,
 }));

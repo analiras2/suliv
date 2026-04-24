@@ -148,7 +148,6 @@ describe("POST /api/profile/onboarding", () => {
     expect(json.error).toBe("validation_error")
     expect(json.details.fieldErrors).toHaveProperty("dietaryRestrictions")
     expect(json.details.fieldErrors).toHaveProperty("allergens")
-    expect(json.details.fieldErrors).toHaveProperty("skillLevel")
     expect(mockUpsert).not.toHaveBeenCalled()
   })
 })

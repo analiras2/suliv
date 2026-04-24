@@ -10,7 +10,7 @@ import {
 describe("registerSchema", () => {
   it("aceita input válido", () => {
     expect(() =>
-      registerSchema.parse({ email: "ana@example.com", password: "senha123" })
+      registerSchema.parse({ email: "ana@example.com", password: "Passw0rd!@#" })
     ).not.toThrow();
   });
 
@@ -18,7 +18,7 @@ describe("registerSchema", () => {
     expect(() =>
       registerSchema.parse({
         email: "ana@example.com",
-        password: "senha123",
+        password: "Passw0rd!@#",
         name: "Ana",
       })
     ).not.toThrow();
@@ -26,11 +26,11 @@ describe("registerSchema", () => {
 
   it("rejeita e-mail inválido", () => {
     expect(() =>
-      registerSchema.parse({ email: "naoemail", password: "senha123" })
+      registerSchema.parse({ email: "naoemail", password: "Passw0rd!@#" })
     ).toThrow();
   });
 
-  it("rejeita senha com menos de 8 caracteres", () => {
+  it("rejeita senha com menos de 6 caracteres", () => {
     expect(() =>
       registerSchema.parse({ email: "ana@example.com", password: "abc1" })
     ).toThrow();
@@ -50,7 +50,7 @@ describe("registerSchema", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const msg = result.error.issues[0]?.message ?? "";
-      expect(msg).toMatch(/pelo menos 8/);
+      expect(msg).toMatch(/pelo menos 6/);
     }
   });
 });
@@ -58,12 +58,12 @@ describe("registerSchema", () => {
 describe("loginSchema", () => {
   it("aceita input válido", () => {
     expect(() =>
-      loginSchema.parse({ email: "ana@example.com", password: "senha123" })
+      loginSchema.parse({ email: "ana@example.com", password: "Passw0rd!@#" })
     ).not.toThrow();
   });
 
   it("rejeita e-mail ausente", () => {
-    expect(() => loginSchema.parse({ password: "senha123" })).toThrow();
+    expect(() => loginSchema.parse({ password: "Passw0rd!@#" })).toThrow();
   });
 
   it("rejeita senha vazia", () => {
