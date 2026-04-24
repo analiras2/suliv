@@ -26,7 +26,7 @@ const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
   { value: "ADVANCED", label: "Avançado" },
 ];
 
-const CATEGORY_OPTIONS = [
+export const CATEGORY_OPTIONS = [
   { value: "cafe", label: "Café" },
   { value: "almoco", label: "Almoço" },
   { value: "jantar", label: "Jantar" },

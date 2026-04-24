@@ -1,23 +1,30 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getRecipes } from "../../lib/recipesApi";
 import type { RecipeCard } from "../../lib/recipesApi";
 import type { PaginatedResponse } from "../../lib/pagination";
 import type { RecipeQueryParams } from "../../lib/recipesApi";
-import { FilterPanel, type FilterState, EMPTY_FILTERS } from "./FilterPanel";
+import { FilterPanel, type FilterState, EMPTY_FILTERS, CATEGORY_OPTIONS } from "./FilterPanel";
+import { TopNav, type FeedTab } from "./TopNav";
+
+// ─── Palette ──────────────────────────────────────────────────────────────────
+const O = {
+  sand25: "#FDFBF6", sand100: "#F3ECDD", sand200: "#E9DFC8",
+  moss100: "#E1EBD6", moss500: "#4C7438", moss600: "#3B5B2C", moss700: "#2D4522",
+  ink100: "#EAE5D9", ink200: "#D4CCBB", ink300: "#B0A697",
+  ink500: "#6F675C", ink700: "#3A362F", ink900: "#15130F",
+  white: "#FFFFFF",
+};
 
 interface FeedClientProps {
   initialRecipes: PaginatedResponse<RecipeCard>;
   initialParams: RecipeQueryParams;
 }
 
-// ---------------------------------------------------------------------------
-// URL ↔ FilterState helpers
-// ---------------------------------------------------------------------------
-
+// ─── URL helpers ──────────────────────────────────────────────────────────────
 function paramsToFilterState(params: RecipeQueryParams): FilterState {
   return {
     q: params.q ?? "",
@@ -53,44 +60,83 @@ function filterStateToQueryParams(f: FilterState, page = 1): RecipeQueryParams {
 
 const SCROLL_KEY = "feed-scroll-y";
 
-// ---------------------------------------------------------------------------
-// FeedClient
-// ---------------------------------------------------------------------------
+// ─── SectionHeader ────────────────────────────────────────────────────────────
+function SectionHeader({ kicker, title, action, onAction }: {
+  kicker: string; title: string; action?: string; onAction?: () => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 20px 10px" }}>
+      <div>
+        <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: O.moss600, marginBottom: 2 }}>
+          {kicker}
+        </div>
+        <div style={{ fontFamily: 'var(--font-display, "Fraunces", Georgia, serif)', fontSize: 24, lineHeight: 1.1, color: O.ink900, letterSpacing: "-0.016em", fontWeight: 500 }}>
+          {title}
+        </div>
+      </div>
+      {action && onAction && (
+        <button
+          onClick={onAction}
+          style={{ background: "none", border: "none", fontSize: 13, color: O.moss700, fontWeight: 600, cursor: "pointer", padding: "4px 0", fontFamily: "inherit" }}
+        >
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
 
+// ─── CategoriesRow ────────────────────────────────────────────────────────────
+function CategoriesRow({ active, onSelect }: { active: string; onSelect: (v: string) => void }) {
+  return (
+    <div style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+      <div style={{ display: "flex", gap: 8, padding: "0 20px 4px", width: "max-content" }}>
+        {CATEGORY_OPTIONS.map((cat) => {
+          const isActive = active === cat.value;
+          return (
+            <button
+              key={cat.value}
+              onClick={() => onSelect(isActive ? "" : cat.value)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 999,
+                background: isActive ? O.moss500 : O.sand100,
+                border: `1.5px solid ${isActive ? O.moss500 : O.ink200}`,
+                color: isActive ? O.sand25 : O.ink700,
+                fontSize: 13, fontWeight: isActive ? 600 : 500,
+                cursor: "pointer", fontFamily: "inherit",
+                whiteSpace: "nowrap",
+                transition: "all 150ms",
+              }}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── FeedClient ───────────────────────────────────────────────────────────────
 export function FeedClient({ initialRecipes, initialParams }: FeedClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
+  const [activeTab, setActiveTab] = useState<FeedTab>("feed");
   const [filters, setFilters] = useState<FilterState>(paramsToFilterState(initialParams));
   const [recipes, setRecipes] = useState<RecipeCard[]>(initialRecipes.data);
   const [hasMore, setHasMore] = useState(initialRecipes.hasMore);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // ---------------------------------------------------------------------------
-  // Detect desktop viewport
-  // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    setIsDesktop(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // Restore scroll position on mount
-  // ---------------------------------------------------------------------------
-
+  // Restore scroll position
   useEffect(() => {
     const saved = sessionStorage.getItem(SCROLL_KEY);
     if (saved) {
@@ -99,56 +145,38 @@ export function FeedClient({ initialRecipes, initialParams }: FeedClientProps) {
     }
   }, []);
 
-  // Save scroll position on unload
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    const handler = () => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // "/" shortcut — focus search input
-  // ---------------------------------------------------------------------------
-
+  // "/" shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName;
       if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        setActiveTab("search");
+        setTimeout(() => searchInputRef.current?.focus(), 50);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // IntersectionObserver for infinite scroll
-  // ---------------------------------------------------------------------------
-
+  // IntersectionObserver
   useEffect(() => {
     if (!sentinelRef.current) return;
-
     observerRef.current?.disconnect();
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasMore && !isFetchingMore) {
-          fetchMore();
-        }
-      },
+      (entries) => { if (entries[0]?.isIntersecting && hasMore && !isFetchingMore) fetchMore(); },
       { threshold: 0.1 },
     );
     observerRef.current.observe(sentinelRef.current);
-
     return () => observerRef.current?.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, isFetchingMore, filters, currentPage]);
-
-  // ---------------------------------------------------------------------------
-  // Fetch more
-  // ---------------------------------------------------------------------------
 
   const fetchMore = useCallback(async () => {
     if (isFetchingMore || !hasMore) return;
@@ -159,399 +187,193 @@ export function FeedClient({ initialRecipes, initialParams }: FeedClientProps) {
       setRecipes((prev) => [...prev, ...result.data]);
       setHasMore(result.hasMore);
       setCurrentPage(nextPage);
-    } catch {
-      // silently fail — user can scroll back up
-    } finally {
-      setIsFetchingMore(false);
-    }
+    } catch { /* ignore */ }
+    finally { setIsFetchingMore(false); }
   }, [isFetchingMore, hasMore, currentPage, filters]);
 
-  // ---------------------------------------------------------------------------
-  // Filter change → debounced URL push + reset list
-  // ---------------------------------------------------------------------------
-
-  const applyFilters = useCallback(
-    (next: FilterState) => {
-      setFilters(next);
-      setCurrentPage(1);
-      setHasMore(true);
-
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        const qs = filterStateToQueryString(next);
-        router.push(`${pathname}${qs}`, { scroll: false });
-        // Re-fetch page 1
-        getRecipes(filterStateToQueryParams(next, 1))
-          .then((result) => {
-            setRecipes(result.data);
-            setHasMore(result.hasMore);
-          })
-          .catch(() => {});
-      }, 300);
-    },
-    [router, pathname],
-  );
+  const applyFilters = useCallback((next: FilterState) => {
+    setFilters(next);
+    setCurrentPage(1);
+    setHasMore(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const qs = filterStateToQueryString(next);
+      router.push(`${pathname}${qs}`, { scroll: false });
+      getRecipes(filterStateToQueryParams(next, 1))
+        .then((result) => { setRecipes(result.data); setHasMore(result.hasMore); })
+        .catch(() => {});
+    }, 300);
+  }, [router, pathname]);
 
   const handleFilterChange = useCallback(
-    (key: keyof FilterState, value: string) => {
-      applyFilters({ ...filters, [key]: value });
-    },
+    (key: keyof FilterState, value: string) => applyFilters({ ...filters, [key]: value }),
     [filters, applyFilters],
   );
 
-  const handleClearFilters = useCallback(() => {
-    applyFilters(EMPTY_FILTERS);
-  }, [applyFilters]);
+  const handleClearFilters = useCallback(() => applyFilters(EMPTY_FILTERS), [applyFilters]);
+  const handleRecipeClick = useCallback(() => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)), []);
 
-  // ---------------------------------------------------------------------------
-  // Save scroll before navigating to recipe
-  // ---------------------------------------------------------------------------
+  const activeFilterCount = [filters.category, filters.difficulty, filters.maxTime, filters.mainIngredient].filter(Boolean).length;
 
-  const handleRecipeClick = useCallback(() => {
-    sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-  }, []);
+  // ─── Recipe grid (shared) ─────────────────────────────────────────────────
+  const recipeGrid = (
+    <>
+      {recipes.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "48px 20px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600, color: O.ink700 }}>Nenhuma receita encontrada.</p>
+          <p style={{ margin: 0, fontSize: 14, color: O.ink300 }}>Tente ajustar os filtros ou a busca.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16, padding: "0 20px" }}>
+          {recipes.map((recipe) => (
+            <Link key={recipe.id} href={`/recipes/${recipe.slug}`} onClick={handleRecipeClick} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+              <RecipeCardItem recipe={recipe} />
+            </Link>
+          ))}
+        </div>
+      )}
+      <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
+      {isFetchingMore && (
+        <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+          <div style={{ width: 24, height: 24, border: `3px solid ${O.ink200}`, borderTop: `3px solid ${O.moss500}`, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        </div>
+      )}
+      {!hasMore && recipes.length > 0 && (
+        <p style={{ textAlign: "center", padding: "24px 0", fontSize: 13, color: O.ink300, margin: 0 }}>Você chegou ao fim das receitas.</p>
+      )}
+    </>
+  );
 
-  // ---------------------------------------------------------------------------
-  // Derived
-  // ---------------------------------------------------------------------------
+  // ─── Feed tab ─────────────────────────────────────────────────────────────
+  const feedContent = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28, paddingTop: 24, paddingBottom: 32 }}>
+      <div>
+        <SectionHeader kicker="Explorar" title="Categorias" />
+        <CategoriesRow active={filters.category} onSelect={(v) => handleFilterChange("category", v)} />
+      </div>
+      <div>
+        <SectionHeader kicker="Comunidade" title="Top da semana" action={activeFilterCount > 0 ? "Limpar filtros" : undefined} onAction={handleClearFilters} />
+        {recipeGrid}
+      </div>
+    </div>
+  );
 
-  const activeFilterCount = [
-    filters.category,
-    filters.difficulty,
-    filters.maxTime,
-    filters.mainIngredient,
-  ].filter(Boolean).length;
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
-  return (
-    <div style={styles.root}>
+  // ─── Search tab ───────────────────────────────────────────────────────────
+  const searchContent = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0, paddingTop: 16 }}>
       {/* Search bar */}
-      <div style={styles.searchBar}>
-        <div style={styles.searchInputWrapper}>
+      <div style={{ padding: "0 20px 16px", display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ flex: 1 }}>
           <input
             ref={searchInputRef}
             type="search"
             value={filters.q}
             onChange={(e) => handleFilterChange("q", e.target.value)}
             placeholder='Buscar receitas… (pressione "/" para focar)'
-            style={styles.searchInput}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              padding: "10px 16px",
+              border: `1.5px solid ${O.ink200}`,
+              borderRadius: 14, fontSize: 15,
+              color: O.ink900, backgroundColor: O.white,
+              outline: "none", fontFamily: "inherit",
+            }}
             aria-label="Buscar receitas"
           />
         </div>
-        {/* Mobile filter toggle */}
-        {!isDesktop && (
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            style={{
-              ...styles.filterToggle,
-              ...(activeFilterCount > 0 ? styles.filterToggleActive : {}),
-            }}
-            aria-expanded={filterOpen}
-            aria-label="Abrir filtros"
-          >
-            {activeFilterCount > 0 ? `Filtros (${activeFilterCount})` : "Filtros"}
-          </button>
-        )}
+        <button
+          onClick={() => setFilterOpen((v) => !v)}
+          style={{
+            padding: "10px 16px",
+            border: `1.5px solid ${activeFilterCount > 0 ? O.moss500 : O.ink200}`,
+            borderRadius: 14,
+            background: activeFilterCount > 0 ? O.moss100 : O.white,
+            fontSize: 14, color: activeFilterCount > 0 ? O.moss700 : O.ink500,
+            cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit", fontWeight: 500,
+          }}
+        >
+          {activeFilterCount > 0 ? `Filtros (${activeFilterCount})` : "Filtros"}
+        </button>
       </div>
 
-      <div style={styles.layout}>
-        {/* Sidebar (desktop always visible / mobile drawer) */}
-        {(isDesktop || filterOpen) && (
-          <div
-            style={
-              isDesktop
-                ? styles.sidebar
-                : { ...styles.mobileDrawer }
-            }
-          >
-            {!isDesktop && (
-              <button onClick={() => setFilterOpen(false)} style={styles.drawerClose}>
-                ✕ Fechar
-              </button>
-            )}
-            <FilterPanel
-              filters={filters}
-              onChange={handleFilterChange}
-              onClear={handleClearFilters}
-            />
+      <div style={{ display: "flex", gap: 24, padding: "0 20px", alignItems: "flex-start" }}>
+        {filterOpen && (
+          <div style={{ width: 220, flexShrink: 0, position: "sticky", top: 76 }}>
+            <FilterPanel filters={filters} onChange={handleFilterChange} onClear={handleClearFilters} />
           </div>
         )}
-
-        {/* Mobile drawer overlay */}
-        {!isDesktop && filterOpen && (
-          <div
-            style={styles.overlay}
-            onClick={() => setFilterOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Recipe grid */}
-        <main style={styles.main}>
-          {recipes.length === 0 ? (
-            <div style={styles.empty}>
-              <p style={styles.emptyTitle}>Nenhuma receita encontrada.</p>
-              <p style={styles.emptySubtitle}>
-                Tente ajustar os filtros ou a busca.
-              </p>
-            </div>
-          ) : (
-            <div style={styles.grid}>
-              {recipes.map((recipe) => (
-                <Link
-                  key={recipe.id}
-                  href={`/recipes/${recipe.slug}`}
-                  onClick={handleRecipeClick}
-                  style={styles.cardLink}
-                >
-                  <RecipeCardItem recipe={recipe} />
-                </Link>
-              ))}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+            {recipes.map((recipe) => (
+              <Link key={recipe.id} href={`/recipes/${recipe.slug}`} onClick={handleRecipeClick} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                <RecipeCardItem recipe={recipe} />
+              </Link>
+            ))}
+          </div>
+          {recipes.length === 0 && (
+            <div style={{ textAlign: "center", padding: "48px 0" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600, color: O.ink700 }}>Nenhuma receita encontrada.</p>
+              <p style={{ margin: 0, fontSize: 14, color: O.ink300 }}>Tente ajustar os filtros ou a busca.</p>
             </div>
           )}
-
-          {/* Infinite scroll sentinel */}
           <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
-
           {isFetchingMore && (
-            <div style={styles.loadingMore}>
-              <div style={styles.spinner} />
+            <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+              <div style={{ width: 24, height: 24, border: `3px solid ${O.ink200}`, borderTop: `3px solid ${O.moss500}`, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
 
-          {!hasMore && recipes.length > 0 && (
-            <p style={styles.endMessage}>Você chegou ao fim das receitas.</p>
-          )}
-        </main>
+  // ─── Placeholder tab ──────────────────────────────────────────────────────
+  const placeholderContent = (label: string) => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", gap: 12 }}>
+      <p style={{ margin: 0, fontSize: 18, fontWeight: 600, color: O.ink700 }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 14, color: O.ink300 }}>Em breve.</p>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: O.sand100, fontFamily: 'var(--font-sans, "Inter Tight", system-ui)' }}>
+      <TopNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        {activeTab === "feed"      && feedContent}
+        {activeTab === "search"    && searchContent}
+        {activeTab === "favorites" && placeholderContent("Favoritos")}
+        {activeTab === "profile"   && placeholderContent("Perfil")}
       </div>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// RecipeCardItem
-// ---------------------------------------------------------------------------
-
+// ─── RecipeCardItem ───────────────────────────────────────────────────────────
 function RecipeCardItem({ recipe }: { recipe: RecipeCard }) {
   const totalMin = recipe.prepTimeMin + recipe.cookTimeMin;
   const DIFFICULTY_LABELS: Record<string, string> = {
-    BEGINNER: "Iniciante",
-    INTERMEDIATE: "Médio",
-    ADVANCED: "Avançado",
+    BEGINNER: "Iniciante", INTERMEDIATE: "Médio", ADVANCED: "Avançado",
   };
 
   return (
-    <article style={cardStyles.card}>
-      {recipe.imageUrl && (
+    <article style={{
+      backgroundColor: O.white, borderRadius: 16, overflow: "hidden",
+      border: `1px solid ${O.ink100}`,
+      boxShadow: "0 1px 3px rgba(58,54,47,0.06)",
+      transition: "box-shadow 0.15s",
+    }}>
+      {recipe.imageUrl
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          style={cardStyles.image}
-          loading="lazy"
-        />
-      )}
-      {!recipe.imageUrl && <div style={cardStyles.imagePlaceholder} />}
-      <div style={cardStyles.body}>
-        <h2 style={cardStyles.title}>{recipe.title}</h2>
-        <p style={cardStyles.meta}>
-          {totalMin} min · {DIFFICULTY_LABELS[recipe.difficulty] ?? recipe.difficulty} ·{" "}
-          {recipe.category}
+        ? <img src={recipe.imageUrl} alt={recipe.title} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} loading="lazy" />
+        : <div style={{ width: "100%", height: 180, backgroundColor: O.sand200 }} />
+      }
+      <div style={{ padding: "12px 16px 16px", display: "flex", flexDirection: "column", gap: 4 }}>
+        <h2 style={{ margin: 0, fontSize: 15.5, fontWeight: 600, color: O.ink900, lineHeight: 1.3 }}>{recipe.title}</h2>
+        <p style={{ margin: 0, fontSize: 12.5, color: O.ink500 }}>
+          {totalMin} min · {DIFFICULTY_LABELS[recipe.difficulty] ?? recipe.difficulty} · {recipe.category}
         </p>
-        {recipe.isFavorite && (
-          <span style={cardStyles.favBadge}>★ Salvo</span>
-        )}
+        {recipe.isFavorite && <span style={{ fontSize: 12, color: O.moss700, fontWeight: 500 }}>★ Salvo</span>}
       </div>
     </article>
   );
 }
-
-const cardStyles = {
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden" as const,
-    border: "1px solid #f0f0f0",
-    transition: "box-shadow 0.15s",
-  },
-  image: {
-    width: "100%",
-    height: 180,
-    objectFit: "cover" as const,
-    display: "block" as const,
-  },
-  imagePlaceholder: {
-    width: "100%",
-    height: 180,
-    backgroundColor: "#f5f5f5",
-  },
-  body: {
-    padding: "12px 16px 16px",
-    display: "flex" as const,
-    flexDirection: "column" as const,
-    gap: 4,
-  },
-  title: {
-    margin: 0,
-    fontSize: 16,
-    fontWeight: 600 as const,
-    color: "#1a1a1a",
-    lineHeight: "1.3",
-  },
-  meta: {
-    margin: 0,
-    fontSize: 13,
-    color: "#777",
-  },
-  favBadge: {
-    fontSize: 12,
-    color: "#80BC60",
-    fontWeight: 500 as const,
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = {
-  root: {
-    minHeight: "100vh",
-    backgroundColor: "#fafafa",
-  },
-  searchBar: {
-    display: "flex" as const,
-    alignItems: "center" as const,
-    gap: 12,
-    padding: "12px 16px",
-    backgroundColor: "#fff",
-    borderBottom: "1px solid #f0f0f0",
-    position: "sticky" as const,
-    top: 0,
-    zIndex: 10,
-  },
-  searchInputWrapper: {
-    flex: 1,
-  },
-  searchInput: {
-    width: "100%",
-    boxSizing: "border-box" as const,
-    padding: "8px 14px",
-    border: "1px solid #e0e0e0",
-    borderRadius: 8,
-    fontSize: 14,
-    color: "#1a1a1a",
-    backgroundColor: "#fafafa",
-    outline: "none",
-  },
-  filterToggle: {
-    padding: "8px 16px",
-    border: "1px solid #e0e0e0",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    fontSize: 14,
-    color: "#444",
-    cursor: "pointer" as const,
-    whiteSpace: "nowrap" as const,
-  },
-  filterToggleActive: {
-    borderColor: "#80BC60",
-    color: "#4a8030",
-    backgroundColor: "#80BC6015",
-  },
-  layout: {
-    display: "flex" as const,
-    maxWidth: 1100,
-    margin: "0 auto",
-    padding: "24px 16px",
-    gap: 24,
-    alignItems: "flex-start" as const,
-    position: "relative" as const,
-  },
-  sidebar: {
-    width: 240,
-    flexShrink: 0,
-    position: "sticky" as const,
-    top: 72,
-  },
-  mobileDrawer: {
-    position: "fixed" as const,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderRadius: "16px 16px 0 0",
-    padding: "16px",
-    zIndex: 20,
-    maxHeight: "80vh",
-    overflowY: "auto" as const,
-    boxShadow: "0 -4px 24px rgba(0,0,0,0.12)",
-  },
-  overlay: {
-    position: "fixed" as const,
-    inset: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    zIndex: 19,
-  },
-  drawerClose: {
-    background: "none",
-    border: "none",
-    cursor: "pointer" as const,
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 12,
-    padding: 0,
-  },
-  main: {
-    flex: 1,
-    minWidth: 0,
-  },
-  grid: {
-    display: "grid" as const,
-    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: 16,
-  },
-  cardLink: {
-    textDecoration: "none",
-    color: "inherit",
-    display: "block" as const,
-  },
-  empty: {
-    textAlign: "center" as const,
-    padding: "48px 0",
-  },
-  emptyTitle: {
-    margin: "0 0 8px",
-    fontSize: 18,
-    fontWeight: 600 as const,
-    color: "#333",
-  },
-  emptySubtitle: {
-    margin: 0,
-    fontSize: 14,
-    color: "#888",
-  },
-  loadingMore: {
-    display: "flex" as const,
-    justifyContent: "center" as const,
-    padding: "24px 0",
-  },
-  spinner: {
-    width: 24,
-    height: 24,
-    border: "3px solid #e0e0e0",
-    borderTop: "3px solid #80BC60",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  },
-  endMessage: {
-    textAlign: "center" as const,
-    padding: "24px 0",
-    fontSize: 13,
-    color: "#aaa",
-    margin: 0,
-  },
-};
