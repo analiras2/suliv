@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuthStore } from "../features/auth/store/authStore";
 import { LoginScreen } from "../features/auth/screens/LoginScreen";
+import { EmailLoginScreen } from "../features/auth/screens/EmailLoginScreen";
 import { RegisterScreen } from "../features/auth/screens/RegisterScreen";
 import { OnboardingScreen } from "../features/auth/screens/OnboardingScreen";
 import { SplashScreen } from "./SplashScreen";
@@ -20,6 +21,7 @@ function AuthStackNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="EmailLogin" component={EmailLoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
     </AuthStack.Navigator>
   );
@@ -52,17 +54,28 @@ type RootStack = {
 const Root = createNativeStackNavigator<RootStack>();
 
 export function AuthNavigator() {
-  const { isLoading, isAuthenticated, user, initialize } = useAuthStore();
+  const { isAuthenticated, user, initialize } = useAuthStore();
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   // Called exactly once on mount — restores session or clears state
   useEffect(() => {
-    initialize();
+    let isMounted = true;
+
+    initialize().finally(() => {
+      if (isMounted) {
+        setIsBootstrapping(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <NavigationContainer>
       <Root.Navigator screenOptions={{ headerShown: false, animation: "none" }}>
-        {isLoading ? (
+        {isBootstrapping ? (
           // While initialize() is running — show splash, no flash
           <Root.Screen name="Splash" component={SplashScreen} />
         ) : !isAuthenticated ? (

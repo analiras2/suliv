@@ -1,391 +1,331 @@
 import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  KeyboardAvoidingView,
-  ScrollView,
+  View, Text, ScrollView,
+  Animated, Dimensions, Easing,
 } from "react-native";
-import { useState, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { tokens } from "@suliv/design-system";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../store/authStore";
 import { Button } from "../../../components/atoms/Button";
-import { Chip } from "../../../components/atoms/Chip";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { AuthStackParamList } from "../../../navigation/types";
+import { type GlyphSpec } from "../../../components/atoms/GlyphIcon";
+import { OptionCard } from "../../../components/molecules/OptionCard";
+import { NoneCard } from "../../../components/molecules/NoneCard";
+import { StepHeader } from "../../../components/molecules/StepHeader";
+import { StepProgressBar } from "../../../components/molecules/StepProgressBar";
 
-type Props = NativeStackScreenProps<AuthStackParamList, "Onboarding">;
+// ─── Palette ──────────────────────────────────────────────────────────────────
+const P = tokens.color.primitive;
+const O = {
+  sand50:  P.sand[50],  sand100: P.sand[100], sand25: P.sand[25],
+  moss100: P.moss[100], moss200: P.moss[200], moss300: P.moss[300],
+  moss500: P.moss[500], moss600: P.moss[600], moss700: P.moss[700], moss800: P.moss[800],
+  clay100: P.clay[100], clay500: P.clay[500], clay700: P.clay[700],
+  ink100:  P.ink[100],  ink200:  P.ink[200],  ink300:  P.ink[300],
+  ink500:  P.ink[500],  ink700:  P.ink[700],  ink900:  P.ink[900],
+  white:   P.white,
+};
 
-type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
-const DRAFT_KEY = "onboarding_draft";
-
-const DIETARY_OPTIONS = [
-  { value: "vegan", label: "Vegano" },
-  { value: "vegetarian", label: "Vegetariano" },
-  { value: "low_carb", label: "Low carb" },
-  { value: "sem_acucar", label: "Sem açúcar" },
+const BASE_DIET = [
+  { value: "vegan",       label: "Vegano",       sub: "Sem ingredientes de origem animal", glyph: { lib: "ion", name: "leaf" }              as GlyphSpec },
+  { value: "vegetarian",  label: "Vegetariano",  sub: "Aceito leite e ovos",              glyph: { lib: "mci", name: "flower"  }             as GlyphSpec },
+  { value: "flexitarian", label: "Flexitariano", sub: "Reduzindo carne aos poucos",       glyph: { lib: "mci", name: "silverware-fork-knife" } as GlyphSpec },
 ];
 
-// Values match Ingredient.allergenGroup
 const ALLERGEN_OPTIONS = [
-  { value: "glúten", label: "Glúten" },
-  { value: "soja", label: "Soja" },
-  { value: "amendoim", label: "Amendoim" },
-  { value: "oleaginosas", label: "Oleaginosas" },
-  { value: "leite", label: "Leite" },
-  { value: "ovo", label: "Ovo" },
-  { value: "frutos-do-mar", label: "Frutos do mar" },
+  { value: "gluten",    label: "Glúten",            sub: "Trigo, centeio, cevada",     glyph: { lib: "mci", name: "barley"   } as GlyphSpec, hideOnVegan: false },
+  { value: "soy",       label: "Soja",              sub: "Grãos e derivados",          glyph: { lib: "mci", name: "seed"     } as GlyphSpec, hideOnVegan: false },
+  { value: "peanuts",   label: "Amendoim",          sub: "",                           glyph: { lib: "mci", name: "peanut"   } as GlyphSpec, hideOnVegan: false },
+  { value: "tree_nuts", label: "Oleaginosas",       sub: "Castanhas, nozes, amêndoas", glyph: { lib: "mci", name: "nut"      } as GlyphSpec, hideOnVegan: false },
+  { value: "dairy",     label: "Leite e derivados", sub: "",                           glyph: { lib: "mci", name: "cow"      } as GlyphSpec, hideOnVegan: true  },
+  { value: "eggs",      label: "Ovos",              sub: "",                           glyph: { lib: "mci", name: "egg"      } as GlyphSpec, hideOnVegan: true  },
 ];
 
-const SKILL_LEVELS: { label: string; value: SkillLevel }[] = [
-  { label: "Iniciante", value: "BEGINNER" },
-  { label: "Intermediário", value: "INTERMEDIATE" },
-  { label: "Avançado", value: "ADVANCED" },
+const TIME_OPTIONS = [
+  { value: "fast",   label: "Até 15 min", sub: "Express",      glyph: { lib: "mci", name: "clock-fast"    } as GlyphSpec, avgMin: 15 },
+  { value: "medium", label: "Até 40 min", sub: "Dia a dia",    glyph: { lib: "ion", name: "time-outline"  } as GlyphSpec, avgMin: 40 },
+  { value: "long",   label: "Tenho tempo",sub: "Slow cooking", glyph: { lib: "mci", name: "timer-sand"    } as GlyphSpec, avgMin: 90 },
 ];
 
-const COOKING_FREQUENCY: { label: string; value: number }[] = [
-  { label: "1–2×", value: 1 },
-  { label: "3–4×", value: 3 },
-  { label: "5–6×", value: 5 },
-  { label: "Todo dia", value: 7 },
+const SKILL_OPTIONS = [
+  { value: "beginner",     label: "Iniciante",     sub: "Começando a cozinhar",  glyph: { lib: "mci", name: "sprout"     } as GlyphSpec, level: "BEGINNER"     as const },
+  { value: "intermediate", label: "Intermediário", sub: "Mando bem no básico",   glyph: { lib: "ion", name: "leaf"       } as GlyphSpec, level: "INTERMEDIATE"  as const },
+  { value: "experienced",  label: "Experiente",    sub: "Topo qualquer receita", glyph: { lib: "ion", name: "flame"      } as GlyphSpec, level: "ADVANCED"      as const },
 ];
 
-interface DraftData {
-  step: number;
-  dietaryRestrictions: string[];
-  allergens: string[];
-  skillLevel: SkillLevel | null;
-  cookingFrequency: number | null;
+const DRAFT_KEY = "onboarding_draft_v2";
+const W = Dimensions.get("window").width;
+const PAGE_COUNT = 5;
+
+// ─── Bottom CTA ───────────────────────────────────────────────────────────────
+function BottomCTA({ label, onPress, disabled, isLoading }: {
+  label: string; onPress: () => void; disabled?: boolean; isLoading?: boolean;
+}) {
+  return (
+    <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: O.sand100 }}>
+      <Button label={label} onPress={onPress} disabled={disabled} loading={isLoading} fullWidth />
+    </View>
+  );
 }
 
-// ---------------------------------------------------------------------------
-// Progress dots
-// ---------------------------------------------------------------------------
-
-function ProgressDots({ currentStep, total }: { currentStep: number; total: number }) {
+// ─── Welcome ──────────────────────────────────────────────────────────────────
+function WelcomeContent({ onStart, topPad, botPad }: { onStart: () => void; topPad: number; botPad: number }) {
   return (
-    <View style={styles.dotsContainer} accessibilityLabel={`Passo ${currentStep + 1} de ${total}`}>
-      {Array.from({ length: total }, (_, i) => (
-        <View
-          key={i}
-          style={[styles.dot, i === currentStep ? styles.dotFilled : styles.dotOutline]}
-        />
+    <View style={{ flex: 1, backgroundColor: O.sand100, overflow: "hidden" }}>
+      {/* Soft decorative circles */}
+      <View style={{ position: "absolute", top: -60, right: -40, width: 220, height: 220, borderRadius: 110, backgroundColor: O.moss200, opacity: 0.45 }} />
+      <View style={{ position: "absolute", bottom: 100, left: -50, width: 180, height: 180, borderRadius: 90, backgroundColor: O.clay100, opacity: 0.5 }} />
+
+      <View style={{ flex: 1, paddingHorizontal: 28, paddingTop: topPad + 40, paddingBottom: botPad + 28, zIndex: 1 }}>
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Text style={{ fontSize: 11, fontWeight: "600", letterSpacing: 1.98, textTransform: "uppercase", color: O.moss600, marginBottom: 18, fontFamily: tokens.typography.family.semibold }}>
+            Bem-vindo à Suliv
+          </Text>
+          <Text style={{ fontSize: 40, lineHeight: 42, color: O.ink900, letterSpacing: -0.8, fontWeight: "400", fontFamily: tokens.typography.family.displayRegular }}>
+            Vamos conhecer
+          </Text>
+          <Text style={{ fontSize: 40, lineHeight: 46, color: O.moss700, letterSpacing: -0.8, fontWeight: "400", fontFamily: tokens.typography.family.editorialItalic }}>
+            você.
+          </Text>
+          <Text style={{ marginTop: 20, fontSize: 16.5, lineHeight: 25, color: O.ink700, fontFamily: tokens.typography.family.regular }}>
+            Três perguntas rápidas para a Suliv montar um cardápio que combina com o jeito que você come.
+          </Text>
+          <View style={{ marginTop: 28, gap: 10 }}>
+            {[
+              { t: "Preferência alimentar",          n: "1" },
+              { t: "Alergias e restrições",           n: "2" },
+              { t: "Tempo e experiência na cozinha",  n: "3" },
+            ].map(row => (
+              <View key={row.n} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: O.white, borderWidth: 1, borderColor: O.moss200, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: O.moss700, fontFamily: tokens.typography.family.semibold }}>{row.n}</Text>
+                </View>
+                <Text style={{ fontSize: 15, color: O.ink700, fontFamily: tokens.typography.family.regular }}>{row.t}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        <BottomCTA label="Começar" onPress={onStart} />
+      </View>
+    </View>
+  );
+}
+
+// ─── Done ─────────────────────────────────────────────────────────────────────
+function DoneContent({ onFinish, isLoading, error, topPad, botPad }: {
+  onFinish: () => void; isLoading: boolean; error: string | null; topPad: number; botPad: number;
+}) {
+  return (
+    <View style={{ flex: 1, backgroundColor: O.sand100, overflow: "hidden" }}>
+      <View style={{ position: "absolute", top: -80, left: W / 2 - 120, width: 240, height: 240, borderRadius: 120, backgroundColor: O.moss100, opacity: 0.8 }} />
+      <View style={{ flex: 1, paddingHorizontal: 28, paddingTop: topPad, paddingBottom: botPad + 28, alignItems: "center", justifyContent: "flex-end", zIndex: 1 }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: O.moss500, alignItems: "center", justifyContent: "center", marginBottom: 24, ...tokens.elevation.lg }}>
+            <Ionicons name="checkmark" size={48} color={O.sand25} />
+          </View>
+          <Text style={{ fontSize: 32, lineHeight: 36, color: O.ink900, letterSpacing: -0.5, fontWeight: "500", fontFamily: tokens.typography.family.displayMedium, textAlign: "center", marginBottom: 12 }}>
+            Tudo pronto.
+          </Text>
+          <Text style={{ fontSize: 16, lineHeight: 23, color: O.ink700, fontFamily: tokens.typography.family.regular, textAlign: "center", maxWidth: 280 }}>
+            Sua Suliv está pronta para sugerir receitas feitas para você.
+          </Text>
+          {!!error && <Text style={{ marginTop: 12, fontSize: 13, color: tokens.color.semantic.feedback.error, textAlign: "center", fontFamily: tokens.typography.family.regular }}>{error}</Text>}
+        </View>
+        <BottomCTA label="Ver minhas receitas" onPress={onFinish} isLoading={isLoading} />
+      </View>
+    </View>
+  );
+}
+
+// ─── Step contents ────────────────────────────────────────────────────────────
+function Step0({ value, onChange }: { value: string | null; onChange: (v: string) => void }) {
+  return (
+    <View style={{ gap: 12, paddingHorizontal: 20 }}>
+      {BASE_DIET.map(opt => (
+        <OptionCard key={opt.value} label={opt.label} sub={opt.sub} glyph={opt.glyph} selected={value === opt.value} onPress={() => onChange(opt.value)} />
       ))}
     </View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// OnboardingScreen
-// ---------------------------------------------------------------------------
+function Step1({ baseDiet, values, onToggle, none, onNone }: {
+  baseDiet: string | null; values: string[]; onToggle: (v: string) => void; none: boolean; onNone: () => void;
+}) {
+  const filtered = ALLERGEN_OPTIONS.filter(o => !(baseDiet === "vegan" && o.hideOnVegan));
+  return (
+    <View style={{ gap: 10, paddingHorizontal: 20 }}>
+      {filtered.map(opt => (
+        <OptionCard key={opt.value} label={opt.label} sub={opt.sub} glyph={opt.glyph} tone="clay" multi selected={!none && values.includes(opt.value)} onPress={() => onToggle(opt.value)} />
+      ))}
+      <View style={{ height: 8 }} />
+      <NoneCard label="Nenhuma alergia ou restrição" selected={none} onPress={onNone} />
+    </View>
+  );
+}
 
-export function OnboardingScreen({ navigation: _navigation }: Props) {
+function Step2({ time, onTime, skill, onSkill }: {
+  time: string | null; onTime: (v: string) => void; skill: string | null; onSkill: (v: string) => void;
+}) {
+  const sectionLabel = { fontSize: 12, fontWeight: "600" as const, color: O.ink500, letterSpacing: 0.96, textTransform: "uppercase" as const, marginBottom: 10, fontFamily: tokens.typography.family.semibold };
+  return (
+    <View style={{ paddingHorizontal: 20 }}>
+      <Text style={sectionLabel}>Tempo disponível</Text>
+      <View style={{ gap: 10, marginBottom: 22 }}>
+        {TIME_OPTIONS.map(opt => (
+          <OptionCard key={opt.value} label={opt.label} sub={opt.sub} glyph={opt.glyph} selected={time === opt.value} onPress={() => onTime(opt.value)} />
+        ))}
+      </View>
+      <Text style={sectionLabel}>Experiência na cozinha</Text>
+      <View style={{ gap: 10 }}>
+        {SKILL_OPTIONS.map(opt => (
+          <OptionCard key={opt.value} label={opt.label} sub={opt.sub} glyph={opt.glyph} tone="clay" selected={skill === opt.value} onPress={() => onSkill(opt.value)} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
+export function OnboardingScreen() {
   const { saveOnboarding, isLoading } = useAuthStore();
+  const insets = useSafeAreaInsets();
+  const slideX = useRef(new Animated.Value(0)).current;
 
-  const [step, setStep] = useState(0);
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
-  const [allergens, setAllergens] = useState<string[]>([]);
-  const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
-  const [cookingFrequency, setCookingFrequency] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage]               = useState(0);
+  const [baseDiet, setBaseDiet]       = useState<string | null>(null);
+  const [allergens, setAllergens]     = useState<string[]>([]);
+  const [noAllergens, setNoAllergens] = useState(false);
+  const [timeAvail, setTimeAvail]     = useState<string | null>(null);
+  const [skill, setSkill]             = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Load draft on mount
   useEffect(() => {
-    AsyncStorage.getItem(DRAFT_KEY)
-      .then((raw) => {
-        if (!raw) return;
-        try {
-          const draft: DraftData = JSON.parse(raw);
-          setStep(draft.step ?? 0);
-          setDietaryRestrictions(draft.dietaryRestrictions ?? []);
-          setAllergens(draft.allergens ?? []);
-          setSkillLevel(draft.skillLevel ?? null);
-          setCookingFrequency(draft.cookingFrequency ?? null);
-        } catch {
-          // ignore corrupt draft
+    AsyncStorage.getItem(DRAFT_KEY).then(raw => {
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw);
+        if (d.baseDiet)           setBaseDiet(d.baseDiet);
+        if (d.allergens)          setAllergens(d.allergens);
+        if (d.noAllergens != null) setNoAllergens(d.noAllergens);
+        if (d.timeAvail)          setTimeAvail(d.timeAvail);
+        if (d.skill)              setSkill(d.skill);
+        if (d.page && d.page > 0 && d.page <= 4) {
+          slideX.setValue(-d.page * W);
+          setPage(d.page);
         }
-      })
-      .catch(() => undefined);
+      } catch { /* ignore */ }
+    }).catch(() => undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist draft on state change
+  // Persist draft
   useEffect(() => {
-    const draft: DraftData = { step, dietaryRestrictions, allergens, skillLevel, cookingFrequency };
-    AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft)).catch(() => undefined);
-  }, [step, dietaryRestrictions, allergens, skillLevel, cookingFrequency]);
+    AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({ page, baseDiet, allergens, noAllergens, timeAvail, skill }))
+      .catch(() => undefined);
+  }, [page, baseDiet, allergens, noAllergens, timeAvail, skill]);
 
-  function toggle<T>(setter: React.Dispatch<React.SetStateAction<T[]>>, value: T) {
-    setter((prev) => prev.includes(value) ? prev.filter((o) => o !== value) : [...prev, value]);
+  function go(next: number) {
+    Animated.timing(slideX, {
+      toValue: -next * W,
+      duration: 400,
+      easing: Easing.bezier(0.22, 0.61, 0.36, 1),
+      useNativeDriver: true,
+    }).start();
+    setPage(next);
   }
 
-  async function finish(opts?: { skipAll?: boolean }) {
-    setError(null);
+  const setDiet = (v: string) => {
+    setBaseDiet(v);
+    if (v === "vegan") setAllergens(prev => prev.filter(a => !ALLERGEN_OPTIONS.find(o => o.value === a && o.hideOnVegan)));
+  };
 
-    const data: Parameters<typeof saveOnboarding>[0] = {
-      dietaryRestrictions: opts?.skipAll ? [] : dietaryRestrictions,
-      allergens: opts?.skipAll ? [] : allergens,
-    };
+  const toggleAllergen = (v: string) => {
+    setNoAllergens(false);
+    setAllergens(prev => prev.includes(v) ? prev.filter(a => a !== v) : [...prev, v]);
+  };
 
-    if (!opts?.skipAll) {
-      if (skillLevel) data.skillLevel = skillLevel;
-      if (cookingFrequency != null) data.cookingFrequencyPerWeek = cookingFrequency;
-    }
+  const handleNone = () => setNoAllergens(n => { if (!n) setAllergens([]); return !n; });
 
+  const canProceed = useMemo(() => [
+    true,
+    !!baseDiet,
+    noAllergens || allergens.length > 0,
+    !!timeAvail && !!skill,
+    true,
+  ], [baseDiet, allergens, noAllergens, timeAvail, skill]);
+
+  async function handleFinish() {
+    setSubmitError(null);
+    const timeOpt  = TIME_OPTIONS.find(o => o.value === timeAvail);
+    const skillOpt = SKILL_OPTIONS.find(o => o.value === skill);
     try {
-      await saveOnboarding(data);
+      await saveOnboarding({
+        dietaryRestrictions: baseDiet ? [baseDiet] : [],
+        allergens: noAllergens ? [] : allergens,
+        ...(skillOpt && { skillLevel: skillOpt.level }),
+        ...(timeOpt  && { avgCookTimeMin: timeOpt.avgMin }),
+      });
       await AsyncStorage.removeItem(DRAFT_KEY);
-      // Navigation happens automatically via authStore (hasProfile → Feed)
+      // Navigator auto-transitions when hasProfile becomes true
     } catch {
-      setError("Não foi possível salvar. Tente novamente.");
+      setSubmitError("Não foi possível salvar. Tente novamente.");
     }
   }
 
   const TOTAL = 3;
+  const stepMeta = [
+    { kicker: "Passo 1 — Preferência base", title: "Qual sua preferência alimentar?", subtitle: "Isso define os ingredientes-base que a Suliv vai sugerir para você." },
+    { kicker: "Passo 2 — Alergias", title: "Tem alguma alergia ou restrição?", subtitle: "Selecione tudo que se aplica. Vamos evitar esses ingredientes nas receitas." },
+    { kicker: "Passo 3 — Rotina", title: "Como é seu dia na cozinha?", subtitle: "A Suliv usa isso pra calibrar o tempo e a complexidade das receitas." },
+  ];
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Top bar: dots + skip all */}
-        <View style={styles.topBar}>
-          <ProgressDots currentStep={step} total={TOTAL} />
-          <TouchableOpacity
-            onPress={() => finish({ skipAll: true })}
-            disabled={isLoading}
-            accessibilityLabel="Configurar depois"
-            accessibilityRole="button"
-          >
-            <Text style={styles.skipAllText}>Configurar depois</Text>
-          </TouchableOpacity>
+    <View style={{ flex: 1, overflow: "hidden", backgroundColor: O.sand100 }}>
+      <Animated.View style={{ flexDirection: "row", width: W * PAGE_COUNT, flex: 1, transform: [{ translateX: slideX }] }}>
+        {/* Page 0 — Welcome */}
+        <View style={{ width: W, flex: 1 }}>
+          <WelcomeContent onStart={() => go(1)} topPad={insets.top} botPad={insets.bottom} />
         </View>
 
-        {/* ── Step 0 — Restrições alimentares ── */}
-        {step === 0 && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Restrições alimentares</Text>
-            <Text style={styles.stepSubtitle}>Selecione as que se aplicam. Pode pular.</Text>
-            <View style={styles.optionsGrid}>
-              {DIETARY_OPTIONS.map((opt) => {
-                const sel = dietaryRestrictions.includes(opt.value);
-                return (
-                  <Chip
-                    key={opt.value}
-                    label={opt.label}
-                    variant="input"
-                    selected={sel}
-                    onPress={() => toggle(setDietaryRestrictions, opt.value)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: sel }}
-                  />
-                );
-              })}
-            </View>
-            <View style={styles.navRow}>
-              <Button
-                label="Pular"
-                variant="text"
-                size="md"
-                onPress={() => { setDietaryRestrictions([]); setStep(1); }}
+        {/* Pages 1–3 — Steps */}
+        {stepMeta.map((meta, i) => {
+          const p = i + 1;
+          return (
+            <View key={p} style={{ width: W, flex: 1 }}>
+              <View style={{ height: insets.top + 12 }} />
+              <StepProgressBar step={p - 1} total={TOTAL} onBack={() => go(p - 1)} />
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
+                <StepHeader kicker={meta.kicker} title={meta.title} subtitle={meta.subtitle} />
+                {p === 1 && <Step0 value={baseDiet} onChange={setDiet} />}
+                {p === 2 && <Step1 baseDiet={baseDiet} values={allergens} onToggle={toggleAllergen} none={noAllergens} onNone={handleNone} />}
+                {p === 3 && <Step2 time={timeAvail} onTime={setTimeAvail} skill={skill} onSkill={setSkill} />}
+                <View style={{ height: 12 }} />
+              </ScrollView>
+              <BottomCTA
+                label={p === 3 ? "Finalizar" : "Continuar"}
+                onPress={() => go(p + 1)}
+                disabled={!canProceed[p]}
               />
-              <Button label="Próximo" variant="primary" onPress={() => setStep(1)} />
+              <View style={{ height: insets.bottom }} />
             </View>
-          </View>
-        )}
+          );
+        })}
 
-        {/* ── Step 1 — Alergias ── */}
-        {step === 1 && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Alergias</Text>
-            <Text style={styles.stepSubtitle}>
-              Ingredientes com essas alergias serão destacados. Pode pular.
-            </Text>
-            <View style={styles.optionsGrid}>
-              {ALLERGEN_OPTIONS.map((opt) => {
-                const sel = allergens.includes(opt.value);
-                return (
-                  <Chip
-                    key={opt.value}
-                    label={opt.label}
-                    variant="input"
-                    selected={sel}
-                    onPress={() => toggle(setAllergens, opt.value)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: sel }}
-                  />
-                );
-              })}
-            </View>
-            <View style={styles.navRow}>
-              <Button label="Voltar" variant="text" size="md" style={styles.backButton} onPress={() => setStep(0)} />
-              <Button
-                label="Pular"
-                variant="text"
-                size="md"
-                onPress={() => { setAllergens([]); setStep(2); }}
-              />
-              <Button label="Próximo" variant="primary" onPress={() => setStep(2)} />
-            </View>
-          </View>
-        )}
-
-        {/* ── Step 2 — Na cozinha ── */}
-        {step === 2 && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Na cozinha</Text>
-            <Text style={styles.stepSubtitle}>Só mais duas perguntas rápidas.</Text>
-
-            <Text style={styles.sectionLabel}>
-              Quantas vezes você cozinha por semana?
-            </Text>
-            <View style={styles.frequencyRow}>
-              {COOKING_FREQUENCY.map((opt) => {
-                const sel = cookingFrequency === opt.value;
-                return (
-                  <Chip
-                    key={opt.value}
-                    label={opt.label}
-                    variant="input"
-                    selected={sel}
-                    onPress={() => setCookingFrequency(sel ? null : opt.value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: sel }}
-                  />
-                );
-              })}
-            </View>
-
-            <Text style={[styles.sectionLabel, { marginTop: tokens.spacing.lg }]}>
-              Nível de habilidade
-            </Text>
-            <View style={styles.skillRow}>
-              {SKILL_LEVELS.map(({ label, value }) => {
-                const sel = skillLevel === value;
-                return (
-                  <Chip
-                    key={value}
-                    label={label}
-                    variant="input"
-                    selected={sel}
-                    style={styles.skillChip}
-                    onPress={() => setSkillLevel(value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: sel }}
-                  />
-                );
-              })}
-            </View>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <View style={styles.navRow}>
-              <Button
-                label="Voltar"
-                variant="text"
-                size="md"
-                style={styles.backButton}
-                onPress={() => setStep(1)}
-                disabled={isLoading}
-              />
-              <Button
-                label="Concluir"
-                variant="primary"
-                loading={isLoading}
-                onPress={() => finish()}
-                disabled={isLoading}
-              />
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+        {/* Page 4 — Done */}
+        <View style={{ width: W, flex: 1 }}>
+          <DoneContent
+            onFinish={handleFinish}
+            isLoading={isLoading}
+            error={submitError}
+            topPad={insets.top}
+            botPad={insets.bottom}
+          />
+        </View>
+      </Animated.View>
+    </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: tokens.colors.background },
-  container: {
-    flexGrow: 1,
-    padding: tokens.spacing.xl,
-    gap: tokens.spacing.xl,
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: tokens.spacing.xl,
-  },
-  dotsContainer: {
-    flexDirection: "row",
-    gap: tokens.spacing.sm,
-  },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  dotFilled: { backgroundColor: tokens.colors.primary },
-  dotOutline: {
-    borderWidth: 2,
-    borderColor: tokens.colors.primary,
-    backgroundColor: "transparent",
-  },
-  skipAllText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary + "66",
-    textDecorationLine: "underline",
-  },
-  stepContainer: { gap: tokens.spacing.xl },
-  stepTitle: {
-    fontSize: tokens.typography.fontSizes.xl,
-    fontWeight: tokens.typography.fontWeights.bold,
-    color: tokens.colors.textPrimary,
-  },
-  stepSubtitle: {
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary + "88",
-    marginTop: -tokens.spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: tokens.typography.fontSizes.sm,
-    fontWeight: tokens.typography.fontWeights.semibold,
-    color: tokens.colors.textPrimary,
-  },
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: tokens.spacing.sm,
-  },
-  frequencyRow: {
-    flexDirection: "row",
-    gap: tokens.spacing.sm,
-  },
-  navRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: tokens.spacing.md,
-    marginTop: tokens.spacing.sm,
-  },
-  backButton: {
-    marginRight: "auto",
-  },
-  skillRow: { flexDirection: "row", gap: tokens.spacing.sm },
-  skillChip: {
-    flex: 1,
-    borderRadius: tokens.radius.sm,
-  },
-  errorText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.error,
-    textAlign: "center",
-  },
-});

@@ -4,61 +4,40 @@ import {
   Text,
   TouchableOpacity,
   View,
-  KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
 import { useState } from "react";
 import { tokens } from "@suliv/design-system";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../store/authStore";
-import { AuthInput } from "../components/AuthInput";
-import { Button } from "../../../components/atoms/Button";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
-import { AuthError } from "../../../services/authApi";
+import { Logo } from "@/src/components/atoms/Logo";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export function LoginScreen({ navigation }: Props) {
-  const { login, isLoading } = useAuthStore();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  async function handleLogin() {
+  async function handleGoogleLogin() {
     setError(null);
     try {
-      await login(email, password);
-    } catch (err) {
-      if (err instanceof AuthError && err.code === "invalid_credentials") {
-        setError("E-mail ou senha incorretos");
-      } else if (err instanceof AuthError && err.code === "validation_error") {
-        setError("Preencha e-mail e senha corretamente");
-      } else {
-        setError("Não foi possível conectar. Tente novamente.");
-      }
-    }
-  }
-
-  async function handleGoogleLogin() {
-    try {
-      // Dynamic import — lib installed when Google Sign-In native setup is added
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { GoogleSignin } = (await import("@react-native-google-signin/google-signin" as any)) as any;
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken as string | undefined;
       if (!idToken) throw new Error("no_id_token");
       await useAuthStore.getState().socialLogin("google", idToken);
-    } catch (err) {
+    } catch {
       setError("Falha no login com Google. Tente novamente.");
     }
   }
 
   async function handleAppleLogin() {
+    setError(null);
     try {
-      // Dynamic import — lib installed when Apple Sign-In native setup is added
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const appleAuth = (await import("@invertase/react-native-apple-authentication" as any)) as any;
       const appleAuthResponse = await appleAuth.default.performRequest({
         requestedOperation: appleAuth.AppleAuthRequestOperation.LOGIN,
@@ -70,131 +49,194 @@ export function LoginScreen({ navigation }: Props) {
       const identityToken = appleAuthResponse.identityToken as string | undefined;
       if (!identityToken) throw new Error("no_identity_token");
       await useAuthStore.getState().socialLogin("apple", identityToken);
-    } catch (err) {
+    } catch {
       setError("Falha no login com Apple. Tente novamente.");
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.title}>Bem-vinda de volta</Text>
-        <Text style={styles.subtitle}>Entre na sua conta Suliv</Text>
-
-        <View style={styles.form}>
-          <AuthInput
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoComplete="email"
-            textContentType="emailAddress"
-            placeholder="seu@email.com"
-            accessibilityLabel="Campo de e-mail"
-          />
-          <AuthInput
-            label="Senha"
-            value={password}
-            onChangeText={setPassword}
-            isPassword
-            textContentType="password"
-            placeholder="Sua senha"
-            accessibilityLabel="Campo de senha"
-            onSubmitEditing={handleLogin}
-            returnKeyType="done"
-          />
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <Button
-            label="Entrar"
-            variant="primary"
-            loading={isLoading}
-            onPress={handleLogin}
-            fullWidth
-            accessibilityLabel="Entrar"
-          />
-
-          <Button
-            label="Entrar com Google"
-            variant="outline"
-            onPress={handleGoogleLogin}
-            disabled={isLoading}
-            fullWidth
-            accessibilityLabel="Entrar com Google"
-          />
-
-          {Platform.OS === "ios" && (
-            <TouchableOpacity
-              style={styles.btnApple}
-              onPress={handleAppleLogin}
-              disabled={isLoading}
-              accessibilityLabel="Entrar com Apple"
-              accessibilityRole="button"
-            >
-              <Text style={styles.btnAppleText}> Entrar com Apple</Text>
-            </TouchableOpacity>
-          )}
+      <View style={styles.logoArea}>
+        <View style={styles.logoCircle}>
+          <Logo width={300} height={100}/>
         </View>
+      </View>
+
+      <Text style={styles.tagline}>
+        começar pode ser{" "}
+        <Text style={styles.taglineAccent}>simples</Text>
+        {"."}
+      </Text>
+
+      <View style={styles.actions}>
+        <TouchableOpacity
+          style={styles.btnPrimary}
+          onPress={() => navigation.navigate("EmailLogin")}
+          activeOpacity={0.85}
+          accessibilityLabel="Entrar com email"
+          accessibilityRole="button"
+        >
+          <Text style={styles.btnPrimaryText}>Entrar com email</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.btnSocial}
+          onPress={handleGoogleLogin}
+          activeOpacity={0.85}
+          accessibilityLabel="Continuar com Google"
+          accessibilityRole="button"
+        >
+          <AntDesign name="google" size={20} color="#4285F4" style={styles.socialIcon} />
+          <Text style={styles.btnSocialText}>Continuar com Google</Text>
+        </TouchableOpacity>
+
+        {Platform.OS === "ios" && (
+          <TouchableOpacity
+            style={styles.btnSocial}
+            onPress={handleAppleLogin}
+            activeOpacity={0.85}
+            accessibilityLabel="Continuar com Apple"
+            accessibilityRole="button"
+          >
+            <Ionicons name="logo-apple" size={22} color="#000000" style={styles.socialIcon} />
+            <Text style={styles.btnSocialText}>Continuar com Apple</Text>
+          </TouchableOpacity>
+        )}
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
           onPress={() => navigation.navigate("Register")}
-          accessibilityLabel="Criar conta"
+          accessibilityLabel="Criar uma conta agora"
           accessibilityRole="link"
         >
-          <Text style={styles.linkText}>
-            Não tem conta?{" "}
-            <Text style={styles.linkHighlight}>Criar conta</Text>
+          <Text style={styles.registerText}>
+            Novo por aqui?{" "}
+            <Text style={styles.registerLink}>Criar uma conta agora</Text>
           </Text>
         </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <Text style={styles.legalText}>
+          {"Ao continuar, você aceita nossos "}
+          <Text style={styles.legalLink}>termos</Text>
+          {" e a "}
+          <Text style={styles.legalLink}>política de privacidade</Text>
+          {"."}
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: tokens.colors.background },
+  scroll: {
+    flex: 1,
+    backgroundColor: tokens.color.semantic.surface.subtle,
+  },
   container: {
     flexGrow: 1,
-    padding: tokens.spacing.xl,
+    alignItems: "center",
+    paddingHorizontal: tokens.space.xl,
+    paddingTop: tokens.space["4xl"],
+    paddingBottom: tokens.space["2xl"],
+    gap: tokens.space["2xl"],
+  },
+  logoArea: {
+    flex: 1,
+    alignItems: "center",
     justifyContent: "center",
-    gap: tokens.spacing.xl,
   },
-  title: {
-    fontSize: tokens.typography.fontSizes.xl,
-    fontWeight: tokens.typography.fontWeights.bold,
-    color: tokens.colors.textPrimary,
+  logoCircle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: tokens.color.primitive.sand[50],
+    alignItems: "center",
+    justifyContent: "center",
   },
-  subtitle: {
-    fontSize: tokens.typography.fontSizes.md,
-    color: tokens.colors.textPrimary + "99",
-    marginTop: -tokens.spacing.lg,
+  logoWordmark: {
+    fontSize: 52,
+    fontWeight: tokens.typography.weight.bold,
+    fontStyle: "italic",
+    color: tokens.color.semantic.text.primary,
+    letterSpacing: -1,
   },
-  form: { gap: tokens.spacing.lg },
+  tagline: {
+      fontFamily: tokens.typography.family.displayMedium,
+      fontSize: 26,
+      lineHeight: 29,
+      fontWeight: "500",
+      letterSpacing: -0.45,
+      color: tokens.color.primitive.ink[900],
+    },
+  taglineAccent: {
+      fontFamily: tokens.typography.family.editorialItalic,
+      fontStyle: "italic",
+      color: tokens.color.primitive.moss[700],
+    },
+  actions: {
+    width: "100%",
+    gap: tokens.space.md,
+  },
+  btnPrimary: {
+    height: 56,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: tokens.color.semantic.brand.primaryStrong,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnPrimaryText: {
+    ...tokens.typography.scale.label.lg,
+    color: tokens.color.semantic.text.inverse,
+  },
+  btnSocial: {
+    height: 56,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: tokens.color.semantic.surface.elevated,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    ...tokens.elevation.sm,
+  },
+  socialIcon: {
+    marginRight: tokens.space.sm,
+  },
+  btnSocialText: {
+    ...tokens.typography.scale.label.lg,
+    color: tokens.color.semantic.text.primary,
+  },
   errorText: {
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.error,
+    ...tokens.typography.scale.body.sm,
+    color: tokens.color.semantic.feedback.error,
     textAlign: "center",
   },
-  btnApple: { backgroundColor: "#000" },
-  btnAppleText: {
-    color: "#fff",
-    fontSize: tokens.typography.fontSizes.md,
-    fontWeight: tokens.typography.fontWeights.semibold,
+  footer: {
+    alignItems: "center",
+    gap: tokens.space.md,
   },
-  linkText: {
+  registerText: {
+    ...tokens.typography.scale.body.sm,
+    color: tokens.color.semantic.text.secondary,
     textAlign: "center",
-    fontSize: tokens.typography.fontSizes.sm,
-    color: tokens.colors.textPrimary + "99",
   },
-  linkHighlight: {
-    color: tokens.colors.primary,
-    fontWeight: tokens.typography.fontWeights.semibold,
+  registerLink: {
+    color: tokens.color.semantic.text.primary,
+    fontWeight: tokens.typography.weight.semibold,
+    textDecorationLine: "underline",
+  },
+  legalText: {
+    ...tokens.typography.scale.caption.md,
+    color: tokens.color.semantic.text.secondary,
+    textAlign: "center",
+  },
+  legalLink: {
+    textDecorationLine: "underline",
+    color: tokens.color.semantic.text.secondary,
   },
 });
