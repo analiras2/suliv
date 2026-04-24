@@ -51,7 +51,7 @@ describe("POST /api/auth/login", () => {
     mockPrisma.user.findUnique.mockResolvedValue(VALID_USER)
     mockComparePassword.mockResolvedValue(true)
 
-    const req = makeRequest({ email: "ana@test.com", password: "senha123" })
+    const req = makeRequest({ email: "ana@test.com", password: "Passw0rd!@#" })
     const res = await POST(req as any)
     const data = await res.json()
 
@@ -74,7 +74,7 @@ describe("POST /api/auth/login", () => {
     })
     mockComparePassword.mockResolvedValue(true)
 
-    const req = makeRequest({ email: "ana@test.com", password: "senha123" })
+    const req = makeRequest({ email: "ana@test.com", password: "Passw0rd!@#" })
     const res = await POST(req as any)
     const data = await res.json()
 
@@ -85,7 +85,7 @@ describe("POST /api/auth/login", () => {
   it("returns 401 when email is not found", async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
 
-    const req = makeRequest({ email: "notfound@test.com", password: "senha123" })
+    const req = makeRequest({ email: "notfound@test.com", password: "Passw0rd!@#" })
     const res = await POST(req as any)
     const data = await res.json()
 

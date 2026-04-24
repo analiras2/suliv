@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
       providerSub = p.sub
       providerEmail = p.email!
     }
-  } catch {
+  } catch (err) {
+    console.error("[social auth] token verification failed:", err)
     return NextResponse.json({ error: "invalid_token" }, { status: 401 })
   }
 

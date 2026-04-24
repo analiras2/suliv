@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getBaseUrl, getGoogleClientId, sanitizeRedirectPath } from "@/lib/auth-config";
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(req: NextRequest): Promise<NextResponse> {
   const state = crypto.randomUUID();
+  const baseUrl = getBaseUrl();
 
   const cookieStore = await cookies();
   cookieStore.set("oauth_state", state, {
@@ -12,9 +14,19 @@ export async function GET(): Promise<NextResponse> {
     path: "/",
   });
 
+  const redirectPath = sanitizeRedirectPath(req.nextUrl.searchParams.get("redirect"));
+  if (redirectPath) {
+    cookieStore.set("post_auth_redirect", redirectPath, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 10 * 60,
+      path: "/",
+    });
+  }
+
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-    redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/google/callback`,
+    client_id: getGoogleClientId(),
+    redirect_uri: `${baseUrl}/api/auth/google/callback`,
     response_type: "code",
     scope: "openid email profile",
     state,

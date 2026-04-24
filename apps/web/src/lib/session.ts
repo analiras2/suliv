@@ -1,19 +1,29 @@
 import { cookies } from "next/headers";
 import { verifyAccessToken } from "@suliv/auth";
 import type { TokenPair } from "@suliv/auth";
+import { getBaseUrl } from "@/lib/auth-config";
 
 const ACCESS_COOKIE = "suliv_access";
 const REFRESH_COOKIE = "suliv_refresh";
+
+function shouldUseSecureCookies(): boolean {
+  try {
+    return new URL(getBaseUrl()).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
 
 export async function setSessionCookies({
   accessToken,
   refreshToken,
 }: TokenPair): Promise<void> {
   const cookieStore = await cookies();
+  const secure = shouldUseSecureCookies();
 
   cookieStore.set(ACCESS_COOKIE, accessToken, {
     httpOnly: true,
-    secure: true,
+    secure,
     sameSite: "lax",
     maxAge: 15 * 60,
     path: "/",
@@ -21,7 +31,7 @@ export async function setSessionCookies({
 
   cookieStore.set(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
-    secure: true,
+    secure,
     sameSite: "lax",
     maxAge: 30 * 24 * 60 * 60,
     path: "/",
@@ -60,8 +70,7 @@ export async function getServerSession(): Promise<{
 
   // Try to refresh the token pair
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+    const baseUrl = getBaseUrl();
 
     const res = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: "POST",

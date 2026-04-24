@@ -3,9 +3,9 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { setSessionCookies, clearSessionCookies } from "@/lib/session";
+import { getBaseUrl } from "@/lib/auth-config";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+const BASE_URL = getBaseUrl();
 
 export async function loginAction(
   email: string,

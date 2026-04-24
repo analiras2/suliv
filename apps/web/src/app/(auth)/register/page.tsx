@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { tokens } from "@suliv/design-system";
 import { registerAction } from "@/app/actions/auth";
 
@@ -54,9 +55,11 @@ export default function RegisterPage() {
       try {
         await registerAction(email, password, name || undefined);
       } catch (err) {
-        if (err instanceof Error) {
-          if (err.message === "NEXT_REDIRECT") throw err;
+        if (isRedirectError(err)) {
+          throw err;
+        }
 
+        if (err instanceof Error) {
           try {
             const parsed: ActionError = JSON.parse(err.message);
             if (parsed.error === "email_taken") {

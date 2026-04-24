@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { tokens } from "@suliv/design-system";
 import { loginAction } from "@/app/actions/auth";
 
@@ -13,7 +14,7 @@ interface ActionError {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const [email, setEmail] = useState("");
@@ -21,6 +22,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const redirect = searchParams.get("redirect");
+  const oauthError = searchParams.get("error");
+
+  const googleLoginHref = redirect
+    ? `/api/auth/google?redirect=${encodeURIComponent(redirect)}`
+    : "/api/auth/google";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,10 +38,11 @@ export default function LoginPage() {
       try {
         await loginAction(email, password);
       } catch (err) {
-        if (err instanceof Error) {
-          // next/navigation redirect throws — re-throw it
-          if (err.message === "NEXT_REDIRECT") throw err;
+        if (isRedirectError(err)) {
+          throw err;
+        }
 
+        if (err instanceof Error) {
           try {
             const parsed: ActionError = JSON.parse(err.message);
             if (parsed.error === "invalid_credentials") {
@@ -180,7 +188,11 @@ export default function LoginPage() {
       <div style={styles.card}>
         <h1 style={styles.title}>Entrar</h1>
 
-        {globalError && <div style={styles.globalError}>{globalError}</div>}
+        {(globalError || oauthError) && (
+          <div style={styles.globalError}>
+            {globalError ?? "Falha no login com Google. Tente novamente."}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} noValidate>
           <div style={styles.fieldGroup}>
@@ -249,7 +261,7 @@ export default function LoginPage() {
 
         <div style={styles.divider}>ou</div>
 
-        <a href="/api/auth/google" style={styles.secondaryBtn}>
+        <a href={googleLoginHref} style={styles.secondaryBtn}>
           Entrar com Google
         </a>
 

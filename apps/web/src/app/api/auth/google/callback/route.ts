@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { setSessionCookies } from "@/lib/session";
+import {
+  getBaseUrl,
+  getGoogleClientId,
+  getGoogleClientSecret,
+  sanitizeRedirectPath,
+} from "@/lib/auth-config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+const BASE_URL = getBaseUrl();
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { searchParams } = req.nextUrl;
@@ -11,6 +17,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const cookieStore = await cookies();
   const storedState = cookieStore.get("oauth_state")?.value;
+  const redirectPath = sanitizeRedirectPath(cookieStore.get("post_auth_redirect")?.value);
 
   // Validate state to prevent CSRF
   if (!state || !storedState || state !== storedState) {
@@ -19,6 +26,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // Clear the state cookie
   cookieStore.delete("oauth_state");
+  cookieStore.delete("post_auth_redirect");
 
   if (!code) {
     return NextResponse.redirect(`${BASE_URL}/login?error=oauth_failed`);
@@ -30,8 +38,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-        client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+        client_id: getGoogleClientId(),
+        client_secret: getGoogleClientSecret(),
         code,
         redirect_uri: `${BASE_URL}/api/auth/google/callback`,
         grant_type: "authorization_code",
@@ -71,7 +79,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       refreshToken: socialData.refresh_token,
     });
 
-    const destination = socialData.has_profile ? "/feed" : "/onboarding";
+    const destination =
+      redirectPath ?? (socialData.has_profile ? "/feed" : "/onboarding");
     return NextResponse.redirect(`${BASE_URL}${destination}`);
   } catch {
     return NextResponse.redirect(`${BASE_URL}/login?error=oauth_failed`);
