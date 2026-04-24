@@ -1,4 +1,4 @@
-import { PrismaClient, SkillLevel } from "@prisma/client";
+import { NewsStatus, PrismaClient, SkillLevel } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -388,6 +388,161 @@ const recipes = [
   },
 ];
 
+const newsArticles = [
+  {
+    title: "Como adaptar receitas clássicas sem laticínios",
+    slug: "como-adaptar-receitas-classicas-sem-laticinios",
+    kicker: "Blog Suliv",
+    excerpt:
+      "Substituições simples para manter textura, untuosidade e sabor em molhos, cremes e assados do dia a dia.",
+    content: [
+      {
+        type: "paragraph",
+        text: "Trocar laticínios em receitas clássicas funciona melhor quando você pensa na função de cada ingrediente: cremosidade, acidez, estrutura ou brilho final.",
+      },
+      {
+        type: "heading",
+        text: "Cremes e molhos",
+      },
+      {
+        type: "paragraph",
+        text: "Castanha-de-caju hidratada, tofu sedoso e leite de coco são boas bases para molhos encorpados. Use limão ou vinagre suave para devolver acidez e equilibrar a gordura.",
+      },
+      {
+        type: "heading",
+        text: "Assados e gratinados",
+      },
+      {
+        type: "paragraph",
+        text: "Para gratinar, combine uma base cremosa com farinha de rosca e azeite. Isso cria cor e crocância sem depender de queijo.",
+      },
+    ],
+    tags: ["substituições", "sem-laticínios", "técnica"],
+    coverImageUrl: null,
+    authorName: "Time Suliv",
+    authorRole: "Editorial",
+    authorAvatarUrl: null,
+    readTimeMin: 4,
+    isFeatured: true,
+    status: NewsStatus.PUBLISHED,
+    seoTitle: "Como adaptar receitas clássicas sem laticínios",
+    seoDescription:
+      "Aprenda substituições plant-based para cremes, molhos e gratinados sem perder textura e sabor.",
+    publishedAt: new Date("2026-04-23T09:00:00.000Z"),
+  },
+  {
+    title: "5 óleos para ter sempre na sua despensa",
+    slug: "5-oleos-para-ter-sempre-na-sua-despensa",
+    kicker: "Guia",
+    excerpt:
+      "Quando usar azeite, gergelim, coco, girassol e abacate para cozinhar melhor e preservar aroma.",
+    content: [
+      {
+        type: "paragraph",
+        text: "Cada óleo entrega um ponto de fumaça, um aroma e uma textura diferentes. Escolher bem evita desperdício e melhora o resultado final.",
+      },
+      {
+        type: "list",
+        items: [
+          "Azeite para finalização e refogados leves.",
+          "Óleo de gergelim para marinadas e pratos asiáticos.",
+          "Óleo de coco para doces e preparos com especiarias.",
+          "Girassol para cocções neutras.",
+          "Óleo de abacate para altas temperaturas.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Vale manter frascos menores, em local fresco e escuro, para preservar aroma e estabilidade.",
+      },
+    ],
+    tags: ["despensa", "ingredientes", "guia"],
+    coverImageUrl: null,
+    authorName: "Helena Costa",
+    authorRole: "Nutri culinária",
+    authorAvatarUrl: null,
+    readTimeMin: 6,
+    isFeatured: true,
+    status: NewsStatus.PUBLISHED,
+    seoTitle: "5 óleos para ter sempre na sua despensa",
+    seoDescription:
+      "Um guia rápido para escolher o óleo certo conforme temperatura, sabor e tipo de preparo.",
+    publishedAt: new Date("2026-04-21T09:00:00.000Z"),
+  },
+  {
+    title: "Chef Alma sobre fermentados no dia a dia",
+    slug: "chef-alma-sobre-fermentados-no-dia-a-dia",
+    kicker: "Entrevista",
+    excerpt:
+      "Uma conversa sobre sabor, digestibilidade e como introduzir fermentados sem complicar a rotina.",
+    content: [
+      {
+        type: "paragraph",
+        text: "Na cozinha cotidiana, fermentados funcionam melhor como camadas de sabor. Pequenas quantidades já mudam caldo, molho e acompanhamento.",
+      },
+      {
+        type: "quote",
+        text: "Você não precisa fermentar tudo em casa. Comece usando um fermentado pronto como tempero.",
+        attribution: "Chef Alma",
+      },
+      {
+        type: "paragraph",
+        text: "A recomendação é começar por picles rápidos, kimchi suave ou um miso bom para dissolver em molhos e sopas.",
+      },
+    ],
+    tags: ["fermentados", "entrevista", "rotina"],
+    coverImageUrl: null,
+    authorName: "Marina Lopes",
+    authorRole: "Repórter",
+    authorAvatarUrl: null,
+    readTimeMin: 8,
+    isFeatured: false,
+    status: NewsStatus.PUBLISHED,
+    seoTitle: "Chef Alma sobre fermentados no dia a dia",
+    seoDescription:
+      "Entrevista com dicas práticas para usar fermentados em receitas simples e acessíveis.",
+    publishedAt: new Date("2026-04-19T09:00:00.000Z"),
+  },
+  {
+    title: "Batch cooking plant-based para a semana útil",
+    slug: "batch-cooking-plant-based-para-a-semana-util",
+    kicker: "Planejamento",
+    excerpt:
+      "Como organizar bases, molhos e complementos em menos de duas horas para cozinhar com menos esforço.",
+    content: [
+      {
+        type: "paragraph",
+        text: "O segredo do batch cooking não é fazer pratos prontos para sete dias. É preparar componentes versáteis que combinam entre si.",
+      },
+      {
+        type: "list",
+        items: [
+          "Escolha duas bases: um grão e uma leguminosa.",
+          "Asse uma bandeja grande de legumes.",
+          "Prepare um molho cremoso e um molho ácido.",
+          "Separe toppings crocantes para finalizar.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Com isso, você monta bowls, sopas, wraps e acompanhamentos ao longo da semana sem repetir exatamente o mesmo prato.",
+      },
+    ],
+    tags: ["batch cooking", "organização", "semana"],
+    coverImageUrl: null,
+    authorName: "Time Suliv",
+    authorRole: "Editorial",
+    authorAvatarUrl: null,
+    readTimeMin: 5,
+    isFeatured: false,
+    status: NewsStatus.PUBLISHED,
+    seoTitle: "Batch cooking plant-based para a semana útil",
+    seoDescription:
+      "Organize bases e complementos para cozinhar melhor durante a semana com menos esforço.",
+    publishedAt: new Date("2026-04-17T09:00:00.000Z"),
+  },
+];
+
 // ---------------------------------------------------------------------------
 // Main seed
 // ---------------------------------------------------------------------------
@@ -454,6 +609,32 @@ async function main() {
     }
   }
   console.log(`✅ ${recipes.length} recipes upserted`);
+
+  for (const article of newsArticles) {
+    await prisma.newsArticle.upsert({
+      where: { slug: article.slug },
+      update: {
+        title: article.title,
+        kicker: article.kicker,
+        excerpt: article.excerpt,
+        content: article.content,
+        tags: article.tags,
+        coverImageUrl: article.coverImageUrl,
+        authorName: article.authorName,
+        authorRole: article.authorRole,
+        authorAvatarUrl: article.authorAvatarUrl,
+        readTimeMin: article.readTimeMin,
+        isFeatured: article.isFeatured,
+        status: article.status,
+        seoTitle: article.seoTitle,
+        seoDescription: article.seoDescription,
+        publishedAt: article.publishedAt,
+      },
+      create: article,
+    });
+  }
+  console.log(`✅ ${newsArticles.length} news articles upserted`);
+
   console.log("🎉 Seed complete");
 }
 

@@ -25,6 +25,12 @@ enum Provider {
   apple
 }
 
+enum NewsStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
@@ -161,4 +167,28 @@ model UserFavorite {
 
   @@unique([userId, recipeId])
   @@map("user_favorites")
+}
+
+model NewsArticle {
+  id              String     @id @default(cuid())
+  title           String
+  slug            String     @unique
+  kicker          String
+  excerpt         String
+  content         Json
+  tags            String[]
+  coverImageUrl   String?
+  authorName      String
+  authorRole      String?
+  authorAvatarUrl String?
+  readTimeMin     Int
+  isFeatured      Boolean    @default(false)
+  status          NewsStatus @default(DRAFT)
+  seoTitle        String?
+  seoDescription  String?
+  publishedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("news_articles")
 }
