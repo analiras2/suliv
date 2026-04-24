@@ -40,7 +40,7 @@ function parseEnvFile(filePath) {
 }
 
 function getApiUrl(env) {
-  return env.EXPO_PUBLIC_API_URL?.trim() || "http://localhost:3001";
+  return env.EXPO_PUBLIC_API_URL?.trim() || "http://localhost:3000";
 }
 
 function getPortFromUrl(urlString) {
