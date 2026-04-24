@@ -1,4 +1,4 @@
-package com.anonymous.suliv
+package com.ascal.suliv
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

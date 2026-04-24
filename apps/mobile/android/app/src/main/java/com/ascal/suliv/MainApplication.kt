@@ -1,4 +1,4 @@
-package com.anonymous.suliv
+package com.ascal.suliv
 
 import android.app.Application
 import android.content.res.Configuration

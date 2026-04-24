@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>suliv</string>
-          <string>com.anonymous.suliv</string>
+          <string>com.ascal.suliv</string>
         </array>
       </dict>
     </array>

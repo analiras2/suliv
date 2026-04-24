@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.suliv'
+    namespace 'com.ascal.suliv'
     defaultConfig {
-        applicationId 'com.anonymous.suliv'
+        applicationId 'com.ascal.suliv'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
