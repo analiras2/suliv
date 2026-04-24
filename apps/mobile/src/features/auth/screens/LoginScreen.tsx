@@ -1,5 +1,4 @@
 import {
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,11 +7,12 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { tokens } from "@suliv/design-system";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { useAuthStore } from "../store/authStore";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
 import { Logo } from "@/src/components/atoms/Logo";
+import { signInWithGoogle } from "../../../services/socialAuth";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
@@ -22,35 +22,12 @@ export function LoginScreen({ navigation }: Props) {
   async function handleGoogleLogin() {
     setError(null);
     try {
-       
-      const { GoogleSignin } = (await import("@react-native-google-signin/google-signin" as any)) as any;
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken as string | undefined;
-      if (!idToken) throw new Error("no_id_token");
+      const idToken = await signInWithGoogle();
       await useAuthStore.getState().socialLogin("google", idToken);
-    } catch {
-      setError("Falha no login com Google. Tente novamente.");
-    }
-  }
-
-  async function handleAppleLogin() {
-    setError(null);
-    try {
-       
-      const appleAuth = (await import("@invertase/react-native-apple-authentication" as any)) as any;
-      const appleAuthResponse = await appleAuth.default.performRequest({
-        requestedOperation: appleAuth.AppleAuthRequestOperation.LOGIN,
-        requestedScopes: [
-          appleAuth.AppleAuthRequestScope.EMAIL,
-          appleAuth.AppleAuthRequestScope.FULL_NAME,
-        ],
-      });
-      const identityToken = appleAuthResponse.identityToken as string | undefined;
-      if (!identityToken) throw new Error("no_identity_token");
-      await useAuthStore.getState().socialLogin("apple", identityToken);
-    } catch {
-      setError("Falha no login com Apple. Tente novamente.");
+    } catch (err: any) {
+      if (err.code !== "SIGN_IN_CANCELLED") {
+        setError("Falha no login com Google. Tente novamente.");
+      }
     }
   }
 
@@ -93,19 +70,6 @@ export function LoginScreen({ navigation }: Props) {
           <AntDesign name="google" size={20} color="#4285F4" style={styles.socialIcon} />
           <Text style={styles.btnSocialText}>Continuar com Google</Text>
         </TouchableOpacity>
-
-        {Platform.OS === "ios" && (
-          <TouchableOpacity
-            style={styles.btnSocial}
-            onPress={handleAppleLogin}
-            activeOpacity={0.85}
-            accessibilityLabel="Continuar com Apple"
-            accessibilityRole="button"
-          >
-            <Ionicons name="logo-apple" size={22} color="#000000" style={styles.socialIcon} />
-            <Text style={styles.btnSocialText}>Continuar com Apple</Text>
-          </TouchableOpacity>
-        )}
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>

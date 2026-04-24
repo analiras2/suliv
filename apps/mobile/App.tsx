@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import {
@@ -21,15 +20,14 @@ import {
 } from "@expo-google-fonts/instrument-serif";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
+import { env } from "./src/config/env";
 import { configureAuthApi } from "./src/services/authApi";
+import { configureGoogleSignIn } from "./src/services/socialAuth";
 
 SplashScreen.preventAutoHideAsync();
 
-const defaultApiBaseUrl =
-  Platform.OS === "android" ? "http://10.0.2.2:3001" : "http://localhost:3001";
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL?.trim() || defaultApiBaseUrl;
-
-configureAuthApi(API_BASE_URL);
+configureAuthApi(env.apiBaseUrl);
+configureGoogleSignIn();
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
