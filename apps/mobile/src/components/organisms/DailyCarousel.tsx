@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import {
   Dimensions,
   NativeScrollEvent,
@@ -9,6 +9,14 @@ import {
   View,
 } from "react-native";
 import { tokens } from "@suliv/design-system";
+import Animated, {
+  interpolate,
+  interpolateColor,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { DailyRecipeCard } from "../molecules/DailyRecipeCard";
 import type { FeedDailyRecipe } from "../../features/recipes/types/feed";
 import { getAccentColor } from "../../features/recipes/data/feedPresentation";
@@ -21,21 +29,43 @@ const SNAP_INTERVAL = CARD_W + GAP;
 
 const P = tokens.color.primitive;
 
+interface CarouselDotProps {
+  index: number;
+  activeIndex: SharedValue<number>;
+}
+
+function CarouselDot({ index, activeIndex }: CarouselDotProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const distance = Math.abs(activeIndex.value - index);
+    const width = interpolate(distance, [0, 1], [18, 8], "clamp");
+    const scale = interpolate(distance, [0, 1], [1, 0.9], "clamp");
+
+    return {
+      width: withSpring(width, { damping: 14, stiffness: 64 }),
+      transform: [{ scale: withSpring(scale, { damping: 14, stiffness: 32 }) }],
+      backgroundColor: interpolateColor(distance, [0, 1], [P.moss[500], P.ink[200]]),
+      opacity: interpolate(distance, [0, 1], [1, 0.75], "clamp"),
+    };
+  });
+
+  return <Animated.View style={[styles.dot, animatedStyle]} />;
+}
+
 interface DailyCarouselProps {
   items: FeedDailyRecipe[];
   onCardPress?: (id: string) => void;
 }
 
 export function DailyCarousel({ items, onCardPress }: DailyCarouselProps) {
-  const [activeIdx, setActiveIdx] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
+  const activeIndex = useSharedValue(0);
 
   if (items.length === 0) return null;
 
   const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
     const nextIndex = Math.round(x / SNAP_INTERVAL);
-    setActiveIdx(nextIndex);
+    activeIndex.value = nextIndex;
   };
 
   return (
@@ -74,10 +104,7 @@ export function DailyCarousel({ items, onCardPress }: DailyCarouselProps) {
 
       <View style={styles.dots}>
         {items.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === activeIdx ? styles.dotActive : styles.dotInactive]}
-          />
+          <CarouselDot key={i} index={i} activeIndex={activeIndex} />
         ))}
       </View>
     </View>
@@ -127,14 +154,8 @@ const styles = StyleSheet.create({
   },
   dot: {
     height: 6,
-    borderRadius: tokens.radius.pill,
-  },
-  dotActive: {
-    width: 20,
-    backgroundColor: P.moss[500],
-  },
-  dotInactive: {
     width: 6,
+    borderRadius: tokens.radius.pill,
     backgroundColor: P.ink[200],
   },
 });
