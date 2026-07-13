@@ -1,18 +1,10 @@
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
 
 # Build outputs
 dist/
 build/
-.next/
 out/
-apps/web/next-env.d.ts
-apps/web/tsconfig.tsbuildinfo
-
-# Turbo
-.turbo/
 
 # Environment
 .env
@@ -28,23 +20,9 @@ yarn-error.log*
 
 # OS
 .DS_Store
-*.pem
 
-# Testing
-coverage/
+# Claude Code local settings
+.claude/settings.local.json
 
-# Prisma generated client (regenerated from schema)
-packages/db/node_modules/.prisma/
-
-# React Native
-# ios/ and android/ are intentionally committed (bare workflow)
-apps/mobile/.expo/
-*.jsbundle
-
-# IDE
-.vscode/
-.idea/
-
-# AI
-.claude/
-.specs/
+# Compozy local state
+.compozy/
