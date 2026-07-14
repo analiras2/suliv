@@ -3,6 +3,7 @@
 ## Project Structure
 
 - `app/` — the React Native (Expo) application. All product code lives here.
+- `api/` — the backend API (NestJS), using Supabase (Postgres) as the database.
 - `docs/` — project documentation.
 - `.claude/rules/` — always-applied rules for this codebase (see below).
 - `.claude/skills/` — symlinked skills available to the agent (see below).
@@ -35,6 +36,51 @@ npm run web      # expo start --web
 ```bash
 cd app
 npm run lint
+```
+
+## `api/` — Backend API (NestJS)
+
+Stack: NestJS 11, Prisma (Postgres) as ORM, Supabase as the database/backend, Passport JWT for auth.
+
+### Install dependencies
+
+```bash
+cd api
+npm install
+```
+
+### Run the project
+
+```bash
+cd api
+npm run start:dev   # nest start --watch
+npm run start:debug # nest start --debug --watch
+npm run start:prod  # node dist/main
+```
+
+### Lint
+
+```bash
+cd api
+npm run lint
+```
+
+### Test
+
+```bash
+cd api
+npm run test          # unit tests
+npm run test:e2e      # end-to-end tests
+npm run test:integration  # resets DB via Prisma and runs integration tests
+```
+
+### Prisma
+
+```bash
+cd api
+npm run prisma:generate # generate Prisma client
+npm run prisma:migrate  # run dev migrations
+npm run prisma:validate # validate schema
 ```
 
 ## Rules (`.claude/rules/`)
