@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { semanticColors } from '@/design-system/tokens';
 import { useSulivFonts } from '@/design-system/fonts';
+import { useSessionViewModel } from '@/module/auth/view-models/use-session-view-model';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,8 +26,9 @@ const sulivTheme = {
 
 export default function RootLayout() {
   const [fontsLoaded] = useSulivFonts();
+  const { status } = useSessionViewModel();
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || status === 'loading') {
     return null;
   }
 
@@ -36,8 +38,11 @@ export default function RootLayout() {
         <ThemeProvider value={sulivTheme}>
           <AnimatedSplashOverlay />
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="recipe/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="(auth)" />
+            <Stack.Protected guard={status === 'authenticated'}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="recipe/[id]" options={{ presentation: 'modal' }} />
+            </Stack.Protected>
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>

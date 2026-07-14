@@ -9,13 +9,18 @@ export type SettingsRowProps = {
   isLast?: boolean;
   tone?: 'default' | 'danger';
   onPress?: () => void;
+  testID?: string;
 };
 
-export function SettingsRow({ icon, label, isLast = false, tone = 'default', onPress }: SettingsRowProps) {
+export function SettingsRow({ icon, label, isLast = false, tone = 'default', onPress, testID }: SettingsRowProps) {
   const labelColor = tone === 'danger' ? semanticColors.danger : semanticColors.fg;
 
   return (
-    <Pressable onPress={onPress} style={[styles.row, !isLast && styles.rowBordered]}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.row, !isLast && styles.rowBordered]}
+      testID={testID}>
       <View style={styles.iconWrap}>
         <Icon name={icon} size={18} color={tone === 'danger' ? semanticColors.danger : semanticColors.fgSecondary} />
       </View>
