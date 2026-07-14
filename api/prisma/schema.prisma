@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DietPreference {
+  vegano
+  vegetariano
+  flexitariano
+}
+
+enum CookingLevel {
+  iniciante
+  intermediario
+  avancado
+}
+
+enum CookingFrequency {
+  raramente
+  algumas_vezes_semana
+  quase_todo_dia
+}
+
+enum AccountStatus {
+  active
+  anonymized
+}
+
+enum DevicePlatform {
+  ios
+  android
+}
+
+model User {
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  name                  String?
+  username              String            @unique
+  usernameUpdatedAt     DateTime?         @map("username_updated_at")
+  avatarUrl             String?           @map("avatar_url")
+  dietPreference        DietPreference?   @map("diet_preference")
+  cookingLevel          CookingLevel?     @map("cooking_level")
+  cookingFrequency      CookingFrequency? @map("cooking_frequency")
+  onboardingCompletedAt DateTime?         @map("onboarding_completed_at")
+  termsVersionAccepted  String?           @map("terms_version_accepted")
+  termsAcceptedAt       DateTime?         @map("terms_accepted_at")
+  status                AccountStatus     @default(active)
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  allergies       UserAllergy[]
+  deviceTokens    DeviceToken[]
+  analyticsEvents AnalyticsEvent[]
+  recipes         Recipe[]
+
+  @@map("users")
+}
+
+model UserAllergy {
+  userId     String @map("user_id")
+  allergenId String @map("allergen_id")
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, allergenId])
+  @@map("user_allergies")
+}
+
+model DeviceToken {
+  id       String         @id @default(uuid())
+  userId   String         @map("user_id")
+  token    String         @unique
+  platform DevicePlatform
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+model AnalyticsEvent {
+  id         String         @id @default(uuid())
+  userId     String?        @map("user_id")
+  sessionId  String         @map("session_id")
+  platform   DevicePlatform
+  appVersion String         @map("app_version")
+  eventName  String         @map("event_name")
+  properties Json
+  occurredAt DateTime       @map("occurred_at")
+  user       User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, occurredAt])
+  @@map("analytics_events")
+}
+
+model Recipe {
+  id       String  @id @default(uuid())
+  authorId String? @map("author_id")
+  title    String
+  user     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@map("recipes")
+}
