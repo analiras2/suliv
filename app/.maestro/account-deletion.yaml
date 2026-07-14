@@ -1,0 +1,19 @@
+appId: host.exp.Exponent
+name: E2E-005 Account deletion
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${DELETE_ACCESS_TOKEN}&refresh_token=${DELETE_REFRESH_TOKEN}
+- assertVisible: Início
+- tapOn: Você
+- tapOn:
+    id: settings-delete-account
+- assertVisible: Excluir conta?
+- tapOn: Excluir conta
+- assertVisible:
+    id: login-email-input
+- stopApp
+- launchApp
+- assertVisible:
+    id: login-email-input
+- assertNotVisible: Início

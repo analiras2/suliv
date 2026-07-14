@@ -1,0 +1,18 @@
+appId: host.exp.Exponent
+name: E2E-002 OAuth return with missing name
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login
+- assertVisible:
+    id: login-google-button
+# Provider consent is replaced by the same fixed callback shape Supabase returns.
+- openLink: suliv://login#access_token=${OAUTH_ACCESS_TOKEN}&refresh_token=${OAUTH_REFRESH_TOKEN}
+- assertVisible:
+    id: complete-profile-name-input
+- tapOn:
+    id: complete-profile-name-input
+- inputText: Ana Maestro
+- tapOn:
+    id: complete-profile-submit-button
+- assertVisible: Início

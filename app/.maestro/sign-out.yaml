@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+name: E2E-004 Sign out
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${SIGN_OUT_ACCESS_TOKEN}&refresh_token=${SIGN_OUT_REFRESH_TOKEN}
+- assertVisible: Início
+- tapOn: Você
+- tapOn:
+    id: settings-sign-out
+- assertVisible:
+    id: login-email-input
+- stopApp
+- launchApp
+- assertVisible:
+    id: login-email-input

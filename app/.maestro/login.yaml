@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+name: E2E-001 Magic Link login
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login
+- assertVisible:
+    id: login-email-input
+- tapOn:
+    id: login-email-input
+- inputText: maestro@example.com
+- tapOn:
+    id: login-magic-link-button
+- assertVisible: Confira seu e-mail para continuar.
+- openLink: suliv://login#access_token=${MAGIC_LINK_ACCESS_TOKEN}&refresh_token=${MAGIC_LINK_REFRESH_TOKEN}
+- assertVisible: Início
