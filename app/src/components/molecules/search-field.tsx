@@ -7,11 +7,12 @@ export type SearchFieldProps = {
   value?: string;
   onChangeText?: (value: string) => void;
   placeholder?: string;
+  testID?: string;
 };
 
 const DEFAULT_PLACEHOLDER = 'lentilha, grão-de-bico, 15 min…';
 
-export function SearchField({ value, onChangeText, placeholder = DEFAULT_PLACEHOLDER }: SearchFieldProps) {
+export function SearchField({ value, onChangeText, placeholder = DEFAULT_PLACEHOLDER, testID }: SearchFieldProps) {
   return (
     <View style={styles.container}>
       <Icon name="search" size={18} color={semanticColors.fgSecondary} strokeWidth={1.9} />
@@ -21,6 +22,7 @@ export function SearchField({ value, onChangeText, placeholder = DEFAULT_PLACEHO
         placeholder={placeholder}
         placeholderTextColor={semanticColors.fgSecondary}
         style={styles.input}
+        testID={testID}
       />
     </View>
   );

@@ -1,0 +1,20 @@
+appId: host.exp.Exponent
+name: E2E-003 App killed after step 0 restarts onboarding from step 0
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${ONBOARDING_ACCESS_TOKEN}&refresh_token=${ONBOARDING_REFRESH_TOKEN}
+- assertVisible:
+    id: onboarding-diet-option-vegano
+- tapOn:
+    id: onboarding-diet-option-vegano
+- tapOn:
+    id: onboarding-continue-button
+- assertVisible:
+    id: onboarding-allergy-search-input
+- stopApp
+- launchApp
+- assertVisible:
+    id: onboarding-diet-option-vegano
+- assertNotVisible:
+    id: onboarding-allergy-search-input
