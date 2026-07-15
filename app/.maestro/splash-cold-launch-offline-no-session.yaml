@@ -1,0 +1,14 @@
+appId: host.exp.Exponent
+name: E2E-004 Airplane-mode launch with no session
+---
+- launchApp:
+    clearState: true
+- setAirplaneMode: true
+- launchApp
+- assertVisible:
+    id: login-offline-message
+- assertVisible:
+    id: login-magic-link-button
+- assertNotVisible:
+    id: splash-error-view
+- setAirplaneMode: false

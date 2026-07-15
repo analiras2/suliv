@@ -11,7 +11,7 @@ export interface BootstrapResponse {
 
 export interface ProfileService {
   bootstrap(session: Session): Promise<BootstrapResponse>;
-  getMe(session: Session): Promise<UserProfile>;
+  getMe(session: Session, signal?: AbortSignal): Promise<UserProfile>;
   updateName(session: Session, name: string): Promise<UserProfile>;
   deleteMe(session: Session): Promise<void>;
 }

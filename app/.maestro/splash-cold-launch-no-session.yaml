@@ -1,0 +1,11 @@
+appId: host.exp.Exponent
+name: E2E-002 Cold launch with no persisted session
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: login-email-input
+- assertVisible:
+    id: login-magic-link-button
+- assertNotVisible:
+    id: splash-error-view

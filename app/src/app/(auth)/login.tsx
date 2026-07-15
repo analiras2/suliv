@@ -2,12 +2,15 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { semanticColors } from '@/design-system/tokens';
+import { useNetworkStatus } from '@/lib/network-status';
 import { authStyles as styles } from '@/module/auth/styles/auth.styles';
 import { useLoginViewModel } from '@/module/auth/view-models/use-login-view-model';
 
 export default function LoginScreen() {
   const viewModel = useLoginViewModel();
+  const { isConnected } = useNetworkStatus();
   const isBusy = viewModel.status === 'submitting' || viewModel.status === 'authenticating';
+  const isSubmitDisabled = isBusy || !isConnected;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,7 +22,7 @@ export default function LoginScreen() {
           accessibilityLabel="E-mail"
           autoCapitalize="none"
           autoComplete="email"
-          editable={!isBusy}
+          editable={!isSubmitDisabled}
           keyboardType="email-address"
           onChangeText={viewModel.setEmail}
           onSubmitEditing={viewModel.submitEmail}
@@ -32,24 +35,29 @@ export default function LoginScreen() {
         <Pressable
           accessibilityLabel="Enviar link mágico"
           accessibilityRole="button"
-          disabled={isBusy}
+          disabled={isSubmitDisabled}
           onPress={viewModel.submitEmail}
-          style={[styles.button, isBusy && styles.disabled]}
+          style={[styles.button, isSubmitDisabled && styles.disabled]}
           testID="login-magic-link-button">
           {isBusy ? <ActivityIndicator color={semanticColors.brandOn} /> : <Text style={styles.buttonText}>Enviar link mágico</Text>}
         </Pressable>
-        {viewModel.status === 'sent' && <Text style={styles.feedback}>Confira seu e-mail para continuar.</Text>}
-        {viewModel.error && <Text style={[styles.feedback, styles.error]}>{viewModel.error}</Text>}
+        {!isConnected && (
+          <Text style={[styles.feedback, styles.error]} testID="login-offline-message">
+            Sem conexão. O login fica disponível assim que a internet voltar.
+          </Text>
+        )}
+        {isConnected && viewModel.status === 'sent' && <Text style={styles.feedback}>Confira seu e-mail para continuar.</Text>}
+        {isConnected && viewModel.error && <Text style={[styles.feedback, styles.error]}>{viewModel.error}</Text>}
         <View style={styles.divider} />
         <View style={styles.socialGroup}>
           {(['google', 'apple'] as const).map((provider) => (
             <Pressable
               accessibilityLabel={`Continuar com ${provider === 'google' ? 'Google' : 'Apple'}`}
               accessibilityRole="button"
-              disabled={isBusy}
+              disabled={isSubmitDisabled}
               key={provider}
               onPress={() => viewModel.signInWithOAuth(provider)}
-              style={[styles.button, styles.buttonSecondary, isBusy && styles.disabled]}
+              style={[styles.button, styles.buttonSecondary, isSubmitDisabled && styles.disabled]}
               testID={`login-${provider}-button`}>
               <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Continuar com {provider === 'google' ? 'Google' : 'Apple'}</Text>
             </Pressable>
