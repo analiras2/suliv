@@ -40,6 +40,7 @@ jest.mock('expo-linking', () => {
   return {
     addEventListener: factoryJest.fn(),
     createURL: factoryJest.fn((path: string) => `suliv://${path}`),
+    getInitialURL: factoryJest.fn<() => Promise<string | null>>().mockResolvedValue(null),
   };
 });
 

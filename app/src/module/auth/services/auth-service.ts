@@ -47,6 +47,8 @@ function throwAuthError(error: AuthError | null): void {
 }
 
 export class SupabaseAuthService implements AuthService {
+  private initialUrlHandled = false;
+
   constructor(private readonly client: SupabaseClient) {}
 
   async signInWithMagicLink(email: string) {
@@ -96,10 +98,26 @@ export class SupabaseAuthService implements AuthService {
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
       void this.completeSignInFromUrl(url).catch(() => undefined);
     });
+    this.handleInitialUrl();
     return () => {
       data.subscription.unsubscribe();
       linkingSubscription.remove();
     };
+  }
+
+  /**
+   * Linking's 'url' event only fires for links received while the app is already
+   * running. A magic-link/OAuth redirect that cold-launches the app instead delivers
+   * its URL as the initial URL, which must be read separately or the session from
+   * that link is silently dropped. Guarded to run once per app session since
+   * multiple view models call onAuthStateChange.
+   */
+  private handleInitialUrl(): void {
+    if (this.initialUrlHandled) return;
+    this.initialUrlHandled = true;
+    void Linking.getInitialURL().then((url) => {
+      if (url) void this.completeSignInFromUrl(url).catch(() => undefined);
+    });
   }
 
   private async completeSignInFromUrl(url: string): Promise<void> {
