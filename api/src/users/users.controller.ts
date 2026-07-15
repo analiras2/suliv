@@ -16,6 +16,7 @@ import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 import {
   AcceptTermsDto,
   BootstrapUserDto,
+  OnboardingDto,
   UpdateUserDto,
   UserDto,
 } from './dto';
@@ -67,6 +68,14 @@ export class UsersController {
       termsVersionAccepted: user.termsVersionAccepted,
       termsAcceptedAt: user.termsAcceptedAt,
     };
+  }
+
+  @Post('onboarding')
+  completeOnboarding(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: OnboardingDto,
+  ): Promise<UserDto> {
+    return this.usersService.completeOnboarding(request.user.id, body);
   }
 
   @Delete()

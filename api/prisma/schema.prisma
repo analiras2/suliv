@@ -35,6 +35,11 @@ enum DevicePlatform {
   android
 }
 
+enum AllergenStatus {
+  approved
+  pending
+}
+
 model User {
   id                    String            @id @default(uuid())
   email                 String            @unique
@@ -61,12 +66,27 @@ model User {
 }
 
 model UserAllergy {
-  userId     String @map("user_id")
-  allergenId String @map("allergen_id")
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  allergenId String   @map("allergen_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allergen   Allergen @relation(fields: [allergenId], references: [id], onDelete: Cascade)
 
   @@id([userId, allergenId])
   @@map("user_allergies")
+}
+
+model Allergen {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  status    AllergenStatus @default(pending)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  userAllergies UserAllergy[]
+
+  @@map("allergens")
 }
 
 model DeviceToken {

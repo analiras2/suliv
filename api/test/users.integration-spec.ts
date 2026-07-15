@@ -75,6 +75,7 @@ describe('UsersController (integration)', () => {
     await prisma.userAllergy.deleteMany();
     await prisma.recipe.deleteMany();
     await prisma.user.deleteMany();
+    await prisma.allergen.deleteMany();
   });
 
   afterAll(async () => {
@@ -212,8 +213,11 @@ describe('UsersController (integration)', () => {
 
   it('IT-009 anonymizes the account and clears private relations', async () => {
     await bootstrap('user-1', 'Ana').expect(201);
+    const allergen = await prisma.allergen.create({
+      data: { name: 'Leite', status: 'approved' },
+    });
     await prisma.userAllergy.create({
-      data: { userId: 'user-1', allergenId: 'allergen-1' },
+      data: { userId: 'user-1', allergenId: allergen.id },
     });
     await prisma.deviceToken.create({
       data: {

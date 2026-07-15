@@ -9,7 +9,7 @@ import {
 import { Prisma, User } from '@prisma/client';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserDto, UserDto } from './dto';
+import { OnboardingDto, UpdateUserDto, UserDto } from './dto';
 import { SupabaseAdminService } from './supabase-admin.service';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{3,20}$/;
@@ -127,6 +127,51 @@ export class UsersService {
           termsAcceptedAt: new Date(),
           termsVersionAccepted: termsVersion,
         },
+      });
+      return UserDto.fromUser(user);
+    } catch (error: unknown) {
+      if (this.isRecordNotFound(error)) {
+        throw new NotFoundException('User not found');
+      }
+      throw error;
+    }
+  }
+
+  async completeOnboarding(userId: string, data: OnboardingDto): Promise<UserDto> {
+    try {
+      const user = await this.prisma.$transaction(async (tx) => {
+        const updatedUser = await tx.user.update({
+          where: { id: userId },
+          data: {
+            dietPreference: data.diet_preference,
+            cookingLevel: data.cooking_level,
+            cookingFrequency: data.cooking_frequency,
+            onboardingCompletedAt: new Date(),
+          },
+        });
+
+        for (const allergenId of data.allergen_ids) {
+          await tx.userAllergy.upsert({
+            where: { userId_allergenId: { userId, allergenId } },
+            update: {},
+            create: { userId, allergenId },
+          });
+        }
+
+        for (const term of data.new_terms) {
+          const allergen = await tx.allergen.upsert({
+            where: { name: term },
+            update: {},
+            create: { name: term, status: 'pending' },
+          });
+          await tx.userAllergy.upsert({
+            where: { userId_allergenId: { userId, allergenId: allergen.id } },
+            update: {},
+            create: { userId, allergenId: allergen.id },
+          });
+        }
+
+        return updatedUser;
       });
       return UserDto.fromUser(user);
     } catch (error: unknown) {
