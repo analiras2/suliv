@@ -5,6 +5,10 @@ name: E2E-001 Onboarding full happy path lands on tabs
     clearState: true
 - openLink: suliv://login#access_token=${ONBOARDING_ACCESS_TOKEN}&refresh_token=${ONBOARDING_REFRESH_TOKEN}
 - assertVisible:
+    id: onboarding-welcome-start-button
+- tapOn:
+    id: onboarding-welcome-start-button
+- assertVisible:
     id: onboarding-diet-option-vegano
 - tapOn:
     id: onboarding-diet-option-vegano

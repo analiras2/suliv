@@ -5,6 +5,10 @@ name: E2E-002 Submit failure shows inline error and succeeds on retry
     clearState: true
 - openLink: suliv://login#access_token=${ONBOARDING_ACCESS_TOKEN}&refresh_token=${ONBOARDING_REFRESH_TOKEN}
 - assertVisible:
+    id: onboarding-welcome-start-button
+- tapOn:
+    id: onboarding-welcome-start-button
+- assertVisible:
     id: onboarding-diet-option-vegano
 - tapOn:
     id: onboarding-diet-option-vegano

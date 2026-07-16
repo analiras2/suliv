@@ -13,6 +13,7 @@ export type ButtonProps = {
   onPress?: () => void;
   icon?: React.ReactNode;
   style?: ViewStyle;
+  testID?: string;
 };
 
 const TONE_STYLES: Record<ButtonTone, { bg: string; fg: string; border?: string }> = {
@@ -31,7 +32,7 @@ const SIZE_STYLES: Record<ButtonSize, { paddingVertical: number; paddingHorizont
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function Button({ children, tone = 'primary', size = 'md', onPress, icon, style }: ButtonProps) {
+export function Button({ children, tone = 'primary', size = 'md', onPress, icon, style, testID }: ButtonProps) {
   const scale = useSharedValue(1);
   const toneStyle = TONE_STYLES[tone];
   const sizeStyle = SIZE_STYLES[size];
@@ -43,6 +44,7 @@ export function Button({ children, tone = 'primary', size = 'md', onPress, icon,
   return (
     <AnimatedPressable
       onPress={onPress}
+      testID={testID}
       onPressIn={() => {
         // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
         scale.value = withTiming(motion.pressScale, { duration: motion.durationFast });

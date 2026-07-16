@@ -1,111 +1,60 @@
 import { useRouter, type Href } from 'expo-router';
-import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { OnboardingAllergiesStep } from '@/components/organisms/onboarding-allergies-step';
-import { OnboardingDietStep } from '@/components/organisms/onboarding-diet-step';
-import { OnboardingLevelFrequencyStep } from '@/components/organisms/onboarding-level-frequency-step';
-import { semanticColors, spacing, typography } from '@/design-system/tokens';
-import { analyticsClient } from '@/lib/analytics';
-import { LAST_STEP } from '@/module/onboarding/types';
-import { useOnboardingViewModel } from '@/module/onboarding/viewModels/use-onboarding-view-model';
+import { BranchDoodle } from '@/components/atoms/branch-doodle';
+import { Button } from '@/components/atoms/button';
+import { Icon } from '@/components/atoms/icon';
+import { Overline } from '@/components/atoms/overline';
+import { SquiggleDoodle } from '@/components/atoms/squiggle-doodle';
+import { fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
 
-const TABS_ROUTE = '/' as Href;
+const STEPS_ROUTE = '/steps' as Href;
 
-export default function OnboardingScreen() {
-  const vm = useOnboardingViewModel();
+const STEP_ITEMS = ['Preferência alimentar', 'Alergias e restrições', 'Tempo e experiência na cozinha'];
+
+export default function OnboardingWelcomeScreen() {
   const router = useRouter();
-  const hasStarted = useRef(false);
-  const hasAttemptedSubmit = useRef(false);
-
-  useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-    analyticsClient.track('onboarding_started', {});
-  }, []);
-
-  useEffect(() => {
-    if (!hasAttemptedSubmit.current) return;
-    if (vm.submitStatus === 'idle') {
-      hasAttemptedSubmit.current = false;
-      router.replace(TABS_ROUTE);
-    } else if (vm.submitStatus === 'error') {
-      hasAttemptedSubmit.current = false;
-    }
-  }, [router, vm.submitStatus]);
-
-  const handleSubmit = () => {
-    hasAttemptedSubmit.current = true;
-    vm.submit();
-  };
-
-  const isLastStep = vm.step === LAST_STEP;
-  const isSubmitting = vm.submitStatus === 'submitting';
-  const isConfirmDisabled = !vm.isStepValid || isSubmitting;
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.branchDoodle}>
+        <BranchDoodle size={72} />
+      </View>
       <View style={styles.container}>
-        {vm.step === 0 && <OnboardingDietStep dietPreference={vm.dietPreference} onSelect={vm.setDietPreference} />}
-        {vm.step === 1 && (
-          <OnboardingAllergiesStep
-            allergenIds={vm.allergenIds}
-            newTerms={vm.newTerms}
-            onAddNewTerm={vm.addNewTerm}
-            onToggleAllergen={vm.toggleAllergen}
-          />
-        )}
-        {vm.step === 2 && (
-          <OnboardingLevelFrequencyStep
-            cookingFrequency={vm.cookingFrequency}
-            cookingLevel={vm.cookingLevel}
-            onSelectFrequency={vm.setCookingFrequency}
-            onSelectLevel={vm.setCookingLevel}
-          />
-        )}
+        <View style={styles.content}>
+          <Overline>bem-vindo à suliv</Overline>
+          <Text style={styles.title}>
+            Vamos deixar sua cozinha do seu <Text style={styles.emphasis}>jeito</Text>
+          </Text>
+          <Text style={styles.body}>
+            Em poucos passos, vamos entender suas preferências para recomendar receitas que combinam com você.
+          </Text>
 
-        {isLastStep && vm.submitStatus === 'error' && (
-          <View style={styles.errorGroup}>
-            <Text style={styles.errorMessage} testID="onboarding-error-message">
-              Não foi possível concluir seu cadastro agora. Tente novamente.
-            </Text>
-            <Pressable
-              accessibilityLabel="Tentar novamente"
-              accessibilityRole="button"
-              onPress={handleSubmit}
-              style={styles.secondaryButton}
-              testID="onboarding-retry-button">
-              <Text style={styles.secondaryButtonText}>Tentar novamente</Text>
-            </Pressable>
+          <View style={styles.stepList}>
+            {STEP_ITEMS.map((item, index) => (
+              <View key={item} style={styles.stepItem}>
+                <View style={styles.stepNumberBadge}>
+                  <Text style={styles.stepNumberText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.stepLabel}>{item}</Text>
+              </View>
+            ))}
           </View>
-        )}
-
-        <View style={styles.footer}>
-          {vm.step > 0 && (
-            <Pressable
-              accessibilityLabel="Voltar"
-              accessibilityRole="button"
-              onPress={vm.back}
-              style={styles.secondaryButton}
-              testID="onboarding-back-button">
-              <Text style={styles.secondaryButtonText}>Voltar</Text>
-            </Pressable>
-          )}
-          <Pressable
-            accessibilityLabel={isLastStep ? 'Concluir' : 'Continuar'}
-            accessibilityRole="button"
-            disabled={isConfirmDisabled}
-            onPress={isLastStep ? handleSubmit : vm.next}
-            style={[styles.button, isConfirmDisabled && styles.disabled]}
-            testID={isLastStep ? 'onboarding-submit-button' : 'onboarding-continue-button'}>
-            {isSubmitting ? (
-              <ActivityIndicator color={semanticColors.brandOn} />
-            ) : (
-              <Text style={styles.buttonText}>{isLastStep ? 'Concluir' : 'Continuar'}</Text>
-            )}
-          </Pressable>
         </View>
+
+        <View style={styles.squiggleDoodle}>
+          <SquiggleDoodle size={96} />
+        </View>
+
+        <Button
+          icon={<Icon color={semanticColors.brandOn} name="arrowRight" size={18} />}
+          onPress={() => router.push(STEPS_ROUTE)}
+          size="lg"
+          style={styles.startButton}
+          testID="onboarding-welcome-start-button">
+          Começar
+        </Button>
       </View>
     </SafeAreaView>
   );
@@ -116,46 +65,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: semanticColors.bg,
   },
+  branchDoodle: {
+    position: 'absolute',
+    right: spacing.lg,
+    top: spacing.lg,
+  },
   container: {
     flex: 1,
     justifyContent: 'space-between',
     padding: spacing.lg,
+    paddingTop: spacing.xxxl,
   },
-  errorGroup: {
+  content: {
+    gap: spacing.md,
+  },
+  title: {
+    ...typography.displayMd,
+    fontFamily: fontFamilies.display,
+    color: semanticColors.fg,
+  },
+  emphasis: {
+    fontFamily: fontFamilies.displayItalic,
+    color: semanticColors.fgBrand,
+    fontStyle: 'italic',
+  },
+  body: {
+    ...typography.bodyMd,
+    color: semanticColors.fgSecondary,
+  },
+  stepList: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
   },
-  errorMessage: {
+  stepNumberBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: semanticColors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    ...typography.labelMd,
+    fontFamily: fontFamilies.sansSemibold,
+    color: semanticColors.fgBrand,
+  },
+  stepLabel: {
     ...typography.bodyMd,
-    color: semanticColors.danger,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'flex-end',
-  },
-  button: {
-    backgroundColor: semanticColors.brand,
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: semanticColors.brandOn,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: semanticColors.surface,
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  secondaryButtonText: {
     color: semanticColors.fg,
-    fontSize: 16,
-    fontWeight: '600',
+  },
+  squiggleDoodle: {
+    alignSelf: 'center',
+  },
+  startButton: {
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
 });
