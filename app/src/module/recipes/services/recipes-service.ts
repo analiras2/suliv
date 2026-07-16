@@ -1,16 +1,8 @@
-import { CATEGORIES, RECIPES, WEEK_PLAN } from '@/module/recipes/data/mock-recipes';
-import type { Category, DayPlanEntry, Recipe } from '@/module/recipes/types';
+import { RECIPES, WEEK_PLAN } from '@/module/recipes/data/mock-recipes';
+import type { DayPlanEntry } from '@/module/recipes/types';
 
-export async function fetchRecipes(): Promise<Recipe[]> {
-  return RECIPES;
-}
-
-export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
+export async function fetchRecipeById(id: string) {
   return RECIPES.find((recipe) => recipe.id === id);
-}
-
-export async function fetchCategories(): Promise<Category[]> {
-  return CATEGORIES;
 }
 
 export async function fetchWeekPlan(): Promise<DayPlanEntry[]> {

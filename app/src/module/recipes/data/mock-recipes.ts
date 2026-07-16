@@ -1,6 +1,19 @@
-import type { Category, DayPlanEntry, Recipe } from '@/module/recipes/types';
+import type { DayPlanEntry, RecipeGradientKey } from '@/module/recipes/types';
 
-export const RECIPES: Recipe[] = [
+interface LegacyRecipeDetail {
+  id: string;
+  title: string;
+  meta: string;
+  time: string;
+  gradient: RecipeGradientKey;
+  servings: number;
+  proteinGrams: number;
+  kcal: number;
+  description: string;
+  ingredients: string[];
+}
+
+export const RECIPES: LegacyRecipeDetail[] = [
   {
     id: 'r1',
     title: 'Creme de abóbora com tahine',
@@ -79,17 +92,6 @@ export const RECIPES: Recipe[] = [
     description: 'Sopa reconfortante, boa pra guardar em potinhos.',
     ingredients: ['1 kg de tomate', '1 cebola', 'alho', 'manjericão fresco', 'azeite'],
   },
-];
-
-export const CATEGORIES: Category[] = [
-  { id: 'cafe', label: 'Café', gradient: 'peach' },
-  { id: 'almoco', label: 'Almoço', gradient: 'moss' },
-  { id: 'jantar', label: 'Jantar', gradient: 'olive' },
-  { id: 'snacks', label: 'Snacks', gradient: 'sand' },
-  { id: 'doces', label: 'Doces', gradient: 'brick' },
-  { id: 'sopas', label: 'Sopas', gradient: 'clay' },
-  { id: 'saladas', label: 'Saladas', gradient: 'moss' },
-  { id: 'bebidas', label: 'Bebidas', gradient: 'peach' },
 ];
 
 export const WEEK_PLAN: DayPlanEntry[] = [

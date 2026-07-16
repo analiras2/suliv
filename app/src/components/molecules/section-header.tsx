@@ -8,9 +8,10 @@ export type SectionHeaderProps = {
   title: string;
   actionLabel?: string;
   onActionPress?: () => void;
+  testID?: string;
 };
 
-export function SectionHeader({ overline, title, actionLabel, onActionPress }: SectionHeaderProps) {
+export function SectionHeader({ overline, title, actionLabel, onActionPress, testID }: SectionHeaderProps) {
   return (
     <View style={styles.row}>
       <View style={styles.titleGroup}>
@@ -18,7 +19,7 @@ export function SectionHeader({ overline, title, actionLabel, onActionPress }: S
         <Text style={styles.title}>{title}</Text>
       </View>
       {actionLabel ? (
-        <Pressable onPress={onActionPress}>
+        <Pressable onPress={onActionPress} testID={testID}>
           <Text style={styles.action}>{actionLabel}</Text>
         </Pressable>
       ) : null}

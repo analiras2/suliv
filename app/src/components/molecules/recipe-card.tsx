@@ -1,4 +1,4 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -7,13 +7,12 @@ import {
   colors,
   fontFamilies,
   radii,
-  recipeGradients,
   semanticColors,
   shadows,
   spacing,
   typography,
 } from '@/design-system/tokens';
-import type { Recipe } from '@/module/recipes/types';
+import type { Recipe, TimeBucket } from '@/module/recipes/types';
 
 export type RecipeCardProps = {
   recipe: Recipe;
@@ -22,28 +21,32 @@ export type RecipeCardProps = {
   onOpen: () => void;
 };
 
+const TIME_BUCKET_LABELS: Record<TimeBucket, string> = {
+  ate_15: 'até 15 min',
+  quinze_30: '15–30 min',
+  trinta_60: '30–60 min',
+  sessenta_mais: '60+ min',
+};
+
 function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen }: RecipeCardProps) {
   return (
     <View style={styles.card}>
       <Pressable onPress={onOpen}>
-        <LinearGradient
-          colors={recipeGradients[recipe.gradient]}
-          style={styles.image}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}>
-          {recipe.time ? (
-            <View style={styles.timePill}>
-              <Icon name="clock" size={11} color={colors.ink700} strokeWidth={2} />
-              <Text style={styles.timeLabel}>{recipe.time}</Text>
-            </View>
+        <View style={styles.image}>
+          {recipe.coverImageUrl ? (
+            <Image source={{ uri: recipe.coverImageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
           ) : null}
-        </LinearGradient>
+          <View style={styles.timePill}>
+            <Icon name="clock" size={11} color={colors.ink700} strokeWidth={2} />
+            <Text style={styles.timeLabel}>{TIME_BUCKET_LABELS[recipe.timeBucket]}</Text>
+          </View>
+        </View>
         <View style={styles.body}>
           <Text style={styles.title} numberOfLines={2}>
             {recipe.title}
           </Text>
           <Text style={styles.meta} numberOfLines={1}>
-            {recipe.meta}
+            {recipe.category.label}
           </Text>
         </View>
       </Pressable>
@@ -69,6 +72,7 @@ const styles = StyleSheet.create({
   },
   image: {
     height: 148,
+    backgroundColor: semanticColors.bgSubtle,
     justifyContent: 'flex-end',
   },
   saveButton: {

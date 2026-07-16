@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 
-import { useRecipesQuery } from '@/module/recipes/queries/use-recipes-query';
+import { useFeedQuery } from '@/module/feed/queries/use-feed-query';
+import { flattenFeedRecipes } from '@/module/feed/services/feed-service';
 import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
 
 export const SEARCH_FILTERS = ['rápido', 'sem glúten', 'jantar', 'café da manhã', 'proteína', 'salgado', 'doce'];
@@ -9,16 +10,17 @@ export const SEARCH_FILTERS = ['rápido', 'sem glúten', 'jantar', 'café da man
 export function useSearchViewModel() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const recipesQuery = useRecipesQuery();
+  const feedQuery = useFeedQuery();
   const savedIds = useSavedRecipesStore((state) => state.savedIds);
   const toggleSaved = useSavedRecipesStore((state) => state.toggleSaved);
 
+  const allRecipes = useMemo(() => (feedQuery.data ? flattenFeedRecipes(feedQuery.data) : []), [feedQuery.data]);
+
   const filteredRecipes = useMemo(() => {
-    const recipes = recipesQuery.data ?? [];
-    if (!query) return recipes;
+    if (!query) return allRecipes;
     const normalizedQuery = query.toLowerCase();
-    return recipes.filter((recipe) => recipe.title.toLowerCase().includes(normalizedQuery));
-  }, [recipesQuery.data, query]);
+    return allRecipes.filter((recipe) => recipe.title.toLowerCase().includes(normalizedQuery));
+  }, [allRecipes, query]);
 
   const openRecipe = useCallback(
     (id: string) => {
@@ -28,7 +30,7 @@ export function useSearchViewModel() {
   );
 
   return {
-    isLoading: recipesQuery.isLoading,
+    isLoading: feedQuery.isLoading,
     query,
     setQuery,
     recipes: filteredRecipes,

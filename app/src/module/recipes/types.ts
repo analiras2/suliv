@@ -2,17 +2,35 @@ import type { recipeGradients } from '@/design-system/tokens';
 
 export type RecipeGradientKey = keyof typeof recipeGradients;
 
+export type RecipeCategoryKey =
+  | 'cafe_da_manha'
+  | 'almoco_jantar'
+  | 'lanche'
+  | 'sobremesa'
+  | 'bebida'
+  | 'molhos_acompanhamentos';
+
+export type TimeBucket = 'ate_15' | 'quinze_30' | 'trinta_60' | 'sessenta_mais';
+
+export type Difficulty = 'iniciante' | 'intermediario' | 'avancado';
+
+export type DietPreference = 'vegano' | 'vegetariano' | 'flexitariano';
+
+export interface Category {
+  id: string;
+  key: RecipeCategoryKey;
+  label: string;
+}
+
 export interface Recipe {
   id: string;
+  slug: string;
   title: string;
-  meta: string;
-  time: string;
-  gradient: RecipeGradientKey;
-  servings: number;
-  proteinGrams: number;
-  kcal: number;
-  description: string;
-  ingredients: string[];
+  coverImageUrl: string | null;
+  category: Category;
+  timeBucket: TimeBucket;
+  difficulty: Difficulty;
+  dietPreference: DietPreference;
 }
 
 export interface DayPlanEntry {
@@ -20,10 +38,4 @@ export interface DayPlanEntry {
   label: string;
   recipe: { title: string; meta: string };
   done: boolean;
-}
-
-export interface Category {
-  id: string;
-  label: string;
-  gradient: RecipeGradientKey;
 }

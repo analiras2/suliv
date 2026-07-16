@@ -1,19 +1,20 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 
-import { useRecipesQuery } from '@/module/recipes/queries/use-recipes-query';
+import { useFeedQuery } from '@/module/feed/queries/use-feed-query';
+import { flattenFeedRecipes } from '@/module/feed/services/feed-service';
 import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
 
 export function useSavedViewModel() {
   const router = useRouter();
-  const recipesQuery = useRecipesQuery();
+  const feedQuery = useFeedQuery();
   const savedIds = useSavedRecipesStore((state) => state.savedIds);
   const toggleSaved = useSavedRecipesStore((state) => state.toggleSaved);
 
-  const savedRecipes = useMemo(
-    () => (recipesQuery.data ?? []).filter((recipe) => savedIds.has(recipe.id)),
-    [recipesQuery.data, savedIds],
-  );
+  const savedRecipes = useMemo(() => {
+    const allRecipes = feedQuery.data ? flattenFeedRecipes(feedQuery.data) : [];
+    return allRecipes.filter((recipe) => savedIds.has(recipe.id));
+  }, [feedQuery.data, savedIds]);
 
   const openRecipe = useCallback(
     (id: string) => {
@@ -27,7 +28,7 @@ export function useSavedViewModel() {
   }, [router]);
 
   return {
-    isLoading: recipesQuery.isLoading,
+    isLoading: feedQuery.isLoading,
     savedRecipes,
     toggleSaved,
     openRecipe,
