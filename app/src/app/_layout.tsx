@@ -62,6 +62,7 @@ export default function RootLayout() {
               <Stack.Protected guard={splash.initialRoute === '(tabs)'}>
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="recipe/[id]" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="ver-tudo" />
               </Stack.Protected>
             </Stack>
           </ThemeProvider>
