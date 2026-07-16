@@ -106,7 +106,9 @@ describe('Allergens & Onboarding (integration)', () => {
 
     const body = response.body as AllergenResponseBody[];
     expect(body).toHaveLength(7);
-    expect(body.every((allergen) => typeof allergen.id === 'string')).toBe(true);
+    expect(body.every((allergen) => typeof allergen.id === 'string')).toBe(
+      true,
+    );
     expect(body.map((allergen) => allergen.name)).not.toContain(
       'Termo pendente de teste',
     );
@@ -136,7 +138,9 @@ describe('Allergens & Onboarding (integration)', () => {
 
     await expect(
       prisma.userAllergy.findUnique({
-        where: { userId_allergenId: { userId: 'user-1', allergenId: leite.id } },
+        where: {
+          userId_allergenId: { userId: 'user-1', allergenId: leite.id },
+        },
       }),
     ).resolves.not.toBeNull();
 
@@ -147,7 +151,10 @@ describe('Allergens & Onboarding (integration)', () => {
     await expect(
       prisma.userAllergy.findUnique({
         where: {
-          userId_allergenId: { userId: 'user-1', allergenId: newTermAllergen!.id },
+          userId_allergenId: {
+            userId: 'user-1',
+            allergenId: newTermAllergen!.id,
+          },
         },
       }),
     ).resolves.not.toBeNull();

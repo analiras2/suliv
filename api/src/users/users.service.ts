@@ -137,7 +137,10 @@ export class UsersService {
     }
   }
 
-  async completeOnboarding(userId: string, data: OnboardingDto): Promise<UserDto> {
+  async completeOnboarding(
+    userId: string,
+    data: OnboardingDto,
+  ): Promise<UserDto> {
     try {
       const user = await this.prisma.$transaction(async (tx) => {
         const updatedUser = await tx.user.update({

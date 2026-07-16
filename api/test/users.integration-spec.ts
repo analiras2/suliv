@@ -264,8 +264,24 @@ describe('UsersController (integration)', () => {
 
   it('IT-010 preserves authored recipes after account deletion', async () => {
     await bootstrap('user-1').expect(201);
+    const category = await prisma.category.upsert({
+      where: { key: 'almoco_jantar' },
+      update: {},
+      create: { key: 'almoco_jantar', label: 'Almoço/Jantar' },
+    });
     const recipe = await prisma.recipe.create({
-      data: { authorId: 'user-1', title: 'Soup' },
+      data: {
+        authorId: 'user-1',
+        title: 'Soup',
+        slug: `soup-${Date.now()}`,
+        description: 'A warm soup.',
+        categoryId: category.id,
+        prepTimeMinutes: 20,
+        timeBucket: 'quinze_30',
+        servings: 2,
+        difficulty: 'iniciante',
+        dietPreference: 'flexitariano',
+      },
     });
     await request(app.getHttpServer())
       .delete('/me')
