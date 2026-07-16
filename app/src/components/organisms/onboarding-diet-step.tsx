@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Pill } from '@/components/atoms/pill';
+import { type IconName } from '@/components/atoms/icon';
+import { OptionCard } from '@/components/molecules/option-card';
 import { semanticColors, spacing, typography } from '@/design-system/tokens';
 import type { DietPreference } from '@/module/onboarding/services/onboarding-service';
 
@@ -9,10 +10,20 @@ export type OnboardingDietStepProps = {
   onSelect: (value: DietPreference) => void;
 };
 
-const DIET_OPTIONS: { value: DietPreference; label: string }[] = [
-  { value: 'vegano', label: 'Vegano' },
-  { value: 'vegetariano', label: 'Vegetariano' },
-  { value: 'flexitariano', label: 'Flexitariano' },
+const DIET_OPTIONS: { value: DietPreference; label: string; subtitle: string; icon: IconName }[] = [
+  { value: 'vegano', label: 'Vegano', subtitle: 'Sem ingredientes de origem animal.', icon: 'vegan' },
+  {
+    value: 'vegetariano',
+    label: 'Vegetariano',
+    subtitle: 'Sem carne, com possibilidade de ovos e laticínios.',
+    icon: 'vegetarian',
+  },
+  {
+    value: 'flexitariano',
+    label: 'Flexitariano',
+    subtitle: 'Alimentação flexível, com interesse em receitas mais conscientes.',
+    icon: 'flexitarian',
+  },
 ];
 
 export function OnboardingDietStep({ dietPreference, onSelect }: OnboardingDietStepProps) {
@@ -23,17 +34,17 @@ export function OnboardingDietStep({ dietPreference, onSelect }: OnboardingDietS
         {DIET_OPTIONS.map((option) => {
           const isSelected = dietPreference === option.value;
           return (
-            <Pressable
+            <OptionCard
               accessibilityLabel={option.label}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
+              icon={option.icon}
               key={option.value}
               onPress={() => onSelect(option.value)}
-              testID={`onboarding-diet-option-${option.value}`}>
-              <Pill tone={isSelected ? 'moss' : 'sand'} size="md">
-                {option.label}
-              </Pill>
-            </Pressable>
+              selected={isSelected}
+              selectionMode="single"
+              subtitle={option.subtitle}
+              testID={`onboarding-diet-option-${option.value}`}
+              title={option.label}
+            />
           );
         })}
       </View>
@@ -50,8 +61,6 @@ const styles = StyleSheet.create({
     color: semanticColors.fg,
   },
   options: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
 });

@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { type IconName } from '@/components/atoms/icon';
 import { Pill } from '@/components/atoms/pill';
+import { OptionCard } from '@/components/molecules/option-card';
 import { spacing } from '@/design-system/tokens';
 import type { ApprovedAllergen } from '@/module/onboarding/services/onboarding-service';
 
@@ -11,6 +13,25 @@ export type OnboardingAllergenOptionsProps = {
   canAddNewTerm: boolean;
   onAddNewTerm: () => void;
 };
+
+const ALLERGEN_ICON_KEYWORDS: { keyword: string; icon: IconName }[] = [
+  { keyword: 'leite', icon: 'milk' },
+  { keyword: 'ovo', icon: 'eggs' },
+  { keyword: 'amendoim', icon: 'peanut' },
+  { keyword: 'soja', icon: 'soy' },
+  { keyword: 'glúten', icon: 'wheat' },
+  { keyword: 'gluten', icon: 'wheat' },
+  { keyword: 'trigo', icon: 'wheat' },
+  { keyword: 'castanha', icon: 'nuts' },
+  { keyword: 'noz', icon: 'nuts' },
+  { keyword: 'gergelim', icon: 'sesame' },
+];
+
+function iconForAllergen(name: string): IconName {
+  const normalized = name.toLowerCase();
+  const match = ALLERGEN_ICON_KEYWORDS.find(({ keyword }) => normalized.includes(keyword));
+  return match ? match.icon : 'leaf';
+}
 
 export function OnboardingAllergenOptions({
   allergens,
@@ -24,17 +45,16 @@ export function OnboardingAllergenOptions({
       {allergens.map((allergen) => {
         const isSelected = selectedIds.includes(allergen.id);
         return (
-          <Pressable
+          <OptionCard
             accessibilityLabel={allergen.name}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
+            icon={iconForAllergen(allergen.name)}
             key={allergen.id}
             onPress={() => onToggle(allergen.id)}
-            testID={`onboarding-allergy-option-${allergen.id}`}>
-            <Pill tone={isSelected ? 'moss' : 'sand'} size="md">
-              {allergen.name}
-            </Pill>
-          </Pressable>
+            selected={isSelected}
+            selectionMode="multiple"
+            testID={`onboarding-allergy-option-${allergen.id}`}
+            title={allergen.name}
+          />
         );
       })}
       {canAddNewTerm && (
@@ -54,8 +74,6 @@ export function OnboardingAllergenOptions({
 
 const styles = StyleSheet.create({
   options: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
 });

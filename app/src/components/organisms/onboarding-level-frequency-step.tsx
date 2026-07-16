@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Pill } from '@/components/atoms/pill';
+import { type IconName } from '@/components/atoms/icon';
+import { OptionCard } from '@/components/molecules/option-card';
 import { semanticColors, spacing, typography } from '@/design-system/tokens';
 import type {
   CookingFrequency,
@@ -14,16 +15,16 @@ export type OnboardingLevelFrequencyStepProps = {
   onSelectFrequency: (value: CookingFrequency) => void;
 };
 
-const LEVEL_OPTIONS: { value: CookingLevel; label: string }[] = [
-  { value: 'iniciante', label: 'Iniciante' },
-  { value: 'intermediario', label: 'Intermediário' },
-  { value: 'avancado', label: 'Avançado' },
+const LEVEL_OPTIONS: { value: CookingLevel; label: string; icon: IconName }[] = [
+  { value: 'iniciante', label: 'Iniciante', icon: 'sparkle' },
+  { value: 'intermediario', label: 'Intermediário', icon: 'leaf' },
+  { value: 'avancado', label: 'Avançado', icon: 'sun' },
 ];
 
-const FREQUENCY_OPTIONS: { value: CookingFrequency; label: string }[] = [
-  { value: 'raramente', label: 'Raramente' },
-  { value: 'algumas_vezes_semana', label: 'Algumas vezes por semana' },
-  { value: 'quase_todo_dia', label: 'Quase todo dia' },
+const FREQUENCY_OPTIONS: { value: CookingFrequency; label: string; icon: IconName }[] = [
+  { value: 'raramente', label: 'Raramente', icon: 'calendar' },
+  { value: 'algumas_vezes_semana', label: 'Algumas vezes por semana', icon: 'clock' },
+  { value: 'quase_todo_dia', label: 'Quase todo dia', icon: 'bell' },
 ];
 
 export function OnboardingLevelFrequencyStep({
@@ -40,17 +41,16 @@ export function OnboardingLevelFrequencyStep({
           {LEVEL_OPTIONS.map((option) => {
             const isSelected = cookingLevel === option.value;
             return (
-              <Pressable
+              <OptionCard
                 accessibilityLabel={option.label}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
+                icon={option.icon}
                 key={option.value}
                 onPress={() => onSelectLevel(option.value)}
-                testID={`onboarding-level-option-${option.value}`}>
-                <Pill tone={isSelected ? 'moss' : 'sand'} size="md">
-                  {option.label}
-                </Pill>
-              </Pressable>
+                selected={isSelected}
+                selectionMode="single"
+                testID={`onboarding-level-option-${option.value}`}
+                title={option.label}
+              />
             );
           })}
         </View>
@@ -61,17 +61,16 @@ export function OnboardingLevelFrequencyStep({
           {FREQUENCY_OPTIONS.map((option) => {
             const isSelected = cookingFrequency === option.value;
             return (
-              <Pressable
+              <OptionCard
                 accessibilityLabel={option.label}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
+                icon={option.icon}
                 key={option.value}
                 onPress={() => onSelectFrequency(option.value)}
-                testID={`onboarding-frequency-option-${option.value}`}>
-                <Pill tone={isSelected ? 'moss' : 'sand'} size="md">
-                  {option.label}
-                </Pill>
-              </Pressable>
+                selected={isSelected}
+                selectionMode="single"
+                testID={`onboarding-frequency-option-${option.value}`}
+                title={option.label}
+              />
             );
           })}
         </View>
@@ -92,8 +91,6 @@ const styles = StyleSheet.create({
     color: semanticColors.fg,
   },
   options: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
 });

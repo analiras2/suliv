@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '@/components/atoms/icon';
 import { SearchField } from '@/components/molecules/search-field';
 import { OnboardingAddedTerms } from '@/components/organisms/onboarding-added-terms';
 import { OnboardingAllergenOptions } from '@/components/organisms/onboarding-allergen-options';
-import { semanticColors, spacing, typography } from '@/design-system/tokens';
+import { radii, semanticColors, spacing, typography } from '@/design-system/tokens';
 import { useApprovedAllergensQuery } from '@/module/onboarding/queries/use-approved-allergens-query';
 
 export type OnboardingAllergiesStepProps = {
@@ -12,6 +13,7 @@ export type OnboardingAllergiesStepProps = {
   newTerms: string[];
   onToggleAllergen: (id: string) => void;
   onAddNewTerm: (term: string) => void;
+  onClearAllergies: () => void;
 };
 
 export function OnboardingAllergiesStep({
@@ -19,7 +21,9 @@ export function OnboardingAllergiesStep({
   newTerms,
   onToggleAllergen,
   onAddNewTerm,
+  onClearAllergies,
 }: OnboardingAllergiesStepProps) {
+  const isNoneSelected = allergenIds.length === 0 && newTerms.length === 0;
   const [search, setSearch] = useState('');
   const { data: approvedAllergens = [] } = useApprovedAllergensQuery();
 
@@ -48,6 +52,18 @@ export function OnboardingAllergiesStep({
         value={search}
         onChangeText={setSearch}
       />
+      <Pressable
+        accessibilityLabel="Nenhuma alergia ou restrição"
+        accessibilityRole="button"
+        accessibilityState={{ selected: isNoneSelected }}
+        onPress={onClearAllergies}
+        style={[styles.noneButton, isNoneSelected && styles.noneButtonSelected]}
+        testID="onboarding-allergy-none-button">
+        <Text style={[styles.noneButtonText, isNoneSelected && styles.noneButtonTextSelected]}>
+          Nenhuma alergia ou restrição
+        </Text>
+        {isNoneSelected ? <Icon color={semanticColors.fgInverse} name="check" size={16} /> : null}
+      </Pressable>
       <OnboardingAllergenOptions
         allergens={filteredAllergens}
         canAddNewTerm={canAddNewTerm}
@@ -67,5 +83,27 @@ const styles = StyleSheet.create({
   title: {
     ...typography.labelMd,
     color: semanticColors.fg,
+  },
+  noneButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: semanticColors.border,
+    backgroundColor: semanticColors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  noneButtonSelected: {
+    backgroundColor: semanticColors.surfaceInverse,
+    borderColor: semanticColors.surfaceInverse,
+  },
+  noneButtonText: {
+    ...typography.bodyMd,
+    color: semanticColors.fg,
+  },
+  noneButtonTextSelected: {
+    color: semanticColors.fgInverse,
   },
 });
