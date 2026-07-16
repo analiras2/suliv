@@ -3,17 +3,22 @@ import {
   Category,
   CookingLevel,
   DietPreference,
+  EditorialBoost,
   Prisma,
   Recipe,
+  RecipeAllergen,
   RecipeCategory,
   RecipeStatus,
   TimeBucket,
   User,
+  UserAllergy,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PopularityService } from './popularity.service';
 import { RankingService } from './ranking.service';
 
-const NOW = new Date('2026-07-15T12:00:00.000Z');
+const NOW = new Date('2026-07-16T12:00:00.000Z');
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const category: Category = {
   id: 'category-1',
@@ -44,7 +49,7 @@ function recipeFixture(
     authorMessageToModerator: null,
     termsVersionAccepted: null,
     submittedAt: null,
-    approvedAt: null,
+    approvedAt: NOW,
     removedAt: null,
     createdAt: NOW,
     updatedAt: NOW,
@@ -83,15 +88,48 @@ describe('RankingService', () => {
     Promise<Array<Recipe & { category: Category }>>,
     [Prisma.RecipeFindManyArgs]
   >();
+  const findManyUserAllergy = jest.fn<
+    Promise<UserAllergy[]>,
+    [Prisma.UserAllergyFindManyArgs]
+  >();
+  const findManyRecipeAllergen = jest.fn<
+    Promise<RecipeAllergen[]>,
+    [Prisma.RecipeAllergenFindManyArgs]
+  >();
+  const findManyEditorialBoost = jest.fn<
+    Promise<EditorialBoost[]>,
+    [Prisma.EditorialBoostFindManyArgs]
+  >();
   const prisma = {
     user: { findUnique: findUniqueUser },
     recipe: { findMany: findManyRecipe },
+    userAllergy: { findMany: findManyUserAllergy },
+    recipeAllergen: { findMany: findManyRecipeAllergen },
+    editorialBoost: { findMany: findManyEditorialBoost },
   };
+  const getWeeklyPopularity = jest.fn<Promise<number>, [string]>();
+  const isEligible = jest.fn<Promise<boolean>, [string]>();
+  const getCategoryAverage = jest.fn<Promise<number>, [string]>();
+  const popularityService = {
+    getWeeklyPopularity,
+    isEligible,
+    getCategoryAverage,
+  };
+
   let service: RankingService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new RankingService(prisma as unknown as PrismaService);
+    findManyUserAllergy.mockResolvedValue([]);
+    findManyRecipeAllergen.mockResolvedValue([]);
+    findManyEditorialBoost.mockResolvedValue([]);
+    getWeeklyPopularity.mockResolvedValue(0);
+    isEligible.mockResolvedValue(true);
+    getCategoryAverage.mockResolvedValue(0);
+    service = new RankingService(
+      prisma as unknown as PrismaService,
+      popularityService as unknown as PopularityService,
+    );
   });
 
   it('throws NotFoundException for an unknown user', async () => {
@@ -101,89 +139,128 @@ describe('RankingService', () => {
     );
   });
 
-  describe('UT-001 diet-hierarchy filtering', () => {
-    it.each([
-      [DietPreference.vegano, [DietPreference.vegano]],
-      [
-        DietPreference.vegetariano,
-        [DietPreference.vegano, DietPreference.vegetariano],
-      ],
-      [
-        DietPreference.flexitariano,
-        [
-          DietPreference.vegano,
-          DietPreference.vegetariano,
-          DietPreference.flexitariano,
-        ],
-      ],
-    ])('%s only sees %j', async (dietPreference, compatibleDiets) => {
-      findUniqueUser.mockResolvedValue(userFixture({ dietPreference }));
-      findManyRecipe.mockResolvedValue([]);
-
-      await service.getSelectedForYou('user-1', 5);
-
-      expect(findManyRecipe).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            status: RecipeStatus.aprovada,
-            dietPreference: { in: compatibleDiets },
-          },
-        }),
-      );
-    });
-  });
-
-  it('UT-002 applies no diet filter and does not throw when dietPreference is null', async () => {
-    findUniqueUser.mockResolvedValue(userFixture({ dietPreference: null }));
-    findManyRecipe.mockResolvedValue([recipeFixture()]);
-
-    await expect(service.getSelectedForYou('user-1', 5)).resolves.toHaveLength(
-      1,
-    );
-
-    expect(findManyRecipe).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { status: RecipeStatus.aprovada, dietPreference: undefined },
-      }),
-    );
-  });
-
-  it('UT-003 orders results by createdAt descending', async () => {
+  it('returns an empty list when there are no aprovada candidates', async () => {
     findUniqueUser.mockResolvedValue(userFixture());
     findManyRecipe.mockResolvedValue([]);
 
-    await service.getSelectedForYou('user-1', 5);
-
-    expect(findManyRecipe).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
-    );
+    await expect(service.getSelectedForYou('user-1', 5)).resolves.toEqual([]);
   });
 
-  it('UT-004 returns exactly the available matches when fewer than limit', async () => {
-    findUniqueUser.mockResolvedValue(
-      userFixture({ dietPreference: DietPreference.vegano }),
-    );
-    const matches = [
-      recipeFixture({ id: 'recipe-1', dietPreference: DietPreference.vegano }),
-      recipeFixture({ id: 'recipe-2', dietPreference: DietPreference.vegano }),
-    ];
-    findManyRecipe.mockResolvedValue(matches);
-
-    const result = await service.getSelectedForYou('user-1', 5);
-
-    expect(result).toHaveLength(2);
-    expect(findManyRecipe).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 5 }),
-    );
-  });
-
-  it('never returns a recipe with a status other than aprovada', async () => {
+  it('never fetches recipes outside status aprovada', async () => {
     findUniqueUser.mockResolvedValue(userFixture());
     findManyRecipe.mockResolvedValue([]);
 
     await service.getSelectedForYou('user-1', 5);
 
     const call = findManyRecipe.mock.calls[0]?.[0];
-    expect(call?.where?.status).toBe(RecipeStatus.aprovada);
+    expect(call?.where).toEqual({ status: RecipeStatus.aprovada });
+  });
+
+  describe('cold-start slot', () => {
+    it('UT-017 appends exactly 1 additional diet-compatible, most-recently-approved recipe not already selected', async () => {
+      findUniqueUser.mockResolvedValue(
+        userFixture({ dietPreference: DietPreference.vegano }),
+      );
+      const scoredTop = ['top-1', 'top-2', 'top-3', 'top-4'].map((id) =>
+        recipeFixture({
+          id,
+          dietPreference: DietPreference.vegano,
+          approvedAt: NOW,
+        }),
+      );
+      const coldStartOlder = recipeFixture({
+        id: 'cold-start-older',
+        dietPreference: DietPreference.vegano,
+        approvedAt: new Date(NOW.getTime() - 10 * MS_PER_DAY),
+      });
+      const coldStartNewest = recipeFixture({
+        id: 'cold-start-newest',
+        dietPreference: DietPreference.vegano,
+        approvedAt: new Date(NOW.getTime() - 1 * MS_PER_DAY),
+      });
+      const incompatible = recipeFixture({
+        id: 'incompatible',
+        dietPreference: DietPreference.flexitariano,
+        approvedAt: new Date(NOW.getTime() - 1 * MS_PER_DAY),
+      });
+      findManyRecipe.mockResolvedValue([
+        ...scoredTop,
+        coldStartOlder,
+        coldStartNewest,
+        incompatible,
+      ]);
+      // Every candidate is eligible and scores equally so the 4 "top-*"
+      // recipes (all approved "now") sort ahead of the cold-start pool.
+      isEligible.mockImplementation(async (recipeId) =>
+        Promise.resolve(recipeId.startsWith('top-')),
+      );
+
+      const result = await service.getSelectedForYou('user-1', 5);
+
+      expect(result).toHaveLength(5);
+      expect(result.map((recipe) => recipe.id)).toEqual([
+        'top-1',
+        'top-2',
+        'top-3',
+        'top-4',
+        'cold-start-newest',
+      ]);
+    });
+
+    it('UT-018 returns fewer than 5 entries with no error when fewer than 4 other eligible recipes exist', async () => {
+      findUniqueUser.mockResolvedValue(
+        userFixture({ dietPreference: DietPreference.vegano }),
+      );
+      const onlyEligible = recipeFixture({
+        id: 'eligible-1',
+        dietPreference: DietPreference.vegano,
+      });
+      findManyRecipe.mockResolvedValue([onlyEligible]);
+      isEligible.mockResolvedValue(true);
+
+      const result = await service.getSelectedForYou('user-1', 5);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('eligible-1');
+    });
+
+    it('omits the cold-start slot when the top scores already consume every candidate', async () => {
+      findUniqueUser.mockResolvedValue(
+        userFixture({ dietPreference: DietPreference.vegano }),
+      );
+      const fourCandidates = ['a', 'b', 'c', 'd'].map((id) =>
+        recipeFixture({ id, dietPreference: DietPreference.vegano }),
+      );
+      findManyRecipe.mockResolvedValue(fourCandidates);
+      isEligible.mockResolvedValue(true);
+
+      const result = await service.getSelectedForYou('user-1', 5);
+
+      expect(result).toHaveLength(4);
+    });
+  });
+
+  describe('allergy conflict', () => {
+    it('penalizes but does not exclude a recipe with a conflicting allergen from the candidate pool', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      const conflicting = recipeFixture({ id: 'conflicting' });
+      findManyRecipe.mockResolvedValue([conflicting]);
+      findManyRecipeAllergen.mockResolvedValue([
+        { recipeId: 'conflicting', allergenId: 'allergen-leite' },
+      ]);
+      findManyUserAllergy.mockResolvedValue([
+        {
+          userId: 'user-1',
+          allergenId: 'allergen-leite',
+          createdAt: NOW,
+          updatedAt: NOW,
+        },
+      ]);
+      isEligible.mockResolvedValue(true);
+
+      const result = await service.getSelectedForYou('user-1', 5);
+
+      expect(result.map((recipe) => recipe.id)).toEqual(['conflicting']);
+    });
   });
 });
