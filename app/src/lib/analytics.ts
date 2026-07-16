@@ -9,6 +9,9 @@ export interface AnalyticsEventPayloads {
     cooking_frequency: string;
     allergy_count: number;
   };
+  recipe_opened: { recipe_id: string; origin: string };
+  feed_viewed: Record<string, never>;
+  feed_section_viewed: { section: 'selecionadas' | 'categorias' | 'top_semana'; category_key?: string };
 }
 
 export interface AnalyticsClient {
