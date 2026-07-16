@@ -204,3 +204,22 @@ model RecipeDailyStats {
   @@id([recipeId, date])
   @@map("recipe_daily_stats")
 }
+
+model RecipeAllergen {
+  recipeId   String @map("recipe_id")
+  allergenId String @map("allergen_id")
+
+  @@id([recipeId, allergenId])
+  @@map("recipe_allergens")
+}
+
+model EditorialBoost {
+  id               String   @id @default(uuid())
+  recipeId         String   @map("recipe_id")
+  weight           Int
+  appliedByAdminId String?  @map("applied_by_admin_id") // not yet a real FK — ADR-003
+  startsAt         DateTime @map("starts_at")
+  endsAt           DateTime @map("ends_at")
+
+  @@map("editorial_boosts")
+}

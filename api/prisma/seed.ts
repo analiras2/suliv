@@ -1,4 +1,10 @@
-import { DietPreference, CookingLevel, PrismaClient, RecipeCategory, TimeBucket } from '@prisma/client';
+import {
+  DietPreference,
+  CookingLevel,
+  PrismaClient,
+  RecipeCategory,
+  TimeBucket,
+} from '@prisma/client';
 
 const APPROVED_ALLERGENS = [
   'Leite',
@@ -18,6 +24,26 @@ const CATEGORIES: { key: RecipeCategory; label: string }[] = [
   { key: 'bebida', label: 'Bebida' },
   { key: 'molhos_acompanhamentos', label: 'Molhos/Acompanhamentos' },
 ];
+
+/**
+ * Fixed fixtures consumed directly by task_03's integration tests
+ * (IT-002, IT-003, IT-004) — keep slugs/ids stable across seed runs.
+ */
+const SEEDED_ALLERGY_CONFLICTS: { recipeSlug: string; allergenName: string }[] =
+  [
+    { recipeSlug: 'omelete-de-espinafre', allergenName: 'Leite' },
+    { recipeSlug: 'pudim-de-leite-condensado', allergenName: 'Leite' },
+    { recipeSlug: 'limonada-suica', allergenName: 'Leite' },
+  ];
+
+const EDITORIAL_BOOST_SEED_ID = '00000000-0000-0000-0000-000000000001';
+const EDITORIAL_BOOST_SEED_ADMIN_ID = 'seed-admin';
+const EDITORIAL_BOOST_SEED = {
+  recipeSlug: 'mix-de-castanhas-temperadas',
+  weight: 50,
+  startsAtOffsetDays: -1,
+  endsAtOffsetDays: 7,
+};
 
 const PLACEHOLDER_IMAGES = [
   'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
@@ -48,7 +74,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'panqueca-de-banana-vegana',
     title: 'Panqueca de banana vegana',
-    description: 'Panquecas fofinhas feitas com banana amassada e aveia, sem leite nem ovos.',
+    description:
+      'Panquecas fofinhas feitas com banana amassada e aveia, sem leite nem ovos.',
     categoryKey: 'cafe_da_manha',
     prepTimeMinutes: 15,
     timeBucket: 'ate_15',
@@ -63,7 +90,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'omelete-de-espinafre',
     title: 'Omelete de espinafre',
-    description: 'Omelete simples com espinafre refogado e queijo, pronto em poucos minutos.',
+    description:
+      'Omelete simples com espinafre refogado e queijo, pronto em poucos minutos.',
     categoryKey: 'cafe_da_manha',
     prepTimeMinutes: 10,
     timeBucket: 'ate_15',
@@ -78,7 +106,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'granola-caseira-com-frutas',
     title: 'Granola caseira com frutas',
-    description: 'Granola assada com aveia, castanhas e mel, servida com frutas frescas.',
+    description:
+      'Granola assada com aveia, castanhas e mel, servida com frutas frescas.',
     categoryKey: 'cafe_da_manha',
     prepTimeMinutes: 35,
     timeBucket: 'trinta_60',
@@ -93,7 +122,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'strogonoff-de-grao-de-bico',
     title: 'Strogonoff de grão-de-bico',
-    description: 'Versão vegana do clássico strogonoff, com grão-de-bico e creme de castanha.',
+    description:
+      'Versão vegana do clássico strogonoff, com grão-de-bico e creme de castanha.',
     categoryKey: 'almoco_jantar',
     prepTimeMinutes: 40,
     timeBucket: 'trinta_60',
@@ -123,7 +153,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'frango-grelhado-com-legumes',
     title: 'Frango grelhado com legumes',
-    description: 'Peito de frango grelhado servido com legumes salteados na manteiga.',
+    description:
+      'Peito de frango grelhado servido com legumes salteados na manteiga.',
     categoryKey: 'almoco_jantar',
     prepTimeMinutes: 30,
     timeBucket: 'quinze_30',
@@ -153,7 +184,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'wrap-de-grao-de-bico',
     title: 'Wrap de grão-de-bico',
-    description: 'Wrap recheado com pasta de grão-de-bico temperada e vegetais crocantes.',
+    description:
+      'Wrap recheado com pasta de grão-de-bico temperada e vegetais crocantes.',
     categoryKey: 'lanche',
     prepTimeMinutes: 12,
     timeBucket: 'ate_15',
@@ -168,7 +200,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'sanduiche-natural-de-frango',
     title: 'Sanduíche natural de frango',
-    description: 'Pão integral recheado com frango desfiado, cenoura e maionese caseira.',
+    description:
+      'Pão integral recheado com frango desfiado, cenoura e maionese caseira.',
     categoryKey: 'lanche',
     prepTimeMinutes: 20,
     timeBucket: 'quinze_30',
@@ -183,7 +216,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'mix-de-castanhas-temperadas',
     title: 'Mix de castanhas temperadas',
-    description: 'Castanhas assadas com páprica defumada e ervas, ótimas para levar na bolsa.',
+    description:
+      'Castanhas assadas com páprica defumada e ervas, ótimas para levar na bolsa.',
     categoryKey: 'lanche',
     prepTimeMinutes: 25,
     timeBucket: 'quinze_30',
@@ -228,7 +262,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'bolo-de-cenoura-com-cobertura',
     title: 'Bolo de cenoura com cobertura de chocolate',
-    description: 'Bolo fofinho de cenoura com cobertura brilhante de chocolate.',
+    description:
+      'Bolo fofinho de cenoura com cobertura brilhante de chocolate.',
     categoryKey: 'sobremesa',
     prepTimeMinutes: 55,
     timeBucket: 'trinta_60',
@@ -273,7 +308,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'limonada-suica',
     title: 'Limonada suíça',
-    description: 'Limonada batida com leite condensado, mais cremosa que a tradicional.',
+    description:
+      'Limonada batida com leite condensado, mais cremosa que a tradicional.',
     categoryKey: 'bebida',
     prepTimeMinutes: 10,
     timeBucket: 'ate_15',
@@ -303,7 +339,8 @@ const RECIPES: RecipeSeed[] = [
   {
     slug: 'farofa-de-banana',
     title: 'Farofa de banana',
-    description: 'Farofa crocante com banana caramelizada, acompanhamento clássico.',
+    description:
+      'Farofa crocante com banana caramelizada, acompanhamento clássico.',
     categoryKey: 'molhos_acompanhamentos',
     prepTimeMinutes: 22,
     timeBucket: 'quinze_30',
@@ -325,7 +362,9 @@ function distributeAcrossWeek(total: number, dayIndex: number): number {
   return Math.max(0, Math.round(total * DAY_WEIGHTS[dayIndex]));
 }
 
-async function seedCategories(prisma: PrismaClient): Promise<Map<RecipeCategory, string>> {
+async function seedCategories(
+  prisma: PrismaClient,
+): Promise<Map<RecipeCategory, string>> {
   const categoryIds = new Map<RecipeCategory, string>();
   for (const category of CATEGORIES) {
     const record = await prisma.category.upsert({
@@ -346,7 +385,9 @@ async function seedRecipes(
   for (const recipeSeed of RECIPES) {
     const categoryId = categoryIds.get(recipeSeed.categoryKey);
     if (!categoryId) {
-      throw new Error(`Unknown category key in seed data: ${recipeSeed.categoryKey}`);
+      throw new Error(
+        `Unknown category key in seed data: ${recipeSeed.categoryKey}`,
+      );
     }
 
     const recipe = await prisma.recipe.upsert({
@@ -387,19 +428,82 @@ async function seedRecipes(
         where: { recipeId_date: { recipeId: recipe.id, date } },
         update: {
           opens: distributeAcrossWeek(recipeSeed.weeklyOpens, dayIndex),
-          favoritesAdded: distributeAcrossWeek(recipeSeed.weeklyFavoritesAdded, dayIndex),
-          cookCompletions: distributeAcrossWeek(recipeSeed.weeklyCookCompletions, dayIndex),
+          favoritesAdded: distributeAcrossWeek(
+            recipeSeed.weeklyFavoritesAdded,
+            dayIndex,
+          ),
+          cookCompletions: distributeAcrossWeek(
+            recipeSeed.weeklyCookCompletions,
+            dayIndex,
+          ),
         },
         create: {
           recipeId: recipe.id,
           date,
           opens: distributeAcrossWeek(recipeSeed.weeklyOpens, dayIndex),
-          favoritesAdded: distributeAcrossWeek(recipeSeed.weeklyFavoritesAdded, dayIndex),
-          cookCompletions: distributeAcrossWeek(recipeSeed.weeklyCookCompletions, dayIndex),
+          favoritesAdded: distributeAcrossWeek(
+            recipeSeed.weeklyFavoritesAdded,
+            dayIndex,
+          ),
+          cookCompletions: distributeAcrossWeek(
+            recipeSeed.weeklyCookCompletions,
+            dayIndex,
+          ),
         },
       });
     }
   }
+}
+
+async function seedAllergyConflicts(prisma: PrismaClient): Promise<void> {
+  for (const conflict of SEEDED_ALLERGY_CONFLICTS) {
+    const recipe = await prisma.recipe.findUniqueOrThrow({
+      where: { slug: conflict.recipeSlug },
+    });
+    const allergen = await prisma.allergen.findUniqueOrThrow({
+      where: { name: conflict.allergenName },
+    });
+
+    await prisma.recipeAllergen.upsert({
+      where: {
+        recipeId_allergenId: { recipeId: recipe.id, allergenId: allergen.id },
+      },
+      update: {},
+      create: { recipeId: recipe.id, allergenId: allergen.id },
+    });
+  }
+}
+
+async function seedEditorialBoost(prisma: PrismaClient): Promise<void> {
+  const recipe = await prisma.recipe.findUniqueOrThrow({
+    where: { slug: EDITORIAL_BOOST_SEED.recipeSlug },
+  });
+  const today = new Date();
+  const startsAt = new Date(
+    today.getTime() + EDITORIAL_BOOST_SEED.startsAtOffsetDays * MS_PER_DAY,
+  );
+  const endsAt = new Date(
+    today.getTime() + EDITORIAL_BOOST_SEED.endsAtOffsetDays * MS_PER_DAY,
+  );
+
+  await prisma.editorialBoost.upsert({
+    where: { id: EDITORIAL_BOOST_SEED_ID },
+    update: {
+      recipeId: recipe.id,
+      weight: EDITORIAL_BOOST_SEED.weight,
+      appliedByAdminId: EDITORIAL_BOOST_SEED_ADMIN_ID,
+      startsAt,
+      endsAt,
+    },
+    create: {
+      id: EDITORIAL_BOOST_SEED_ID,
+      recipeId: recipe.id,
+      weight: EDITORIAL_BOOST_SEED.weight,
+      appliedByAdminId: EDITORIAL_BOOST_SEED_ADMIN_ID,
+      startsAt,
+      endsAt,
+    },
+  });
 }
 
 async function main(): Promise<void> {
@@ -415,6 +519,8 @@ async function main(): Promise<void> {
 
     const categoryIds = await seedCategories(prisma);
     await seedRecipes(prisma, categoryIds);
+    await seedAllergyConflicts(prisma);
+    await seedEditorialBoost(prisma);
   } finally {
     await prisma.$disconnect();
   }
