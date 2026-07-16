@@ -1,0 +1,14 @@
+appId: host.exp.Exponent
+name: E2E-001 Feed loads with all 3 sections populated
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible: Início
+- assertVisible: Selecionadas para você
+- assertVisible: Categorias
+- assertVisible: Top da semana
+- assertVisible:
+    id: selected-for-you-card-0
+- assertVisible:
+    id: top-of-week-card-0

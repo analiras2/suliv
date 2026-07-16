@@ -28,3 +28,7 @@ null), so the app routes to `(onboarding)` on login instead of `(tabs)`.
 `onboarding-happy-path.yaml` assumes the backend seed data includes an
 approved allergen named "Leite". `onboarding-submit-failure-retry.yaml`
 depends on `setAirplaneMode` support like the splash offline flow above.
+
+The feed flows (`feed-*.yaml`) also reuse the `PERSISTED_*` token pair and
+assume the Prisma seed script (ADR-002) has run, so `GET /feed` returns a
+non-empty catalog for all 3 blocks.

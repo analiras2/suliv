@@ -1,0 +1,23 @@
+appId: host.exp.Exponent
+name: E2E-002 Recipe card and Ver tudo navigation from the feed
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible:
+    id: selected-for-you-card-0
+- tapOn:
+    id: selected-for-you-card-0
+- assertNotVisible:
+    id: top-of-week-ver-tudo-button
+
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible:
+    id: top-of-week-ver-tudo-button
+- tapOn:
+    id: top-of-week-ver-tudo-button
+- assertVisible:
+    id: ver-tudo-title
+- assertVisible: Top da semana
