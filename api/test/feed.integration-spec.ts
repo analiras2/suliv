@@ -136,7 +136,7 @@ describe('Feed (integration)', () => {
     }
   });
 
-  it('IT-002 GET /feed for a vegano user returns only vegano recipes in selectedForYou', async () => {
+  it('IT-002 GET /feed for a vegano user never ranks a diet-incompatible recipe ahead of a compatible one', async () => {
     await onboard('user-2', 'vegano');
 
     const response = await request(app.getHttpServer())
@@ -144,11 +144,22 @@ describe('Feed (integration)', () => {
       .set('Authorization', `Bearer ${tokenFor('user-2')}`)
       .expect(200);
 
+    // docs/02-prd.md §8.4/§9.3: diet preference is a soft, non-exclusionary
+    // score signal (task_03) — it is not guaranteed that every recipe is
+    // vegano, only that compatible recipes never rank behind incompatible ones.
     const body = response.body as FeedResponseBody;
     expect(body.selectedForYou.length).toBeGreaterThan(0);
-    expect(
-      body.selectedForYou.every((recipe) => recipe.dietPreference === 'vegano'),
-    ).toBe(true);
+    const lastCompatibleIndex = body.selectedForYou.reduce(
+      (lastIndex, recipe, index) =>
+        recipe.dietPreference === 'vegano' ? index : lastIndex,
+      -1,
+    );
+    const firstIncompatibleIndex = body.selectedForYou.findIndex(
+      (recipe) => recipe.dietPreference !== 'vegano',
+    );
+    if (firstIncompatibleIndex !== -1) {
+      expect(lastCompatibleIndex).toBeLessThan(firstIncompatibleIndex);
+    }
   });
 
   it('IT-003 GET /feed without a valid JWT returns 401', async () => {
