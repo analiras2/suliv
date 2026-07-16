@@ -74,6 +74,10 @@ export function useOnboardingViewModel(
     [analytics],
   );
 
+  const clearAllergies = useCallback(() => {
+    setState((current) => ({ ...current, allergenIds: [], newTerms: [] }));
+  }, []);
+
   const setCookingLevel = useCallback((value: OnboardingState['cookingLevel']) => {
     setState((current) => ({ ...current, cookingLevel: value }));
   }, []);
@@ -119,6 +123,7 @@ export function useOnboardingViewModel(
     setDietPreference,
     toggleAllergen,
     addNewTerm,
+    clearAllergies,
     setCookingLevel,
     setCookingFrequency,
     submit,

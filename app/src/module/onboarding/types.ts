@@ -21,6 +21,7 @@ export interface OnboardingViewModel extends OnboardingState {
   setDietPreference: (value: OnboardingState['dietPreference']) => void;
   toggleAllergen: (id: string) => void;
   addNewTerm: (term: string) => void;
+  clearAllergies: () => void;
   setCookingLevel: (value: OnboardingState['cookingLevel']) => void;
   setCookingFrequency: (value: OnboardingState['cookingFrequency']) => void;
   submit: () => Promise<void>;

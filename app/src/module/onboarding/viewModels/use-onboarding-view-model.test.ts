@@ -244,4 +244,25 @@ describe('useOnboardingViewModel', () => {
     expect(secondCall.allergenIds).toEqual(['id-1']);
     expect(secondCall.newTerms).toEqual(['quinoa em pó']);
   });
+
+  it('UT-009: clearAllergies resets a populated allergenIds and newTerms to empty arrays', async () => {
+    const { result } = await setup();
+    await act(async () => { result.current.toggleAllergen('id-1'); });
+    await act(async () => { result.current.toggleAllergen('id-2'); });
+    await act(async () => { result.current.addNewTerm('termo-x'); });
+
+    await act(async () => { result.current.clearAllergies(); });
+
+    expect(result.current.allergenIds).toEqual([]);
+    expect(result.current.newTerms).toEqual([]);
+  });
+
+  it('UT-010: clearAllergies is a no-op when allergenIds and newTerms are already empty', async () => {
+    const { result } = await setup();
+
+    await act(async () => { result.current.clearAllergies(); });
+
+    expect(result.current.allergenIds).toEqual([]);
+    expect(result.current.newTerms).toEqual([]);
+  });
 });
