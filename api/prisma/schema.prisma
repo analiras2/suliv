@@ -40,6 +40,40 @@ enum AllergenStatus {
   pending
 }
 
+enum RecipeCategory {
+  cafe_da_manha
+  almoco_jantar
+  lanche
+  sobremesa
+  bebida
+  molhos_acompanhamentos
+}
+
+enum TimeBucket {
+  ate_15
+  quinze_30
+  trinta_60
+  sessenta_mais
+}
+
+enum RecipeStatus {
+  rascunho
+  em_analise
+  aprovada
+  precisa_de_ajustes
+  removida
+}
+
+enum AdjustmentReason {
+  ingrediente_ambiguo
+  passo_confuso
+  falta_foto
+  foto_baixa_qualidade
+  tempo_porcao_incoerente
+  conteudo_inadequado
+  outro
+}
+
 model User {
   id                    String            @id @default(uuid())
   email                 String            @unique
@@ -114,11 +148,59 @@ model AnalyticsEvent {
   @@map("analytics_events")
 }
 
-model Recipe {
-  id       String  @id @default(uuid())
-  authorId String? @map("author_id")
-  title    String
-  user     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+model Category {
+  id    String         @id @default(uuid())
+  key   RecipeCategory @unique
+  label String
 
+  recipes Recipe[]
+
+  @@map("categories")
+}
+
+model Recipe {
+  id                       String            @id @default(uuid())
+  slug                     String            @unique
+  authorId                 String?           @map("author_id")
+  title                    String
+  description              String
+  coverImageUrl            String?           @map("cover_image_url")
+  categoryId               String            @map("category_id")
+  prepTimeMinutes          Int               @map("prep_time_minutes")
+  timeBucket               TimeBucket        @map("time_bucket")
+  servings                 Int
+  difficulty               CookingLevel
+  dietPreference           DietPreference    @map("diet_preference")
+  status                   RecipeStatus      @default(rascunho)
+  currentVersion           Int               @default(1) @map("current_version")
+  adjustmentReason         AdjustmentReason? @map("adjustment_reason")
+  adjustmentNote           String?           @map("adjustment_note")
+  authorMessageToModerator String?           @map("author_message_to_moderator")
+  termsVersionAccepted     String?           @map("terms_version_accepted")
+  submittedAt              DateTime?         @map("submitted_at")
+  approvedAt               DateTime?         @map("approved_at")
+  removedAt                DateTime?         @map("removed_at")
+  createdAt                DateTime          @default(now()) @map("created_at")
+  updatedAt                DateTime          @updatedAt @map("updated_at")
+
+  user       User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  category   Category           @relation(fields: [categoryId], references: [id])
+  dailyStats RecipeDailyStats[]
+
+  @@index([status])
+  @@index([categoryId, status])
   @@map("recipes")
+}
+
+model RecipeDailyStats {
+  recipeId        String   @map("recipe_id")
+  date            DateTime @db.Date
+  opens           Int      @default(0)
+  favoritesAdded  Int      @default(0) @map("favorites_added")
+  cookCompletions Int      @default(0) @map("cook_completions")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, date])
+  @@map("recipe_daily_stats")
 }
