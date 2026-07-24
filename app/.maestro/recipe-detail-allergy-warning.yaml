@@ -1,0 +1,20 @@
+appId: host.exp.Exponent
+name: E2E-002 Allergy warning banner appears near ingredients for a recipe conflicting with the user's declared allergy
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Buscar
+- assertVisible:
+    id: listing-search-input
+- tapOn:
+    id: listing-search-input
+- inputText: espinafre
+- assertVisible:
+    id: listing-result-card-0
+- tapOn:
+    id: listing-result-card-0
+- assertVisible: Omelete de espinafre
+- assertVisible:
+    id: allergy-warning-banner
+- assertVisible: Leite

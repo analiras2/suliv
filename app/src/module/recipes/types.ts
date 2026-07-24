@@ -1,4 +1,5 @@
 import type { recipeGradients } from '@/design-system/tokens';
+import type { RecipeIngredientDto } from '@/module/recipes/utils/scale-ingredients';
 
 export type RecipeGradientKey = keyof typeof recipeGradients;
 
@@ -16,6 +17,8 @@ export type Difficulty = 'iniciante' | 'intermediario' | 'avancado';
 
 export type DietPreference = 'vegano' | 'vegetariano' | 'flexitariano';
 
+export type RecipeStatus = 'rascunho' | 'em_analise' | 'aprovada' | 'precisa_de_ajustes' | 'removida';
+
 export interface Category {
   id: string;
   key: RecipeCategoryKey;
@@ -31,6 +34,25 @@ export interface Recipe {
   timeBucket: TimeBucket;
   difficulty: Difficulty;
   dietPreference: DietPreference;
+}
+
+export interface RecipeStepDto {
+  order: number;
+  description: string;
+  stepTimeSeconds: number | null;
+}
+
+export interface RecipeDetail extends Recipe {
+  description: string;
+  servings: number;
+  ingredients: RecipeIngredientDto[];
+  steps: RecipeStepDto[];
+  conflictsWithUser?: boolean;
+  conflictingAllergens?: string[];
+  isFavorited?: boolean;
+  status?: RecipeStatus;
+  averageRating: number | null;
+  ratingCount: number;
 }
 
 export interface DayPlanEntry {

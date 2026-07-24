@@ -1,0 +1,8 @@
+appId: host.exp.Exponent
+name: E2E-005 A slug matching no approved recipe shows the not-found state, not a blank screen or crash
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://recipe/receita-que-nao-existe-em-nenhum-lugar
+- assertVisible: Receita não encontrada
+- assertVisible: Essa receita não existe ou não está mais disponível.

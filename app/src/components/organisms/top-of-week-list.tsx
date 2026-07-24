@@ -33,7 +33,7 @@ export function TopOfWeekList({
           recipe={item}
           saved={savedIds.has(item.id)}
           onToggleSave={() => onToggleSave(item.id)}
-          onOpen={() => onOpen(item.id)}
+          onOpen={() => onOpen(item.slug)}
         />
       </View>
     ),

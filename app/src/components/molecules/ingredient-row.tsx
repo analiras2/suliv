@@ -2,17 +2,20 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fontFamilies, semanticColors, typography } from '@/design-system/tokens';
+import type { ScaledIngredient } from '@/module/recipes/utils/scale-ingredients';
 
 export type IngredientRowProps = {
-  label: string;
+  ingredient: ScaledIngredient;
   isFirst: boolean;
 };
 
-function IngredientRowComponent({ label, isFirst }: IngredientRowProps) {
+function IngredientRowComponent({ ingredient, isFirst }: IngredientRowProps) {
   return (
     <View style={[styles.row, !isFirst && styles.rowBordered]}>
       <View style={styles.checkbox} />
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>
+        <Text style={styles.quantity}>{ingredient.displayQuantity}</Text> {ingredient.name}
+      </Text>
     </View>
   );
 }
@@ -42,5 +45,9 @@ const styles = StyleSheet.create({
     ...typography.bodyLg,
     fontFamily: fontFamilies.sans,
     color: semanticColors.fg,
+    flexShrink: 1,
+  },
+  quantity: {
+    fontFamily: fontFamilies.sansSemibold,
   },
 });

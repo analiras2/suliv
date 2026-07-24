@@ -61,9 +61,13 @@ export default function RootLayout() {
               </Stack.Protected>
               <Stack.Protected guard={splash.initialRoute === '(tabs)'}>
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="recipe/[id]" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="ver-tudo" />
               </Stack.Protected>
+              {/* Recipe detail renders without an active session (ADR-002) — reachable via
+                  deep link regardless of the auth gate above, unlike the rest of (tabs). */}
+              <Stack.Screen name="recipe/[slug]" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="recipe/[slug]/cook" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="r/[slug]" />
             </Stack>
           </ThemeProvider>
         </QueryClientProvider>

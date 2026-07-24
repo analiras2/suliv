@@ -1,0 +1,11 @@
+appId: host.exp.Exponent
+name: E2E-004 Logged-out Favoritar tap redirects to login instead of applying the favorite
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn:
+    id: recipe-detail-favorite-button
+- assertVisible:
+    id: login-email-input

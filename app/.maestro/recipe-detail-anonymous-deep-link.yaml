@@ -1,0 +1,10 @@
+appId: host.exp.Exponent
+name: E2E-003 Anonymous deep link opens the recipe fully rendered, no login redirect first
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- assertVisible: até 15 min
+- assertNotVisible:
+    id: login-email-input
