@@ -1,0 +1,33 @@
+appId: host.exp.Exponent
+name: E2E-004 Offline guided-cooking session from a previously-cached recipe, events sync after reconnect
+---
+# Warm recipe-detail-cache by opening the recipe once online, then cook the
+# entire session offline. Depends on setAirplaneMode (Android only at time of
+# writing), consistent with splash-offline-launch-cached.yaml.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- setAirplaneMode: true
+- tapOn: Começar a cozinhar
+- assertVisible: Amasse as bananas até formar um purê.
+- assertNotVisible:
+    id: cook-unavailable-state
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Misture a aveia, o leite vegetal, o fermento e a canela ao purê.
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Aqueça uma frigideira antiaderente em fogo médio.
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Despeje porções da massa e doure dos dois lados.
+- tapOn:
+    id: cook-advance-button
+- assertVisible:
+    id: finalization-panel
+- setAirplaneMode: false
+# Queued analytics events flush on reconnect; verified via analytics_events row
+# counts (test-only check), not a user-visible assertion. A subsequent relaunch
+# must not duplicate them (sync_operations idempotency, ADR-003).

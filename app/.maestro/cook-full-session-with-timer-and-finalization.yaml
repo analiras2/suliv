@@ -1,0 +1,39 @@
+appId: host.exp.Exponent
+name: E2E-001 Full guided-cooking session with a timer, through finalization (rate, favorite, share)
+---
+# Seeded recipe "panqueca-de-banana-vegana" has 4 timed steps (120/180/120/360s).
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn: Começar a cozinhar
+- assertVisible: Amasse as bananas até formar um purê.
+- tapOn:
+    id: step-timer-start-button
+- assertVisible:
+    id: step-timer-running
+- extendedWaitUntil:
+    visible:
+      id: step-timer-start-button
+    timeout: 125000
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Misture a aveia, o leite vegetal, o fermento e a canela ao purê.
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Aqueça uma frigideira antiaderente em fogo médio.
+- tapOn:
+    id: cook-advance-button
+- assertVisible: Despeje porções da massa e doure dos dois lados.
+- tapOn:
+    id: cook-advance-button
+- assertVisible:
+    id: finalization-panel
+- tapOn:
+    id: rating-star-4
+- tapOn:
+    id: finalization-favorite-button
+- assertVisible: Favoritado
+- tapOn:
+    id: finalization-share-button

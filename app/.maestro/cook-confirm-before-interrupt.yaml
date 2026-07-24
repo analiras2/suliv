@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+name: E2E-002 Manual advance while a timer is active shows a confirm dialog; confirming cancels the timer and advances
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn: Começar a cozinhar
+- assertVisible: Amasse as bananas até formar um purê.
+- tapOn:
+    id: step-timer-start-button
+- assertVisible:
+    id: step-timer-running
+- tapOn:
+    id: cook-advance-button
+- assertVisible:
+    id: confirm-advance-dialog
+- assertVisible: Amasse as bananas até formar um purê.
+- tapOn:
+    id: confirm-advance-confirm
+- assertNotVisible:
+    id: confirm-advance-dialog
+- assertVisible: Misture a aveia, o leite vegetal, o fermento e a canela ao purê.
+- assertVisible:
+    id: step-timer-start-button
