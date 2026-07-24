@@ -108,12 +108,58 @@ export class UsersService {
           name: data.name,
           username: data.username,
           usernameUpdatedAt: usernameChanged ? new Date() : undefined,
+          dietPreference: data.diet_preference,
+          cookingLevel: data.cooking_level,
+          cookingFrequency: data.cooking_frequency,
         },
       });
       return UserDto.fromUser(user);
     } catch (error: unknown) {
       if (this.isUniqueConflict(error, 'username')) {
         throw new ConflictException('Username is already taken');
+      }
+      throw error;
+    }
+  }
+
+  async updateAllergies(
+    userId: string,
+    allergenIds: string[],
+    newTerm?: string,
+  ): Promise<UserDto> {
+    try {
+      const user = await this.prisma.$transaction(async (tx) => {
+        await tx.userAllergy.deleteMany({
+          where: { userId, allergenId: { notIn: allergenIds } },
+        });
+
+        for (const allergenId of allergenIds) {
+          await tx.userAllergy.upsert({
+            where: { userId_allergenId: { userId, allergenId } },
+            update: {},
+            create: { userId, allergenId },
+          });
+        }
+
+        if (newTerm) {
+          const allergen = await tx.allergen.upsert({
+            where: { name: newTerm },
+            update: {},
+            create: { name: newTerm, status: 'pending' },
+          });
+          await tx.userAllergy.upsert({
+            where: { userId_allergenId: { userId, allergenId: allergen.id } },
+            update: {},
+            create: { userId, allergenId: allergen.id },
+          });
+        }
+
+        return tx.user.findUniqueOrThrow({ where: { id: userId } });
+      });
+      return UserDto.fromUser(user);
+    } catch (error: unknown) {
+      if (this.isRecordNotFound(error)) {
+        throw new NotFoundException('User not found');
       }
       throw error;
     }

@@ -25,6 +25,8 @@ interface UserResponseBody {
   username: string;
   status: string;
   dietPreference: string | null;
+  cookingLevel: string | null;
+  cookingFrequency: string | null;
   termsVersionAccepted: string | null;
   termsAcceptedAt: string | null;
 }
@@ -306,5 +308,215 @@ describe('UsersController (integration)', () => {
         .send({ username: 'shared_name' }),
     ]);
     expect(responses.map(({ status }) => status).sort()).toEqual([200, 409]);
+  });
+
+  it('IT-011 rejects an expired JWT', async () => {
+    const token = sign(
+      { sub: 'user-1', email: 'user-1@example.com' },
+      trustedKeys.privateKey,
+      {
+        algorithm: 'RS256',
+        expiresIn: '-1s',
+        issuer,
+        keyid: 'trusted-key',
+      },
+    );
+    await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  });
+
+  it('IT-012 rejects a malformed Authorization header', async () => {
+    await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', 'Bearer not-a-jwt')
+      .expect(401);
+  });
+
+  it('IT-013 rejects PATCH /me with an unknown field', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ isAdmin: true })
+      .expect(400);
+  });
+
+  it('IT-014 rejects PATCH /me with a name over 100 characters', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ name: 'a'.repeat(101) })
+      .expect(400);
+  });
+
+  it('IT-015 rejects POST /me/terms-acceptance without a termsVersion', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .post('/me/terms-acceptance')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({})
+      .expect(400);
+  });
+
+  it('perfil-configuracoes IT-001 updates diet_preference and reflects it on GET /me', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ diet_preference: 'vegetariano' })
+      .expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .expect(200);
+    expect((response.body as UserResponseBody).dietPreference).toBe(
+      'vegetariano',
+    );
+  });
+
+  it('perfil-configuracoes IT-002 updates cooking_level and reflects it on GET /me', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ cooking_level: 'intermediario' })
+      .expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .expect(200);
+    expect((response.body as UserResponseBody).cookingLevel).toBe(
+      'intermediario',
+    );
+  });
+
+  it('perfil-configuracoes IT-003 updates cooking_frequency and reflects it on GET /me', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ cooking_frequency: 'raramente' })
+      .expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .expect(200);
+    expect((response.body as UserResponseBody).cookingFrequency).toBe(
+      'raramente',
+    );
+  });
+
+  it('perfil-configuracoes IT-004 replaces the full allergy set (not additive)', async () => {
+    await bootstrap('user-1').expect(201);
+    const [allergenA, allergenB, allergenC] = await Promise.all([
+      prisma.allergen.create({
+        data: { name: 'Allergen A', status: 'approved' },
+      }),
+      prisma.allergen.create({
+        data: { name: 'Allergen B', status: 'approved' },
+      }),
+      prisma.allergen.create({
+        data: { name: 'Allergen C', status: 'approved' },
+      }),
+    ]);
+    await prisma.userAllergy.createMany({
+      data: [
+        { userId: 'user-1', allergenId: allergenA.id },
+        { userId: 'user-1', allergenId: allergenB.id },
+      ],
+    });
+
+    await request(app.getHttpServer())
+      .patch('/me/allergies')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ allergen_ids: [allergenC.id] })
+      .expect(200);
+
+    const remaining = await prisma.userAllergy.findMany({
+      where: { userId: 'user-1' },
+    });
+    expect(remaining.map((row) => row.allergenId)).toEqual([allergenC.id]);
+  });
+
+  it('perfil-configuracoes IT-005 creates a pending Allergen row for a new free-text term', async () => {
+    await bootstrap('user-1').expect(201);
+
+    await request(app.getHttpServer())
+      .patch('/me/allergies')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ allergen_ids: [], new_term: 'ingrediente-raro' })
+      .expect(200);
+
+    const newTermAllergen = await prisma.allergen.findUnique({
+      where: { name: 'ingrediente-raro' },
+    });
+    expect(newTermAllergen?.status).toBe('pending');
+    await expect(
+      prisma.userAllergy.findUnique({
+        where: {
+          userId_allergenId: {
+            userId: 'user-1',
+            allergenId: newTermAllergen!.id,
+          },
+        },
+      }),
+    ).resolves.not.toBeNull();
+  });
+
+  it('perfil-configuracoes IT-006 (regression) name-only PATCH /me has no diet/level/frequency side effects', async () => {
+    await bootstrap('user-1').expect(201);
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ name: 'Novo Nome' })
+      .expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .expect(200);
+    const body = response.body as UserResponseBody;
+    expect(body.name).toBe('Novo Nome');
+    expect(body.dietPreference).toBeNull();
+    expect(body.cookingLevel).toBeNull();
+    expect(body.cookingFrequency).toBeNull();
+  });
+
+  it('perfil-configuracoes IT-007 (regression) username conflict/cooldown paths are unaffected', async () => {
+    await bootstrap('user-1').expect(201);
+    await bootstrap('user-2').expect(201);
+    await prisma.user.update({
+      where: { id: 'user-2' },
+      data: { username: 'existing_user' },
+    });
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ username: 'existing_user' })
+      .expect(409);
+
+    await prisma.user.update({
+      where: { id: 'user-1' },
+      data: { usernameUpdatedAt: new Date(Date.now() - 5 * DAY_MS) },
+    });
+    await request(app.getHttpServer())
+      .patch('/me')
+      .set('Authorization', `Bearer ${tokenFor('user-1')}`)
+      .send({ username: 'new_username' })
+      .expect(422);
+  });
+
+  it('perfil-configuracoes IT-008 GET /terms/current returns { version, url } without auth', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/terms/current')
+      .expect(200);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        version: expect.any(String),
+        url: expect.any(String),
+      }),
+    );
   });
 });

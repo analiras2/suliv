@@ -17,6 +17,7 @@ import {
   AcceptTermsDto,
   BootstrapUserDto,
   OnboardingDto,
+  UpdateAllergiesDto,
   UpdateUserDto,
   UserDto,
 } from './dto';
@@ -52,6 +53,18 @@ export class UsersController {
     @Body() body: UpdateUserDto,
   ): Promise<UserDto> {
     return this.usersService.updateMe(request.user.id, body);
+  }
+
+  @Patch('allergies')
+  updateAllergies(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: UpdateAllergiesDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateAllergies(
+      request.user.id,
+      body.allergen_ids,
+      body.new_term,
+    );
   }
 
   @Post('terms-acceptance')

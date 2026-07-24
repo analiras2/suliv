@@ -45,15 +45,20 @@ describe('UsersService', () => {
   const updateUser = jest.fn<Promise<User>, [Prisma.UserUpdateArgs]>();
   const prisma = {
     $transaction: jest.fn(),
+    allergen: { upsert: jest.fn() },
     analyticsEvent: { updateMany: jest.fn() },
     deviceToken: { deleteMany: jest.fn() },
     recipe: { deleteMany: jest.fn(), updateMany: jest.fn() },
     user: {
       findUnique: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       update: updateUser,
       upsert: upsertUser,
     },
-    userAllergy: { deleteMany: jest.fn() },
+    userAllergy: {
+      deleteMany: jest.fn(),
+      upsert: jest.fn(),
+    },
   };
   const supabaseAdmin = { deleteUser: jest.fn() };
   let service: UsersService;
@@ -61,8 +66,14 @@ describe('UsersService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(NOW);
-    prisma.$transaction.mockImplementation((operations: Promise<unknown>[]) =>
-      Promise.all(operations),
+    prisma.$transaction.mockImplementation(
+      (
+        operationsOrCallback:
+          Promise<unknown>[] | ((tx: typeof prisma) => Promise<unknown>),
+      ) =>
+        typeof operationsOrCallback === 'function'
+          ? operationsOrCallback(prisma)
+          : Promise.all(operationsOrCallback),
     );
     service = new UsersService(
       prisma as unknown as PrismaService,
@@ -265,5 +276,101 @@ describe('UsersService', () => {
 
     expect(prisma.recipe.deleteMany).not.toHaveBeenCalled();
     expect(prisma.recipe.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('UT-015 throws a conflict after exhausting username retry attempts', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.upsert.mockRejectedValue(uniqueUsernameError());
+
+    await expect(
+      service.bootstrap('user-1', 'ana@example.com'),
+    ).rejects.toThrow(ConflictException);
+    expect(prisma.user.upsert).toHaveBeenCalledTimes(5);
+  });
+
+  it('writes dietPreference/cookingLevel/cookingFrequency when provided to updateMe', async () => {
+    const updated = userFixture({
+      dietPreference: 'vegetariano',
+      cookingLevel: 'intermediario',
+      cookingFrequency: 'raramente',
+    });
+    let updateArgs: Prisma.UserUpdateArgs | undefined;
+    prisma.user.findUnique.mockResolvedValue(userFixture());
+    prisma.user.update.mockImplementation((args) => {
+      updateArgs = args;
+      return Promise.resolve(updated);
+    });
+
+    await expect(
+      service.updateMe('user-1', {
+        diet_preference: 'vegetariano',
+        cooking_level: 'intermediario',
+        cooking_frequency: 'raramente',
+      }),
+    ).resolves.toEqual(updated);
+    expect(updateArgs?.data.dietPreference).toBe('vegetariano');
+    expect(updateArgs?.data.cookingLevel).toBe('intermediario');
+    expect(updateArgs?.data.cookingFrequency).toBe('raramente');
+  });
+
+  it('leaves diet/level/frequency untouched when omitted from updateMe payload', async () => {
+    let updateArgs: Prisma.UserUpdateArgs | undefined;
+    prisma.user.findUnique.mockResolvedValue(userFixture({ name: 'Ana' }));
+    prisma.user.update.mockImplementation((args) => {
+      updateArgs = args;
+      return Promise.resolve(userFixture({ name: 'Novo Nome' }));
+    });
+
+    await service.updateMe('user-1', { name: 'Novo Nome' });
+
+    expect(updateArgs?.data.dietPreference).toBeUndefined();
+    expect(updateArgs?.data.cookingLevel).toBeUndefined();
+    expect(updateArgs?.data.cookingFrequency).toBeUndefined();
+  });
+
+  it('replaces the full allergy set, removing rows not in the given ids', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue(userFixture());
+    prisma.userAllergy.deleteMany.mockResolvedValue({ count: 2 });
+    prisma.userAllergy.upsert.mockResolvedValue({});
+
+    await service.updateAllergies('user-1', ['allergen-c']);
+
+    expect(prisma.userAllergy.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', allergenId: { notIn: ['allergen-c'] } },
+    });
+    expect(prisma.userAllergy.upsert).toHaveBeenCalledWith({
+      where: {
+        userId_allergenId: { userId: 'user-1', allergenId: 'allergen-c' },
+      },
+      update: {},
+      create: { userId: 'user-1', allergenId: 'allergen-c' },
+    });
+    expect(prisma.allergen.upsert).not.toHaveBeenCalled();
+  });
+
+  it('creates a pending Allergen row for a new term and links it to the user', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue(userFixture());
+    prisma.userAllergy.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.userAllergy.upsert.mockResolvedValue({});
+    prisma.allergen.upsert.mockResolvedValue({
+      id: 'allergen-new',
+      name: 'ingrediente-raro',
+      status: 'pending',
+    });
+
+    await service.updateAllergies('user-1', [], 'ingrediente-raro');
+
+    expect(prisma.allergen.upsert).toHaveBeenCalledWith({
+      where: { name: 'ingrediente-raro' },
+      update: {},
+      create: { name: 'ingrediente-raro', status: 'pending' },
+    });
+    expect(prisma.userAllergy.upsert).toHaveBeenCalledWith({
+      where: {
+        userId_allergenId: { userId: 'user-1', allergenId: 'allergen-new' },
+      },
+      update: {},
+      create: { userId: 'user-1', allergenId: 'allergen-new' },
+    });
   });
 });
