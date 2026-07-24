@@ -1,10 +1,17 @@
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
+import {
+  environmentConfiguration,
+  environmentValidationSchema,
+} from '../src/config/environment';
 import { PrismaModule } from '../src/prisma/prisma.module';
 import { RecipesModule } from '../src/recipes/recipes.module';
 import { RecipesService } from '../src/recipes/recipes.service';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+jest.setTimeout(20000);
 
 describe('RecipesService (integration)', () => {
   const prisma = new PrismaClient();
@@ -12,7 +19,16 @@ describe('RecipesService (integration)', () => {
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
-      imports: [PrismaModule, RecipesModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [environmentConfiguration],
+          validationOptions: { abortEarly: false },
+          validationSchema: environmentValidationSchema,
+        }),
+        PrismaModule,
+        RecipesModule,
+      ],
     }).compile();
     recipesService = moduleFixture.get(RecipesService);
   });
