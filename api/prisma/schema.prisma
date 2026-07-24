@@ -74,6 +74,19 @@ enum AdjustmentReason {
   outro
 }
 
+enum IngredientUnit {
+  g
+  kg
+  ml
+  l
+  unidade
+  xicara
+  colher_sopa
+  colher_cha
+  pitada
+  a_gosto
+}
+
 model User {
   id                    String            @id @default(uuid())
   email                 String            @unique
@@ -183,13 +196,63 @@ model Recipe {
   createdAt                DateTime          @default(now()) @map("created_at")
   updatedAt                DateTime          @updatedAt @map("updated_at")
 
-  user       User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  category   Category           @relation(fields: [categoryId], references: [id])
-  dailyStats RecipeDailyStats[]
+  // Kept in sync via DB triggers (not a native Prisma-managed generated
+  // column) because it depends on the joined categories.label — see the
+  // 20260716190000_add_recipe_search_vector migration and ADR-002.
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  user        User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  category    Category           @relation(fields: [categoryId], references: [id])
+  dailyStats  RecipeDailyStats[]
+  ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  versions    RecipeVersion[]
 
   @@index([status])
   @@index([categoryId, status])
+  @@index([searchVector], type: Gin)
   @@map("recipes")
+}
+
+model RecipeVersion {
+  id            String   @id @default(uuid())
+  recipeId      String   @map("recipe_id")
+  versionNumber Int      @map("version_number")
+  snapshot      Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, versionNumber])
+  @@map("recipe_versions")
+}
+
+model RecipeIngredient {
+  id                 String         @id @default(uuid())
+  recipeId           String         @map("recipe_id")
+  name               String
+  quantity           Decimal?
+  unit               IngredientUnit
+  scalesWithServings Boolean        @default(true) @map("scales_with_servings")
+  order              Int
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, order])
+  @@map("recipe_ingredients")
+}
+
+model RecipeStep {
+  id              String @id @default(uuid())
+  recipeId        String @map("recipe_id")
+  order           Int
+  description     String
+  stepTimeSeconds Int?   @map("step_time_seconds")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, order])
+  @@map("recipe_steps")
 }
 
 model RecipeDailyStats {
@@ -222,4 +285,83 @@ model EditorialBoost {
   endsAt           DateTime @map("ends_at")
 
   @@map("editorial_boosts")
+}
+
+model SyncOperation {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  idempotencyKey String   @map("idempotency_key")
+  actionType     String   @map("action_type")
+  appliedAt      DateTime @default(now()) @map("applied_at")
+
+  @@unique([userId, idempotencyKey])
+  @@map("sync_operations")
+}
+
+enum CommentStatus {
+  visible
+  hidden
+}
+
+model CommentRating {
+  id          String        @id @default(uuid())
+  recipeId    String        @map("recipe_id")
+  userId      String        @map("user_id")
+  rating      Int
+  commentText String?       @map("comment_text")
+  status      CommentStatus @default(visible)
+  // Not in the TechSpec's literal Prisma block, but required to implement
+  // the §19.5.8 20/day rate limit (a MUST for this task): updatedAt is the
+  // only available per-row time signal, and it already doubles as the
+  // "avaliar de novo atualiza ... updated_at" field the schema-spec prose
+  // (§3.11) references.
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@unique([recipeId, userId])
+  @@index([recipeId, status])
+  @@map("comments_ratings")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  recipeId  String   @map("recipe_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, recipeId])
+  @@map("favorites")
+}
+
+enum ReportTargetType {
+  recipe
+  comment
+}
+
+enum ReportReason {
+  conteudo_inadequado
+  spam
+  informacao_incorreta_perigosa
+  discurso_odio_assedio
+  outro
+}
+
+enum ReportStatus {
+  pending
+  reviewed
+}
+
+model Report {
+  id                String           @id @default(uuid())
+  reporterUserId    String           @map("reporter_user_id")
+  targetType        ReportTargetType @map("target_type")
+  targetId          String           @map("target_id")
+  reason            ReportReason
+  freeText          String?          @map("free_text")
+  status            ReportStatus     @default(pending)
+  reviewedByAdminId String?          @map("reviewed_by_admin_id")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  @@unique([reporterUserId, targetType, targetId])
+  @@map("reports")
 }
