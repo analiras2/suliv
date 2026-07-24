@@ -1,5 +1,5 @@
-import { SearchScreen } from '@/screens/search-screen';
+import { ListingScreen } from '@/screens/listing-screen';
 
 export default function SearchRoute() {
-  return <SearchScreen />;
+  return <ListingScreen origin="busca" />;
 }

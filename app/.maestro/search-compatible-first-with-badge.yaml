@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+name: E2E-001 Search shows compatible recipes first, conflicting recipe visible with a badge
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Buscar
+- assertVisible:
+    id: listing-search-input
+- tapOn:
+    id: listing-search-input
+- inputText: espinafre
+- assertVisible:
+    id: listing-result-card-0
+- assertVisible: Omelete de espinafre
+- assertVisible: Contém restrição

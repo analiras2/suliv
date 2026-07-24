@@ -1,0 +1,15 @@
+appId: host.exp.Exponent
+name: E2E-002 Scrolling to the bottom of the results loads more without a full reload
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Buscar
+- assertVisible:
+    id: listing-result-card-0
+- scrollUntilVisible:
+    element:
+      id: listing-result-card-10
+    direction: DOWN
+- assertVisible:
+    id: listing-result-card-10

@@ -1,0 +1,15 @@
+appId: host.exp.Exponent
+name: E2E-004 A query matching no seeded recipe shows the real empty state, not a blank screen
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Buscar
+- assertVisible:
+    id: listing-search-input
+- tapOn:
+    id: listing-search-input
+- inputText: xyzquenaoexisteemnenhumareceita
+- assertVisible:
+    id: listing-empty-state
+- assertVisible: Nenhuma receita encontrada

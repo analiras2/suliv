@@ -1,0 +1,37 @@
+appId: host.exp.Exponent
+name: E2E-003 Ver tudo from categories, top da semana, and selecionadas lands with title and results
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible:
+    id: categories-ver-tudo-button
+- tapOn:
+    id: categories-ver-tudo-button
+- assertVisible:
+    id: ver-tudo-title
+- assertVisible:
+    id: listing-result-card-0
+
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible:
+    id: top-of-week-ver-tudo-button
+- tapOn:
+    id: top-of-week-ver-tudo-button
+- assertVisible:
+    id: ver-tudo-title
+- assertVisible: Top da semana
+- assertVisible:
+    id: listing-result-card-0
+
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://ver-tudo?origin=selecionadas
+- assertVisible:
+    id: ver-tudo-title
+- assertVisible: Selecionadas para você
+- assertVisible:
+    id: listing-result-card-0

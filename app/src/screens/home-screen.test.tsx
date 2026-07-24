@@ -7,11 +7,12 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('@/module/auth/services/auth-service', () => ({ authService: {} }));
 jest.mock('@/module/splash/context/offline-mode-context', () => ({ useOfflineMode: () => false }));
+jest.mock('@/module/recipes/viewModels/use-favorite-toggle', () => ({
+  useFavoriteToggle: jest.fn(() => ({ savedIds: new Set(), toggleSaved: jest.fn() })),
+}));
 
 // eslint-disable-next-line import/first
 import { authService } from '@/module/auth/services/auth-service';
-// eslint-disable-next-line import/first
-import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
 // eslint-disable-next-line import/first
 import { HomeScreen } from './home-screen';
 
@@ -53,7 +54,6 @@ async function renderHomeScreen() {
 describe('HomeScreen (IT-005, IT-006)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useSavedRecipesStore.setState({ savedIds: new Set() });
     (authService as { getSession: jest.Mock }).getSession = jest
       .fn<() => Promise<Session | null>>()
       .mockResolvedValue(session);
