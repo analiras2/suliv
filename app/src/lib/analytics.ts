@@ -12,6 +12,19 @@ export interface AnalyticsEventPayloads {
   recipe_opened: { recipe_id: string; origin: string };
   feed_viewed: Record<string, never>;
   feed_section_viewed: { section: 'selecionadas' | 'categorias' | 'top_semana'; category_key?: string };
+  search_used: { query_length: number; has_filters: boolean };
+  filter_applied: {
+    filter_type: 'categoria' | 'tempo' | 'dificuldade' | 'preferencia' | 'alergia';
+    filter_value: string;
+  };
+  serving_adjusted: { recipe_id: string; from_servings: number; to_servings: number };
+  recipe_warning_viewed: { recipe_id: string; allergen_id: string };
+  favorite_saved: { recipe_id: string; offline: boolean };
+  favorite_removed: { recipe_id: string };
+  favorite_saved_offline: { recipe_id: string; idempotency_key: string };
+  favorites_viewed: { count: number };
+  submitted_recipe_started: { recipe_id: string };
+  submitted_recipe_completed: { recipe_id: string };
 }
 
 export interface AnalyticsClient {

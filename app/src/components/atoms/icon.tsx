@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Bean,
@@ -16,13 +17,16 @@ import {
   Leaf,
   LogOut,
   Milk,
+  Minus,
   Nut,
+  Plus,
   Salad,
   Search,
   Settings,
   Share2,
   Sparkles,
   Sprout,
+  Star,
   Sun,
   User,
   Utensils,
@@ -65,6 +69,10 @@ const ICONS = {
   nuts: Nut,
   soy: Sprout,
   sesame: CircleMinus,
+  plus: Plus,
+  minus: Minus,
+  warning: AlertTriangle,
+  star: Star,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
