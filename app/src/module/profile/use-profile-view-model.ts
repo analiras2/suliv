@@ -19,8 +19,11 @@ export interface ProfileSettingItem {
   testID?: string;
 }
 
+const MY_RECIPES_ROUTE = '/profile/my-recipes' as Href;
+
 const SETTINGS: ProfileSettingItem[] = [
   { id: 'account', icon: 'user', label: 'Conta' },
+  { id: 'my-recipes', icon: 'leaf', label: 'Minhas receitas' },
   { id: 'search-preferences', icon: 'filter', label: 'Preferências de busca' },
   { id: 'notifications', icon: 'bell', label: 'Notificações' },
   { id: 'about', icon: 'settings', label: 'Sobre o Suliv' },
@@ -59,9 +62,14 @@ export function useProfileViewModel() {
 
   const settings = SETTINGS.map((item) => ({
     ...item,
-    onPress: item.id === 'sign-out'
-      ? () => void signOut()
-      : item.id === 'delete-account' ? account.requestAccountDeletion : undefined,
+    onPress:
+      item.id === 'sign-out'
+        ? () => void signOut()
+        : item.id === 'delete-account'
+          ? account.requestAccountDeletion
+          : item.id === 'my-recipes'
+            ? () => router.push(MY_RECIPES_ROUTE)
+            : undefined,
     testID: `settings-${item.id}`,
   }));
   const user = profile.data ?? cachedUser;

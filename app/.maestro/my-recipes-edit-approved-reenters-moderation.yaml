@@ -1,0 +1,31 @@
+appId: host.exp.Exponent
+name: E2E-003 Editing a seeded approved recipe re-enters moderation and drops out of discovery
+---
+# Assumes the RECIPE_AUTHOR_* test-project user owns a seeded, already
+# approved recipe ("Salada de quinoa da autora") with at least one step, per
+# the Prisma seed script.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${RECIPE_AUTHOR_ACCESS_TOKEN}&refresh_token=${RECIPE_AUTHOR_REFRESH_TOKEN}
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- assertVisible: Aprovadas
+- tapOn: Salada de quinoa da autora
+- assertVisible:
+    id: recipe-form-remoderation-notice
+- tapOn:
+    id: step-description-0
+- eraseText
+- inputText: Misture a quinoa cozida com os legumes picados e o tempero.
+- tapOn:
+    id: recipe-form-submit
+- assertVisible: Suas criações
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- assertVisible: Em análise
+- assertVisible: Salada de quinoa da autora
+# No longer discoverable via search/feed until re-approved — verified via a
+# test-only check against seeded backend state (GET /recipes/search, GET
+# /feed), not a user-visible assertion, per the TechSpec's E2E coverage note.

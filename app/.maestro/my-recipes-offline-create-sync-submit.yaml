@@ -1,0 +1,57 @@
+appId: host.exp.Exponent
+name: E2E-001 Create a recipe fully offline, reconnect to sync and auto-upload the image, then submit
+---
+# Requires the dedicated RECIPE_AUTHOR_* token pair (a test-project user with
+# no authored recipes yet, so "Minhas Receitas" starts empty and the create
+# CTA is reachable without first clearing prior runs' drafts).
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${RECIPE_AUTHOR_ACCESS_TOKEN}&refresh_token=${RECIPE_AUTHOR_REFRESH_TOKEN}
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- assertVisible: Nenhuma receita ainda
+- setAirplaneMode: true
+- tapOn:
+    id: my-recipes-create-cta
+- tapOn:
+    id: recipe-form-title
+- inputText: Panqueca offline
+- tapOn:
+    id: recipe-form-description
+- inputText: Uma panqueca simples, feita com o app offline.
+- tapOn:
+    id: ingredient-add
+- tapOn:
+    id: ingredient-name-0
+- inputText: Banana madura
+- tapOn:
+    id: ingredient-quantity-0
+- inputText: "2"
+- tapOn:
+    id: step-add
+- tapOn:
+    id: step-description-0
+- inputText: Amasse a banana e misture os ingredientes.
+- tapOn:
+    id: recipe-form-pick-image
+- back
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- setAirplaneMode: false
+# The draft's text fields sync automatically (no manual sync trigger) and the
+# picked cover image uploads automatically once reconnected — both surfaced
+# here as the recipe reappearing under Rascunho with no dead-end error state.
+- assertVisible: Panqueca offline
+- assertVisible: Rascunho
+- tapOn: Panqueca offline
+- assertNotVisible:
+    id: recipe-form-missing-image-error
+- tapOn:
+    id: recipe-form-submit
+- assertVisible: Suas criações
+# submitted_recipe_started (draft creation) and submitted_recipe_completed
+# (this submit) firing are verified via a test-only event-log check against
+# the test backend, not a user-visible assertion — same pattern as the
+# guided-cooking and favorites offline flows' analytics verification.

@@ -1,0 +1,40 @@
+appId: host.exp.Exponent
+name: E2E-002 Submission blocked with no cover image; succeeds once one is added
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- tapOn:
+    id: my-recipes-new-button
+- tapOn:
+    id: recipe-form-title
+- inputText: Bolo sem foto
+- tapOn:
+    id: recipe-form-description
+- inputText: Testando o gate de envio sem imagem.
+- tapOn:
+    id: ingredient-add
+- tapOn:
+    id: ingredient-name-0
+- inputText: Farinha de trigo
+- tapOn:
+    id: step-add
+- tapOn:
+    id: step-description-0
+- inputText: Misture tudo e asse por 40 minutos.
+- tapOn:
+    id: recipe-form-submit
+- assertVisible:
+    id: recipe-form-missing-image-error
+# No POST /recipes/:id/submit call is made — verified via a test-only check
+# against the test backend's request log, not a user-visible assertion.
+- tapOn:
+    id: recipe-form-pick-image
+# Assumes the test device/simulator's photo library has at least one fixture
+# image available to pick.
+- tapOn:
+    id: recipe-form-submit
+- assertVisible: Suas criações

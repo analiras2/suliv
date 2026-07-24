@@ -1,0 +1,25 @@
+appId: host.exp.Exponent
+name: E2E-004 Deleting a recipe with existing favorites shows the impact count before confirming
+---
+# Assumes the RECIPE_AUTHOR_* test-project user owns a seeded, approved
+# recipe ("Torta salgada da autora") favorited by 2 other seeded users, per
+# the Prisma seed script.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${RECIPE_AUTHOR_ACCESS_TOKEN}&refresh_token=${RECIPE_AUTHOR_REFRESH_TOKEN}
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- assertVisible: Torta salgada da autora
+- tapOn: Excluir Torta salgada da autora
+- assertVisible:
+    id: delete-recipe-favorites-impact
+- assertVisible: "2 pessoas salvaram"
+- tapOn:
+    id: delete-recipe-confirm
+- assertVisible: Suas criações
+- assertNotVisible: Torta salgada da autora
+# The recipe silently disappearing from the other seeded users' favorites
+# lists is verified via a test-only check against the test backend
+# (GET /favorites for those users), not a user-visible assertion here — per
+# Favoritos' existing removed-recipe filtering.
