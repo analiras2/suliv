@@ -4,17 +4,20 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RecipeSummaryDto } from '../recipes/recipe-summary.dto';
 import { isDietCompatible } from './diet-compatibility';
 
-const POPULARITY_WINDOW_DAYS = 7;
-const OPENS_WEIGHT = 1;
-const FAVORITES_ADDED_WEIGHT = 2;
-const COOK_COMPLETIONS_WEIGHT = 3;
+// Exported so SearchService (busca-filtros-ver-tudo, task_02) can inline this
+// same weighted-popularity formula in a raw SQL ORDER BY clause — required by
+// ADR-001 to keep the two-bucket ordering a single query per page.
+export const POPULARITY_WINDOW_DAYS = 7;
+export const OPENS_WEIGHT = 1;
+export const FAVORITES_ADDED_WEIGHT = 2;
+export const COOK_COMPLETIONS_WEIGHT = 3;
 
 // Lifetime eligibility floor (ADR-001) — calibration-pending thresholds
 // flagged for product review post-launch, per docs/02-prd.md §9.5.
 const ELIGIBILITY_MIN_OPENS = 10;
 const ELIGIBILITY_MIN_COOK_COMPLETIONS = 3;
 
-function weeklyWindowStart(): Date {
+export function weeklyWindowStart(): Date {
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
   start.setUTCDate(start.getUTCDate() - (POPULARITY_WINDOW_DAYS - 1));

@@ -263,4 +263,79 @@ describe('RankingService', () => {
       expect(result.map((recipe) => recipe.id)).toEqual(['conflicting']);
     });
   });
+
+  describe('getSelectedForYouPaginated', () => {
+    it('UT-007 first page returns up to limit items and a non-null nextCursor when more exist', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      const candidates = ['a', 'b', 'c', 'd', 'e'].map((id) =>
+        recipeFixture({ id }),
+      );
+      findManyRecipe.mockResolvedValue(candidates);
+
+      const result = await service.getSelectedForYouPaginated(
+        'user-1',
+        undefined,
+        3,
+      );
+
+      expect(result.items).toHaveLength(3);
+      expect(result.items.map((item) => item.id)).toEqual(['a', 'b', 'c']);
+      expect(result.nextCursor).not.toBeNull();
+    });
+
+    it('UT-008 the last page returns nextCursor: null', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      const candidates = ['a', 'b', 'c', 'd', 'e'].map((id) =>
+        recipeFixture({ id }),
+      );
+      findManyRecipe.mockResolvedValue(candidates);
+
+      const firstPage = await service.getSelectedForYouPaginated(
+        'user-1',
+        undefined,
+        3,
+      );
+      const secondPage = await service.getSelectedForYouPaginated(
+        'user-1',
+        firstPage.nextCursor ?? undefined,
+        3,
+      );
+
+      expect(secondPage.items.map((item) => item.id)).toEqual(['d', 'e']);
+      expect(secondPage.nextCursor).toBeNull();
+    });
+
+    it('returns an empty page with a null cursor when there are no candidates', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      findManyRecipe.mockResolvedValue([]);
+
+      const result = await service.getSelectedForYouPaginated(
+        'user-1',
+        undefined,
+        3,
+      );
+
+      expect(result.items).toEqual([]);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it('marks conflictsWithUser true for a diet-incompatible or allergy-conflicting recipe', async () => {
+      findUniqueUser.mockResolvedValue(
+        userFixture({ dietPreference: DietPreference.vegano }),
+      );
+      const incompatible = recipeFixture({
+        id: 'incompatible',
+        dietPreference: DietPreference.flexitariano,
+      });
+      findManyRecipe.mockResolvedValue([incompatible]);
+
+      const result = await service.getSelectedForYouPaginated(
+        'user-1',
+        undefined,
+        3,
+      );
+
+      expect(result.items[0].conflictsWithUser).toBe(true);
+    });
+  });
 });
