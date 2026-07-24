@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+name: E2E-005 Guided cooking's finalization "avaliar" flow upserts via CommentsService, visible in recipe detail
+---
+# Seeded recipe "panqueca-de-banana-vegana" has 4 timed steps (120/180/120/360s).
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- tapOn: Começar a cozinhar
+- assertVisible: Amasse as bananas até formar um purê.
+- tapOn:
+    id: cook-advance-button
+- tapOn:
+    id: cook-advance-button
+- tapOn:
+    id: cook-advance-button
+- tapOn:
+    id: cook-advance-button
+- assertVisible:
+    id: finalization-panel
+- tapOn:
+    id: rating-star-4
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- assertVisible: "4.0 · 1"
+- assertVisible: Salvar alterações

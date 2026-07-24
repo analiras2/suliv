@@ -1,0 +1,27 @@
+appId: host.exp.Exponent
+name: E2E-002 Edit an existing review, the list still shows exactly one entry with updated values
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- tapOn:
+    id: rating-star-3
+- tapOn:
+    id: comment-composer-text
+- inputText: Boa receita
+- tapOn:
+    id: comment-composer-submit
+- assertVisible: Boa receita
+- assertVisible: Salvar alterações
+- tapOn:
+    id: rating-star-5
+- tapOn:
+    id: comment-composer-text
+- eraseText
+- inputText: Excelente, refiz várias vezes
+- tapOn:
+    id: comment-composer-submit
+- assertVisible: Excelente, refiz várias vezes
+- assertNotVisible: Boa receita
+- assertVisible: "5.0 · 1"

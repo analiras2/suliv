@@ -1,0 +1,15 @@
+appId: host.exp.Exponent
+name: E2E-004 Report another user's comment via the closed reason picker, success feedback shown
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/omelete-de-espinafre
+- assertVisible: Muito bom, fácil de fazer!
+- tapOn:
+    id: comment-report-button-00000000-0000-0000-0000-000000000002
+- assertVisible: Por que você está denunciando este comentário?
+- tapOn:
+    id: report-reason-spam
+- assertVisible: Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.
+- assertVisible: Muito bom, fácil de fazer!

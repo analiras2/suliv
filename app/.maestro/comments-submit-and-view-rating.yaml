@@ -1,0 +1,18 @@
+appId: host.exp.Exponent
+name: E2E-001 Submit a rating with comment, see it in the list, header average updates
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- assertVisible: Sem avaliações
+- tapOn:
+    id: rating-star-4
+- tapOn:
+    id: comment-composer-text
+- inputText: Adorei essa receita!
+- tapOn:
+    id: comment-composer-submit
+- assertVisible: Adorei essa receita!
+- assertVisible: "4.0 · 1"

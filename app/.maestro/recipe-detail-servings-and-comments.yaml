@@ -1,0 +1,31 @@
+appId: host.exp.Exponent
+name: E2E-001 Open a seeded recipe, real header data, comments placeholder, servings stepper updates instantly
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Buscar
+- assertVisible:
+    id: listing-search-input
+- tapOn:
+    id: listing-search-input
+- inputText: banana vegana
+- assertVisible:
+    id: listing-result-card-0
+- tapOn:
+    id: listing-result-card-0
+- assertVisible: Panqueca de banana vegana
+- assertVisible: até 15 min
+- assertVisible: iniciante
+- assertVisible: vegano
+- assertVisible: 2 porções
+- assertVisible: Nenhuma avaliação ainda
+- assertVisible: 2 unidades
+- assertVisible: 1 pitada
+- tapOn:
+    id: servings-stepper-increase
+- tapOn:
+    id: servings-stepper-increase
+- assertVisible: 4 unidades
+- assertNotVisible: 2 unidades
+- assertVisible: 1 pitada

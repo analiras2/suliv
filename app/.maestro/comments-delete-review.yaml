@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+name: E2E-003 Delete own review, entry disappears, composer resets to create mode
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- tapOn:
+    id: rating-star-4
+- tapOn:
+    id: comment-composer-text
+- inputText: Vou deletar essa avaliação
+- tapOn:
+    id: comment-composer-submit
+- assertVisible: Vou deletar essa avaliação
+- assertVisible:
+    id: comment-composer-delete
+- tapOn:
+    id: comment-composer-delete
+- assertVisible: Excluir avaliação?
+- tapOn: Excluir
+- assertNotVisible: Vou deletar essa avaliação
+- assertVisible: Nenhuma avaliação ainda
+- assertVisible: Publicar
+- assertNotVisible:
+    id: comment-composer-delete
