@@ -1,20 +1,13 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import { useFeedQuery } from '@/module/feed/queries/use-feed-query';
-import { flattenFeedRecipes } from '@/module/feed/services/feed-service';
-import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
+import { useFavoriteToggle } from '@/module/recipes/viewModels/use-favorite-toggle';
+import { useFavoritesList } from '@/module/recipes/store/use-favorites-store';
 
 export function useSavedViewModel() {
   const router = useRouter();
-  const feedQuery = useFeedQuery();
-  const savedIds = useSavedRecipesStore((state) => state.savedIds);
-  const toggleSaved = useSavedRecipesStore((state) => state.toggleSaved);
-
-  const savedRecipes = useMemo(() => {
-    const allRecipes = feedQuery.data ? flattenFeedRecipes(feedQuery.data) : [];
-    return allRecipes.filter((recipe) => savedIds.has(recipe.id));
-  }, [feedQuery.data, savedIds]);
+  const { items } = useFavoritesList();
+  const { toggleSaved } = useFavoriteToggle(items);
 
   const openRecipe = useCallback(
     (id: string) => {
@@ -28,8 +21,8 @@ export function useSavedViewModel() {
   }, [router]);
 
   return {
-    isLoading: feedQuery.isLoading,
-    savedRecipes,
+    isLoading: false,
+    savedRecipes: items,
     toggleSaved,
     openRecipe,
     goExplore,

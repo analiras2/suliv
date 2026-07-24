@@ -1,0 +1,20 @@
+appId: host.exp.Exponent
+name: E2E-001 Favorite a recipe online, it survives an app restart, and opens offline from Salvos with full content
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn:
+    id: recipe-detail-favorite-button
+- back
+- stopApp
+- launchApp
+- tapOn: Salvos
+- assertVisible: Panqueca de banana vegana
+- setAirplaneMode: true
+- tapOn: Panqueca de banana vegana
+- assertVisible: Banana madura
+- assertVisible: Amasse as bananas até formar um purê.
+- setAirplaneMode: false

@@ -3,18 +3,24 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import type { AnalyticsClient } from '@/lib/analytics';
 import type { FeedResponse } from '@/module/feed/types';
-import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
 
 const mockPush = jest.fn();
+const mockToggleSaved = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('@/module/feed/queries/use-feed-query', () => ({ useFeedQuery: jest.fn() }));
+jest.mock('@/module/recipes/viewModels/use-favorite-toggle', () => ({
+  useFavoriteToggle: jest.fn(() => ({ savedIds: new Set(['r1']), toggleSaved: mockToggleSaved })),
+}));
 
 // eslint-disable-next-line import/first
 import { useFeedQuery } from '@/module/feed/queries/use-feed-query';
 // eslint-disable-next-line import/first
+import { useFavoriteToggle } from '@/module/recipes/viewModels/use-favorite-toggle';
+// eslint-disable-next-line import/first
 import { useFeedViewModel } from './use-feed-view-model';
 
 const mockedUseFeedQuery = jest.mocked(useFeedQuery);
+const mockedUseFavoriteToggle = jest.mocked(useFavoriteToggle);
 
 function buildRecipe(id: string): FeedResponse['selectedForYou'][number] {
   return {
@@ -42,7 +48,7 @@ describe('useFeedViewModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useSavedRecipesStore.setState({ savedIds: new Set() });
+    mockedUseFavoriteToggle.mockReturnValue({ savedIds: new Set(['r1']), toggleSaved: mockToggleSaved });
     analytics = { track: jest.fn() };
     mockedUseFeedQuery.mockReturnValue({ isLoading: false, data: feedResponse } as ReturnType<typeof useFeedQuery>);
   });
@@ -87,15 +93,20 @@ describe('useFeedViewModel', () => {
     });
   });
 
-  it('UT-010: toggleSaved delegates to the existing useSavedRecipesStore.toggleSaved', async () => {
+  it('UT-010: savedIds/toggleSaved delegate to useFavoriteToggle, given the flattened recipe list', async () => {
     const { result } = await setup();
 
-    expect(result.current.toggleSaved).toBe(useSavedRecipesStore.getState().toggleSaved);
+    expect(result.current.savedIds).toEqual(new Set(['r1']));
 
     await act(() => {
       result.current.toggleSaved('recipe-1');
     });
 
-    expect(useSavedRecipesStore.getState().savedIds.has('recipe-1')).toBe(true);
+    expect(mockToggleSaved).toHaveBeenCalledWith('recipe-1');
+    expect(mockedUseFavoriteToggle).toHaveBeenCalledWith([
+      ...feedResponse.selectedForYou,
+      ...feedResponse.categories.flatMap((section) => section.recipes),
+      ...feedResponse.topOfWeek,
+    ]);
   });
 });

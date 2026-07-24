@@ -1,0 +1,18 @@
+appId: host.exp.Exponent
+name: E2E-004 Empty favorites list shows the explore CTA; favoriting a recipe makes it appear with no loading spinner
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- tapOn: Salvos
+- assertVisible: Ainda nada salvo
+- tapOn: Explorar receitas
+- assertVisible:
+    id: selected-for-you-card-0
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn:
+    id: recipe-detail-favorite-button
+- back
+- tapOn: Salvos
+- assertVisible: Panqueca de banana vegana

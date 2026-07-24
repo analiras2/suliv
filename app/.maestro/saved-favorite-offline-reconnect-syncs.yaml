@@ -1,0 +1,27 @@
+appId: host.exp.Exponent
+name: E2E-002 Favorite a previously-cached recipe while offline; syncs to the server on reconnect
+---
+# Warm recipe-detail-cache by viewing the recipe once online first — the
+# offline favorite CTA needs the full RecipeDetail already cached, since there
+# is no network to fetch it while offline. Depends on setAirplaneMode (Android
+# only at time of writing), consistent with cook-offline-session-previously-cached.yaml.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- back
+- setAirplaneMode: true
+- openLink: suliv://r/panqueca-de-banana-vegana
+- assertVisible: Panqueca de banana vegana
+- tapOn:
+    id: recipe-detail-favorite-button
+- back
+- tapOn: Salvos
+- assertVisible: Panqueca de banana vegana
+- setAirplaneMode: false
+# favorite_saved_offline firing exactly once, and the server-side Favorite row
+# eventually appearing via GET /favorites once the sync queue flushes, are
+# verified via a test-only check against the test backend (seeded state /
+# event log), not a user-visible assertion — same pattern as
+# cook-abandonment.yaml's and the splash offline flow's post-reconnect checks.

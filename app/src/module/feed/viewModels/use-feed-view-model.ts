@@ -1,10 +1,10 @@
 import { useRouter, type Href } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { analyticsClient, type AnalyticsClient } from '@/lib/analytics';
 import { useFeedQuery } from '@/module/feed/queries/use-feed-query';
 import type { CategorySection, RecipeSummary } from '@/module/feed/types';
-import { useSavedRecipesStore } from '@/module/recipes/store/use-saved-recipes-store';
+import { useFavoriteToggle } from '@/module/recipes/viewModels/use-favorite-toggle';
 
 const VER_TUDO_ROUTE = '/ver-tudo' as Href;
 
@@ -24,8 +24,15 @@ export interface FeedViewModel {
 export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): FeedViewModel {
   const router = useRouter();
   const feedQuery = useFeedQuery();
-  const savedIds = useSavedRecipesStore((state) => state.savedIds);
-  const toggleSaved = useSavedRecipesStore((state) => state.toggleSaved);
+  const allRecipes = useMemo(
+    () => [
+      ...(feedQuery.data?.selectedForYou ?? []),
+      ...(feedQuery.data?.categories.flatMap((section) => section.recipes) ?? []),
+      ...(feedQuery.data?.topOfWeek ?? []),
+    ],
+    [feedQuery.data],
+  );
+  const { savedIds, toggleSaved } = useFavoriteToggle(allRecipes);
 
   const openRecipe = useCallback(
     (id: string, origin: string) => {

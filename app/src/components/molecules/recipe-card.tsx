@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/atoms/icon';
+import { Pill } from '@/components/atoms/pill';
 import {
   colors,
   fontFamilies,
@@ -19,6 +20,7 @@ export type RecipeCardProps = {
   saved: boolean;
   onToggleSave: () => void;
   onOpen: () => void;
+  conflictsWithUser?: boolean;
 };
 
 const TIME_BUCKET_LABELS: Record<TimeBucket, string> = {
@@ -28,7 +30,7 @@ const TIME_BUCKET_LABELS: Record<TimeBucket, string> = {
   sessenta_mais: '60+ min',
 };
 
-function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen }: RecipeCardProps) {
+function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen, conflictsWithUser }: RecipeCardProps) {
   return (
     <View style={styles.card}>
       <Pressable onPress={onOpen}>
@@ -48,6 +50,13 @@ function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen }: RecipeCard
           <Text style={styles.meta} numberOfLines={1}>
             {recipe.category.label}
           </Text>
+          {conflictsWithUser ? (
+            <View testID={`recipe-card-conflict-badge-${recipe.id}`}>
+              <Pill tone="clay" size="sm">
+                Contém restrição
+              </Pill>
+            </View>
+          ) : null}
         </View>
       </Pressable>
       <Pressable
