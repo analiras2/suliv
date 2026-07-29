@@ -264,6 +264,23 @@ describe('UsersService', () => {
     expect(supabaseAdmin.deleteUser).toHaveBeenCalledWith('user-1');
   });
 
+  it('UT-013b does not anonymize local data when Supabase auth deletion fails', async () => {
+    prisma.user.findUnique.mockResolvedValue(userFixture({ name: 'Ana' }));
+    supabaseAdmin.deleteUser.mockRejectedValue(
+      new Error('Supabase Auth deletion failed with 500'),
+    );
+
+    await expect(service.deleteMe('user-1')).rejects.toThrow(
+      'Supabase Auth deletion failed with 500',
+    );
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+    expect(prisma.userAllergy.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.deviceToken.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.analyticsEvent.updateMany).not.toHaveBeenCalled();
+  });
+
   it('UT-014 never deletes or reassigns authored recipes', async () => {
     prisma.user.findUnique.mockResolvedValue(userFixture());
     prisma.user.update.mockResolvedValue(userFixture());

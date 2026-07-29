@@ -233,28 +233,41 @@ export class UsersService {
 
   async deleteMe(userId: string): Promise<void> {
     await this.getMe(userId);
+
+    // Delete the Supabase Auth account before anonymizing local data: if the
+    // Admin API call fails, no local mutation happens and the caller can
+    // safely retry without leaving an active auth identity behind.
+    await this.supabaseAdmin.deleteUser(userId);
+
     const hash = createHash('sha256').update(userId).digest('hex').slice(0, 12);
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          avatarUrl: null,
-          email: `${hash}@removed.invalid`,
-          name: null,
-          status: 'anonymized',
-          username: `removed_${hash}`,
-        },
-      }),
-      this.prisma.userAllergy.deleteMany({ where: { userId } }),
-      this.prisma.deviceToken.deleteMany({ where: { userId } }),
-      this.prisma.analyticsEvent.updateMany({
-        where: { userId },
-        data: { userId: null },
-      }),
-    ]);
+    try {
+      await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            avatarUrl: null,
+            email: `${hash}@removed.invalid`,
+            name: null,
+            status: 'anonymized',
+            username: `removed_${hash}`,
+          },
+        }),
+        this.prisma.userAllergy.deleteMany({ where: { userId } }),
+        this.prisma.deviceToken.deleteMany({ where: { userId } }),
+        this.prisma.analyticsEvent.updateMany({
+          where: { userId },
+          data: { userId: null },
+        }),
+      ]);
+    } catch (error: unknown) {
+      this.logger.error(
+        { userId, error },
+        'UserDeletionLocalAnonymizationFailed: Supabase auth user was deleted but local data was not anonymized; requires manual reconciliation',
+      );
+      throw error;
+    }
 
-    await this.supabaseAdmin.deleteUser(userId);
     this.logger.log({ userId }, 'UserDeleted');
   }
 
