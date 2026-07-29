@@ -1,6 +1,8 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import type { Session } from '@supabase/supabase-js';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { InitialRoute, SplashStatus } from '@/module/splash/viewModels/use-splash-view-model';
 
 jest.mock('expo-splash-screen', () => ({ preventAutoHideAsync: jest.fn() }));
@@ -118,5 +120,20 @@ describe('_layout routing decision (IT-001..IT-006)', () => {
     mockSplash('loading', null);
     const rendered = await render(<RootLayout />);
     expect(rendered.toJSON()).toBeNull();
+  });
+});
+
+describe('_layout auth guard reacts to live session state', () => {
+  it('unmounts (tabs) and mounts (auth) when the session store flips to unauthenticated after sign-out', async () => {
+    useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
+    mockSplash('ready', '(tabs)');
+    const rendered = await render(<RootLayout />);
+    expectOnlyGroupVisible(rendered, '(tabs)');
+
+    await act(async () => {
+      useSessionStore.getState().setSession(null);
+    });
+
+    expectOnlyGroupVisible(rendered, '(auth)');
   });
 });
