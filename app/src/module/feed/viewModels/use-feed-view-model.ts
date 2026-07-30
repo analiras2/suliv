@@ -17,7 +17,7 @@ export interface FeedViewModel {
   topOfWeek: RecipeSummary[];
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
-  openRecipe: (id: string, origin: string) => void;
+  openRecipe: (slug: string, origin: string) => void;
   openVerTudo: (origin: VerTudoOrigin, categoryKey?: string) => void;
 }
 
@@ -33,13 +33,15 @@ export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): 
     [feedQuery.data],
   );
   const { savedIds, toggleSaved } = useFavoriteToggle(allRecipes);
+  const recipesBySlug = useMemo(() => new Map(allRecipes.map((recipe) => [recipe.slug, recipe])), [allRecipes]);
 
   const openRecipe = useCallback(
-    (id: string, origin: string) => {
-      analytics.track('recipe_opened', { recipe_id: id, origin });
-      router.push(`/recipe/${id}`);
+    (slugOrId: string, origin: string) => {
+      const recipeId = recipesBySlug.get(slugOrId)?.id ?? slugOrId;
+      analytics.track('recipe_opened', { recipe_id: recipeId, origin });
+      router.push(`/recipe/${slugOrId}`);
     },
-    [analytics, router],
+    [analytics, router, recipesBySlug],
   );
 
   const openVerTudo = useCallback(

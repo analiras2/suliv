@@ -109,14 +109,14 @@ Para evitar revisar coisas dependentes antes da base, a rodada deve seguir nesta
 
 Feature atual da rodada:
 
-- `splash-bootstrap-modo-offline`
+- `busca-filtros-ver-tudo`
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name splash-bootstrap-modo-offline`
+1. Rodar `compozy tasks validate --name busca-filtros-ver-tudo`
 2. Abrir a rodada manual de review dessa feature
 3. Registrar os issues encontrados
-4. Corrigir antes de passar para `onboarding-obrigatorio`
+4. Corrigir antes de avançar para `detalhe-receita-recalculo-porcoes`
 
 ## Registro da rodada
 
@@ -133,47 +133,47 @@ Passos imediatos:
 
 ### 2. `splash-bootstrap-modo-offline`
 
-- Status: `Review concluído, com issues`
+- Status: `Validado`
 - `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 4 tasks escaneadas)
 - Review round: `.compozy/tasks/splash-bootstrap-modo-offline/reviews-001/`
 - Issues encontradas: 1 high
-- Correções aplicadas: nenhuma nesta etapa; review-only
-- QA funcional: testes focados do app passaram com `--watchman=false` (6 suites / 33 testes), mas com warnings de `act()` no teste de retry; Maestro não executado nesta etapa
-- Decisão final: precisa corrigir antes de avançar para `onboarding-obrigatorio`
-- Próximo passo: rodar `compozy reviews fix splash-bootstrap-modo-offline --ide codex`
+- Correções aplicadas: `issue_001.md` marcada como `resolved`; commit `6405632 fix(app): forward splash profile abort signal`
+- QA funcional: em 2026-07-30, testes focados do app passaram com `--watchman=false` (5 suites / 30 testes); `npm run lint` passou com 0 erros e 4 warnings já existentes; Maestro não executado nesta etapa
+- Decisão final: liberado para avançar para `onboarding-obrigatorio`
+- Próximo passo: revisar `onboarding-obrigatorio`
 
 ### 3. `onboarding-obrigatorio`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 5 tasks escaneadas)
+- Review round: `.compozy/tasks/onboarding-obrigatorio/reviews-001/`
+- Issues encontradas: 1 medium
+- Correções aplicadas: `issue_001.md` marcada como `resolved`; commit `96a24f0 fix(app): map onboarding response into a real ProfileSnapshot`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; testes focados do app passaram com `--watchman=false --forceExit` (6 suites / 37 testes); integração backend ainda pendente porque o script tenta `prisma migrate reset` no datasource configurado e precisa de ambiente local/test seguro
+- Decisão final: liberado para avançar para `motor-ranking-popularidade-recomendacao`
+- Próximo passo: revisar `motor-ranking-popularidade-recomendacao`
 
 ### 4. `feed-descoberta-personalizada`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 5 tasks escaneadas)
+- Review round: `.compozy/tasks/feed-descoberta-personalizada/reviews-001/`
+- Issues encontradas: 1 medium
+- Correções aplicadas: `issue_001.md` marcada como `resolved`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; `npm run lint` no `app` passou com 0 erros e 4 warnings já conhecidos; testes focados do app passaram com `--watchman=false --forceExit` (2 suites / 7 testes)
+- Decisão final: liberado para avançar para `busca-filtros-ver-tudo`
+- Próximo passo: revisar `busca-filtros-ver-tudo`
 
 ### 5. `motor-ranking-popularidade-recomendacao`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 4 tasks escaneadas)
+- Review round: `.compozy/tasks/motor-ranking-popularidade-recomendacao/reviews-001/`
+- Issues encontradas: 1 high, 1 medium
+- Correções aplicadas: `issue_001.md` e `issue_002.md` marcadas como `resolved`; commits `f4e3266 fix(api): forward userId through listTopOfWeek so feed applies diet tie-break` e `fb6e49a fix(api): sum active editorial boosts instead of overwriting by recipe`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; `npm run lint` no `api` passou; testes focados do backend passaram com `--watchman=false` (5 suites / 87 testes); integração backend não executada nesta etapa porque o script de integração reseta o datasource configurado
+- Decisão final: liberado para avançar para `feed-descoberta-personalizada`
+- Próximo passo: revisar `feed-descoberta-personalizada`
 
 ### 6. `busca-filtros-ver-tudo`
 

@@ -80,6 +80,27 @@ describe('useFeedViewModel', () => {
     expect(mockPush).toHaveBeenCalledWith('/recipe/recipe-1');
   });
 
+  it('openRecipe tracks the recipe id (not the slug) when they differ, but navigates by slug', async () => {
+    mockedUseFeedQuery.mockReturnValue({
+      isLoading: false,
+      data: {
+        ...feedResponse,
+        selectedForYou: [{ ...buildRecipe('r1'), id: 'uuid-r1', slug: 'bolo-de-cenoura' }],
+      },
+    } as ReturnType<typeof useFeedQuery>);
+    const { result } = await setup();
+
+    await act(() => {
+      result.current.openRecipe('bolo-de-cenoura', 'feed_selecionadas');
+    });
+
+    expect(analytics.track).toHaveBeenCalledWith('recipe_opened', {
+      recipe_id: 'uuid-r1',
+      origin: 'feed_selecionadas',
+    });
+    expect(mockPush).toHaveBeenCalledWith('/recipe/bolo-de-cenoura');
+  });
+
   it('UT-009: openVerTudo navigates with the correct { origin, categoryKey } params', async () => {
     const { result } = await setup();
 
