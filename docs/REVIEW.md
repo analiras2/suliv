@@ -109,14 +109,14 @@ Para evitar revisar coisas dependentes antes da base, a rodada deve seguir nesta
 
 Feature atual da rodada:
 
-- `detalhe-receita-recalculo-porcoes`
+- `preparo-guiado`
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name detalhe-receita-recalculo-porcoes`
+1. Rodar `compozy tasks validate --name preparo-guiado`
 2. Abrir a rodada manual de review dessa feature
 3. Registrar os issues encontrados
-4. Corrigir antes de avançar para `favoritos`
+4. Corrigir antes de avançar para `perfil-configuracoes`
 
 ## Registro da rodada
 
@@ -188,14 +188,14 @@ Passos imediatos:
 
 ### 7. `detalhe-receita-recalculo-porcoes`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 4 tasks escaneadas)
+- Review round: `.compozy/tasks/detalhe-receita-recalculo-porcoes/reviews-001/`
+- Issues encontradas: 1 high, 1 medium
+- Correções aplicadas: `issue_001.md` e `issue_002.md` marcadas como `resolved`; commits `9df69c8 fix(api): return real isFavorited state for authenticated recipe detail` e `6dbdf2d fix(app): track recipe_opened with origin deep_link for universal link opens`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; testes focados do backend passaram com `--watchman=false` (1 suite / 35 testes); testes focados do app passaram com `--watchman=false --forceExit` (2 suites / 12 testes)
+- Decisão final: liberado para avançar para `favoritos`
+- Próximo passo: revisar `favoritos`
 
 ### 8. `preparo-guiado`
 
@@ -210,14 +210,14 @@ Passos imediatos:
 
 ### 9. `favoritos`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 4 tasks escaneadas)
+- Review round: `.compozy/tasks/favoritos/reviews-001/`
+- Issues encontradas: 2 high, 1 medium
+- Correções aplicadas: `issue_001.md`, `issue_002.md` e `issue_003.md` marcadas como `resolved`; commits `50453c5 fix(app): render reconciled favorites without a cached recipe detail`, `06ba9a9 fix(app): reconcile all pages of server favorites, not just the first` e `5db0711 fix(app): mock onAuthStateChange for favorites store user-scoping subscription`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; `npm run lint` no `app` passou com 0 erros e 4 warnings já conhecidos; testes focados do backend passaram com `--watchman=false` (3 suites / 43 testes); testes focados do app passaram com `--watchman=false --forceExit` (3 suites / 28 testes)
+- Decisão final: liberado para avançar para `preparo-guiado`
+- Próximo passo: revisar `preparo-guiado`
 
 ### 10. `perfil-configuracoes`
 
