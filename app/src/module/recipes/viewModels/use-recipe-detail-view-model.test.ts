@@ -30,7 +30,9 @@ jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,
   default: { addEventListener: () => jest.fn() },
 }));
-jest.mock('@/module/auth/services/auth-service', () => ({ authService: { getSession: jest.fn() } }));
+jest.mock('@/module/auth/services/auth-service', () => ({
+  authService: { getSession: jest.fn(), onAuthStateChange: () => jest.fn() },
+}));
 jest.mock('@/module/recipes/services/recipe-detail-cache', () => ({
   cacheRecipeDetail: jest.fn(),
   evictCachedRecipeDetail: jest.fn(),
