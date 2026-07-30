@@ -43,10 +43,10 @@ export function useGuidedCookingViewModel(
     isConnectedRef.current = isConnected;
   }, [isConnected]);
 
-  const hasLoadedRef = useRef(false);
+  const loadedSlugRef = useRef<string | null>(null);
   useEffect(() => {
-    if (hasLoadedRef.current) return;
-    hasLoadedRef.current = true;
+    if (loadedSlugRef.current === slug) return;
+    loadedSlugRef.current = slug;
 
     useGuidedCookingStore.getState().reset();
     void contentService.load(slug, isConnectedRef.current).then((result) => {

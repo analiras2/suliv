@@ -53,6 +53,7 @@ jest.mock('@/module/recipes/store/use-favorites-store', () => {
 // eslint-disable-next-line import/first
 import {
   useGuidedCookingViewModel,
+  type GuidedCookingViewModel,
   type GuidedCookingViewModelDeps,
 } from './use-guided-cooking-view-model';
 // eslint-disable-next-line import/first
@@ -425,6 +426,45 @@ describe('useGuidedCookingViewModel', () => {
     expect(mockGetCachedRecipeDetail).toHaveBeenCalledWith('bolo-de-cenoura');
     expect(useFavoritesStore.getState().favorites['recipe-1']).toBeDefined();
     expect(result.current.isFavorited).toBe(true);
+  });
+
+  it('reloads content and resets the store when the slug changes across a rerender', async () => {
+    const otherDetail: RecipeDetail = { ...detail, id: 'recipe-2', slug: 'panqueca' };
+    const deps = buildDeps({
+      contentService: {
+        load: jest
+          .fn<() => Promise<GuidedContentResult>>()
+          .mockResolvedValueOnce({ kind: 'online', detail })
+          .mockResolvedValueOnce({ kind: 'online', detail: otherDetail }),
+      },
+    });
+
+    const { result, rerender, unmount } = await renderHook<GuidedCookingViewModel, { slug: string }>(
+      ({ slug }) => useGuidedCookingViewModel(slug, deps),
+      { initialProps: { slug: 'bolo-de-cenoura' } },
+    );
+    await flush();
+
+    expect(useGuidedCookingStore.getState().recipeId).toBe('recipe-1');
+
+    await act(async () => {
+      result.current.requestAdvance();
+    });
+    expect(result.current.currentStepIndex).toBe(1);
+
+    await rerender({ slug: 'panqueca' });
+    await flush();
+
+    expect(useGuidedCookingStore.getState().recipeId).toBe('recipe-2');
+    expect(useGuidedCookingStore.getState().currentStepIndex).toBe(0);
+    expect(deps.contentService.load).toHaveBeenCalledTimes(2);
+    expect(deps.contentService.load).toHaveBeenNthCalledWith(2, 'panqueca', true);
+    expect(deps.analyticsService.track).toHaveBeenCalledWith(
+      { type: 'guided_cook_started', recipeId: 'recipe-2' },
+      true,
+    );
+
+    await unmount();
   });
 
   it('toggleFavorite unfavorites an already-favorited recipe', async () => {
