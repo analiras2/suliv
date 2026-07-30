@@ -25,7 +25,7 @@ import { onboardingService } from '@/module/onboarding/services/onboarding-servi
 import OnboardingScreen from '@/app/(onboarding)/steps';
 
 const mockedService = onboardingService as jest.Mocked<OnboardingService>;
-const mockedCache = offlineCache as { set: jest.Mock };
+const mockedCache = offlineCache as unknown as { set: jest.Mock };
 const mockedAnalytics = analyticsClient as { track: jest.Mock };
 
 const approvedAllergens: ApprovedAllergen[] = [{ id: 'id-1', name: 'Leite' }];

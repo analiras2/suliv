@@ -512,11 +512,16 @@ describe('UsersController (integration)', () => {
     const response = await request(app.getHttpServer())
       .get('/terms/current')
       .expect(200);
+    // expect.any() is typed `any` by design (matches any value of the given
+    // constructor), which trips no-unsafe-assignment when assigned as an
+    // object property rather than passed as a bare matcher argument.
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     expect(response.body).toEqual(
       expect.objectContaining({
         version: expect.any(String),
         url: expect.any(String),
       }),
     );
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   });
 });

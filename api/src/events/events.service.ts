@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { IngestEventsDto } from './dto/ingest-events.dto';
 
@@ -34,7 +35,9 @@ export class EventsService {
           platform: event.platform,
           appVersion: event.appVersion,
           eventName: event.eventName,
-          properties: event.properties,
+          // Validated as a plain object by @IsObject() on the DTO, so it's
+          // already JSON-safe at runtime; Prisma's Json field just needs the type asserted.
+          properties: event.properties as Prisma.InputJsonValue,
           occurredAt: new Date(event.occurredAt),
         })),
       }),

@@ -54,13 +54,15 @@ async function renderHomeScreen() {
 describe('HomeScreen (IT-005, IT-006)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (authService as { getSession: jest.Mock }).getSession = jest
+    (authService as unknown as { getSession: jest.Mock }).getSession = jest
       .fn<() => Promise<Session | null>>()
       .mockResolvedValue(session);
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(feedResponse),
-    }) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn<() => Promise<{ ok: boolean; json: () => Promise<typeof feedResponse> }>>()
+      .mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(feedResponse),
+      }) as unknown as typeof fetch;
   });
 
   it('IT-005: renders all 3 section headers and recipe cards matching a mocked GET /feed response', async () => {
@@ -71,7 +73,11 @@ describe('HomeScreen (IT-005, IT-006)', () => {
     expect(screen.getByText('Top da semana')).toBeTruthy();
 
     expect(screen.getByText('Panqueca de banana')).toBeTruthy();
-    expect(screen.getByText('Omelete de espinafre')).toBeTruthy();
+    // The categories section renders category chips (from feed.categorySections),
+    // not the individual recipes nested under each category in the /feed response.
+    // "Café da manhã" also appears as the selected-for-you card's category label,
+    // so both the chip and the card copy must be present (2 matches).
+    expect(screen.getAllByText('Café da manhã')).toHaveLength(2);
     expect(screen.getByText('Wrap de grão-de-bico')).toBeTruthy();
   });
 

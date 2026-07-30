@@ -53,14 +53,16 @@ async function renderStep(props?: Partial<React.ComponentProps<typeof Onboarding
 describe('OnboardingAllergiesStep', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (authService as { getSession: jest.Mock }).getSession = jest
+    (authService as unknown as { getSession: jest.Mock }).getSession = jest
       .fn<() => Promise<Session | null>>()
       .mockResolvedValue(session);
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => approvedAllergens,
-    }) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn<() => Promise<{ ok: boolean; status: number; json: () => Promise<typeof approvedAllergens> }>>()
+      .mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => approvedAllergens,
+      }) as unknown as typeof fetch;
   });
 
   it('IT-001: renders all 7 approved allergens fetched via fetchApprovedAllergens', async () => {
@@ -159,14 +161,16 @@ describe('OnboardingAllergiesStep', () => {
 describe('OnboardingAllergiesStep wired to a real useOnboardingViewModel instance', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (authService as { getSession: jest.Mock }).getSession = jest
+    (authService as unknown as { getSession: jest.Mock }).getSession = jest
       .fn<() => Promise<Session | null>>()
       .mockResolvedValue(session);
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => approvedAllergens,
-    }) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn<() => Promise<{ ok: boolean; status: number; json: () => Promise<typeof approvedAllergens> }>>()
+      .mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => approvedAllergens,
+      }) as unknown as typeof fetch;
   });
 
   function Harness() {
