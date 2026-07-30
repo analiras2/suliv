@@ -19,17 +19,27 @@ export interface ProfileSettingItem {
   testID?: string;
 }
 
-const MY_RECIPES_ROUTE = '/profile/my-recipes' as Href;
-
 const SETTINGS: ProfileSettingItem[] = [
-  { id: 'account', icon: 'user', label: 'Conta' },
+  { id: 'diet-preference', icon: 'vegan', label: 'Estilo alimentar' },
+  { id: 'allergies', icon: 'warning', label: 'Alergias e restrições' },
+  { id: 'level-frequency', icon: 'leaf', label: 'Nível e frequência' },
+  { id: 'theme', icon: 'sun', label: 'Tema' },
+  { id: 'terms', icon: 'bookmark', label: 'Termos' },
+  { id: 'privacy', icon: 'settings', label: 'Privacidade' },
   { id: 'my-recipes', icon: 'leaf', label: 'Minhas receitas' },
-  { id: 'search-preferences', icon: 'filter', label: 'Preferências de busca' },
-  { id: 'notifications', icon: 'bell', label: 'Notificações' },
-  { id: 'about', icon: 'settings', label: 'Sobre o Suliv' },
-  { id: 'delete-account', icon: 'user', label: 'Excluir conta', tone: 'danger' },
   { id: 'sign-out', icon: 'logOut', label: 'Sair', tone: 'danger' },
+  { id: 'delete-account', icon: 'user', label: 'Excluir conta', tone: 'danger' },
 ];
+
+const SETTINGS_ROUTES: Partial<Record<string, Href>> = {
+  'diet-preference': '/profile/settings/diet' as Href,
+  allergies: '/profile/settings/allergies' as Href,
+  'level-frequency': '/profile/settings/level-frequency' as Href,
+  theme: '/profile/settings/theme' as Href,
+  terms: '/profile/settings/terms' as Href,
+  privacy: '/profile/settings/privacy' as Href,
+  'my-recipes': '/profile/my-recipes' as Href,
+};
 
 export function useProfileViewModel() {
   const router = useRouter();
@@ -61,16 +71,10 @@ export function useProfileViewModel() {
   };
 
   const getSettingOnPress = (id: string): (() => void) | undefined => {
-    switch (id) {
-      case 'sign-out':
-        return () => void signOut();
-      case 'delete-account':
-        return account.requestAccountDeletion;
-      case 'my-recipes':
-        return () => router.push(MY_RECIPES_ROUTE);
-      default:
-        return undefined;
-    }
+    if (id === 'sign-out') return () => void signOut();
+    if (id === 'delete-account') return account.requestAccountDeletion;
+    const route = SETTINGS_ROUTES[id];
+    return route ? () => router.push(route) : undefined;
   };
 
   const settings = SETTINGS.map((item) => ({
@@ -85,6 +89,8 @@ export function useProfileViewModel() {
     isLoading: status === 'loading' || profile.isPending,
     isWorking: isSigningOut || account.isDeleting,
     name: user?.name ?? user?.username ?? '',
+    avatarUrl: user?.avatarUrl ?? null,
+    username: user?.username ?? '',
     settings,
   };
 }

@@ -1,0 +1,33 @@
+appId: host.exp.Exponent
+name: E2E-001 Edit diet, level, frequency and allergies persist across relaunch
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${SETTINGS_ACCESS_TOKEN}&refresh_token=${SETTINGS_REFRESH_TOKEN}
+- assertVisible: Início
+- tapOn: Você
+- tapOn:
+    id: settings-diet-preference
+- tapOn:
+    id: settings-diet-option-vegetariano
+- tapOn:
+    id: settings-header-back
+- tapOn:
+    id: settings-level-frequency
+- tapOn:
+    id: settings-level-option-avancado
+- tapOn:
+    id: settings-frequency-option-quase_todo_dia
+- tapOn:
+    id: settings-header-back
+- tapOn:
+    id: settings-allergies
+- tapOn:
+    id: settings-allergy-search-input
+- inputText: Leite
+- tapOn: Leite
+- tapOn:
+    id: settings-header-back
+- stopApp
+- launchApp
+- assertVisible: Início

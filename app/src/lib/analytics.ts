@@ -25,6 +25,7 @@ export interface AnalyticsEventPayloads {
   favorites_viewed: { count: number };
   submitted_recipe_started: { recipe_id: string };
   submitted_recipe_completed: { recipe_id: string };
+  profile_updated: { fields_changed: string[] };
 }
 
 export interface AnalyticsClient {

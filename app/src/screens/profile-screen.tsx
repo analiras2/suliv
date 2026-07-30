@@ -1,13 +1,14 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/molecules/avatar';
 import { Overline } from '@/components/atoms/overline';
 import { SettingsRow } from '@/components/molecules/settings-row';
 import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 import { useProfileViewModel } from '@/module/profile/use-profile-view-model';
 
 export function ProfileScreen() {
-  const { error, isLoading, isWorking, name, settings } = useProfileViewModel();
+  const { avatarUrl, error, isLoading, isWorking, name, settings, username } = useProfileViewModel();
 
   if (isLoading) {
     return (
@@ -22,7 +23,10 @@ export function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Overline>você</Overline>
-          <Text style={styles.title} testID="profile-greeting">Oi, {name.toLocaleLowerCase('pt-BR')}</Text>
+          <View style={styles.headerRow}>
+            <Avatar avatarUrl={avatarUrl} name={name || null} username={username} />
+            <Text style={styles.title} testID="profile-greeting">Oi, {name.toLocaleLowerCase('pt-BR')}</Text>
+          </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
 
@@ -61,6 +65,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg - 4,
     paddingTop: spacing.sm + 2,
     gap: 4,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   title: {
     ...typography.displayXs,
