@@ -79,9 +79,16 @@ export class CommentsService {
     }
     await this.enforceRateLimit(recipeId, userId);
 
+    const updateData: { rating: number; commentText?: string | null } = {
+      rating: input.rating,
+    };
+    if (input.commentText !== undefined) {
+      updateData.commentText = input.commentText;
+    }
+
     const row = await this.prisma.commentRating.upsert({
       where: { recipeId_userId: { recipeId, userId } },
-      update: { rating: input.rating, commentText: input.commentText ?? null },
+      update: updateData,
       create: {
         recipeId,
         userId,

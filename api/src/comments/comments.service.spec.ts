@@ -130,6 +130,26 @@ describe('CommentsService', () => {
       );
     });
 
+    it('UT-009 updates only the rating and preserves the existing comment text when commentText is omitted', async () => {
+      const updated = commentRatingFixture({
+        rating: 5,
+        commentText: 'texto original',
+      });
+      upsertCommentRating.mockResolvedValue(updated);
+
+      const result = await service.upsert('recipe-1', 'user-1', {
+        rating: 5,
+      });
+
+      expect(result.rating).toBe(5);
+      expect(result.commentText).toBe('texto original');
+      expect(upsertCommentRating).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: { rating: 5 },
+        }),
+      );
+    });
+
     it('UT-007 rejects with 429 on the 21st comment/rating action in the same day', async () => {
       countCommentRating.mockResolvedValue(20);
 
