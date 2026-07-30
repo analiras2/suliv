@@ -109,6 +109,7 @@ describe('RecipesService', () => {
   const findManyRecipe = jest.fn();
   const updateRecipe = jest.fn();
   const countFavorite = jest.fn();
+  const findUniqueFavorite = jest.fn();
   const aggregateCommentRating = jest.fn();
   const findUniqueUser = jest.fn();
   const findUniqueOrThrowRecipe = jest.fn();
@@ -152,7 +153,7 @@ describe('RecipesService', () => {
     userAllergy: { findMany: findManyUserAllergy },
     recipeAllergen: { findMany: findManyRecipeAllergen },
     allergen: { findMany: findManyAllergen },
-    favorite: { count: countFavorite },
+    favorite: { count: countFavorite, findUnique: findUniqueFavorite },
     commentRating: { aggregate: aggregateCommentRating },
     user: { findUnique: findUniqueUser },
     $transaction: transaction,
@@ -194,6 +195,7 @@ describe('RecipesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     upsertRecipeTx.mockResolvedValue({ id: 'recipe-1' });
+    findUniqueFavorite.mockResolvedValue(null);
     aggregateCommentRating.mockResolvedValue({
       _avg: { rating: null },
       _count: { rating: 0 },
@@ -350,6 +352,49 @@ describe('RecipesService', () => {
 
       expect(result.averageRating).toBeNull();
       expect(result.ratingCount).toBe(0);
+    });
+
+    it('authenticated caller who already favorited the recipe receives isFavorited: true', async () => {
+      findUniqueRecipe.mockResolvedValue(recipeWithDetailsFixture());
+      findManyUserAllergy.mockResolvedValue([]);
+      findUniqueFavorite.mockResolvedValue({
+        id: 'favorite-1',
+        userId: 'user-1',
+        recipeId: 'recipe-1',
+        createdAt: new Date(),
+      });
+
+      const result = await service.getBySlug(
+        'panqueca-de-banana-vegana',
+        'user-1',
+      );
+
+      expect(result.isFavorited).toBe(true);
+      expect(findUniqueFavorite).toHaveBeenCalledWith({
+        where: { userId_recipeId: { userId: 'user-1', recipeId: 'recipe-1' } },
+      });
+    });
+
+    it('authenticated caller who has not favorited the recipe receives isFavorited: false', async () => {
+      findUniqueRecipe.mockResolvedValue(recipeWithDetailsFixture());
+      findManyUserAllergy.mockResolvedValue([]);
+      findUniqueFavorite.mockResolvedValue(null);
+
+      const result = await service.getBySlug(
+        'panqueca-de-banana-vegana',
+        'user-1',
+      );
+
+      expect(result.isFavorited).toBe(false);
+    });
+
+    it('anonymous caller response omits isFavorited entirely', async () => {
+      findUniqueRecipe.mockResolvedValue(recipeWithDetailsFixture());
+
+      const result = await service.getBySlug('panqueca-de-banana-vegana');
+
+      expect(result.isFavorited).toBeUndefined();
+      expect(findUniqueFavorite).not.toHaveBeenCalled();
     });
   });
 

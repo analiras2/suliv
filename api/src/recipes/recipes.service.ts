@@ -170,9 +170,10 @@ export class RecipesService {
     );
     detail.conflictsWithUser = conflictingAllergens.length > 0;
     detail.conflictingAllergens = conflictingAllergens;
-    // Favoritos hasn't been built yet — no favorites table exists to query
-    // (out of this task's scope; see ADR-001/PRD §10 for the boundary).
-    detail.isFavorited = false;
+    const favorite = await this.prisma.favorite.findUnique({
+      where: { userId_recipeId: { userId, recipeId: recipe.id } },
+    });
+    detail.isFavorited = favorite !== null;
 
     return detail;
   }
