@@ -49,6 +49,18 @@ describe('ProfileService', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/me', expect.objectContaining({ method: 'GET' }));
   });
 
+  it('forwards the supplied abort signal to fetch', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve(user), ok: true,
+    } as Response);
+    const controller = new AbortController();
+
+    await expect(profileService.getMe(session, controller.signal)).resolves.toBe(user);
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/me', expect.objectContaining({
+      method: 'GET', signal: controller.signal,
+    }));
+  });
+
   it('deletes the current profile without parsing the empty response', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 202 } as Response);
     await expect(profileService.deleteMe(session)).resolves.toBeUndefined();

@@ -27,6 +27,7 @@ async function request(
   path: string,
   method: 'DELETE' | 'GET' | 'PATCH' | 'POST',
   body?: Record<string, string>,
+  signal?: AbortSignal,
 ) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
@@ -35,6 +36,7 @@ async function request(
       'Content-Type': 'application/json',
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(signal ? { signal } : {}),
   });
 
   if (!response.ok) {
@@ -44,14 +46,20 @@ async function request(
   return response;
 }
 
-async function requestJson<T>(session: Session, path: string, method: 'GET' | 'PATCH' | 'POST', body?: Record<string, string>) {
-  const response = await request(session, path, method, body);
+async function requestJson<T>(
+  session: Session,
+  path: string,
+  method: 'GET' | 'PATCH' | 'POST',
+  body?: Record<string, string>,
+  signal?: AbortSignal,
+) {
+  const response = await request(session, path, method, body, signal);
   return response.json() as Promise<T>;
 }
 
 export const profileService: ProfileService = {
   bootstrap: (session) => requestJson<BootstrapResponse>(session, '/me/bootstrap', 'POST', {}),
-  getMe: (session) => requestJson<UserProfile>(session, '/me', 'GET'),
+  getMe: (session, signal) => requestJson<UserProfile>(session, '/me', 'GET', undefined, signal),
   updateName: (session, name) => requestJson<UserProfile>(session, '/me', 'PATCH', { name }),
   deleteMe: async (session) => { await request(session, '/me', 'DELETE'); },
 };
