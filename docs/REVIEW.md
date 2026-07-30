@@ -109,14 +109,14 @@ Para evitar revisar coisas dependentes antes da base, a rodada deve seguir nesta
 
 Feature atual da rodada:
 
-- `busca-filtros-ver-tudo`
+- `detalhe-receita-recalculo-porcoes`
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name busca-filtros-ver-tudo`
+1. Rodar `compozy tasks validate --name detalhe-receita-recalculo-porcoes`
 2. Abrir a rodada manual de review dessa feature
 3. Registrar os issues encontrados
-4. Corrigir antes de avançar para `detalhe-receita-recalculo-porcoes`
+4. Corrigir antes de avançar para `favoritos`
 
 ## Registro da rodada
 
@@ -177,14 +177,14 @@ Passos imediatos:
 
 ### 6. `busca-filtros-ver-tudo`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 4 tasks escaneadas)
+- Review round: `.compozy/tasks/busca-filtros-ver-tudo/reviews-001/`
+- Issues encontradas: 1 high, 2 medium
+- Correções aplicadas: `issue_001.md`, `issue_002.md` e `issue_003.md` marcadas como `resolved`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; `npm run lint` no `api` passou; `npm run lint` no `app` passou com 0 erros e 4 warnings já conhecidos; testes focados do backend passaram com `--watchman=false` (3 suites / 25 testes); testes focados do app passaram com `--watchman=false --forceExit` (3 suites / 13 testes)
+- Decisão final: liberado para avançar para `detalhe-receita-recalculo-porcoes`
+- Próximo passo: revisar `detalhe-receita-recalculo-porcoes`
 
 ### 7. `detalhe-receita-recalculo-porcoes`
 

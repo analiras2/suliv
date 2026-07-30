@@ -94,7 +94,8 @@ export class SearchService {
       ? DIET_COMPATIBILITY[user.dietPreference]
       : null;
 
-    const hasQuery = origin === 'busca' && !!filters.q;
+    const hasQuery = !!filters.q;
+    const useQuerySignal = origin === 'busca' && hasQuery;
     const windowStart = weeklyWindowStart();
 
     const compatibleDietClause =
@@ -126,7 +127,7 @@ export class SearchService {
         : Prisma.empty,
     ];
 
-    const signalClause = hasQuery
+    const signalClause = useQuerySignal
       ? Prisma.sql`ts_rank(r.search_vector, websearch_to_tsquery('portuguese', ${filters.q})) DESC`
       : Prisma.sql`(
           SELECT COALESCE(SUM(ds.opens), 0) * ${OPENS_WEIGHT}

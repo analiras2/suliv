@@ -37,7 +37,7 @@ export interface ListingViewModel {
   isEmpty: boolean;
   hasMore: boolean;
   loadMore: () => void;
-  openRecipe: (id: string) => void;
+  openRecipe: (slug: string) => void;
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
 }
@@ -74,7 +74,9 @@ export function useListingViewModel(
 
   const [query, setQueryState] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [filters, setFiltersState] = useState<ListingFilters>({});
+  const [filters, setFiltersState] = useState<ListingFilters>(() =>
+    origin === 'categoria' && params.categoryKey ? { category: params.categoryKey } : {},
+  );
 
   const debouncedSetQuery = useMemo(() => debounce(setDebouncedQuery, QUERY_DEBOUNCE_MS), []);
 
@@ -127,12 +129,15 @@ export function useListingViewModel(
     }
   }, [searchQuery]);
 
+  const recipesBySlug = useMemo(() => new Map(results.map((item) => [item.slug, item])), [results]);
+
   const openRecipe = useCallback(
-    (id: string) => {
-      analytics.track('recipe_opened', { recipe_id: id, origin: origin === 'busca' ? 'busca' : 'ver_tudo' });
-      router.push(`/recipe/${id}`);
+    (slugOrId: string) => {
+      const recipeId = recipesBySlug.get(slugOrId)?.id ?? slugOrId;
+      analytics.track('recipe_opened', { recipe_id: recipeId, origin: origin === 'busca' ? 'busca' : 'ver_tudo' });
+      router.push(`/recipe/${slugOrId}`);
     },
-    [analytics, origin, router],
+    [analytics, origin, router, recipesBySlug],
   );
 
   const title = useMemo(() => deriveTitle(origin, params.categoryKey), [origin, params.categoryKey]);

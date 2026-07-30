@@ -170,6 +170,22 @@ describe('SearchService', () => {
     expect(sql).not.toContain('ts_rank');
   });
 
+  it("UT-006 origin 'categoria' with a query narrows by text-match while still ordering by popularity", async () => {
+    queryRaw.mockResolvedValue([]);
+    findManyRecipe.mockResolvedValue([]);
+
+    await service.search('user-1', 'categoria', {
+      category: RecipeCategory.lanche,
+      q: 'banana',
+    });
+
+    const sql = (queryRaw.mock.calls[0][0] as Prisma.Sql).sql;
+    expect(sql).toContain('search_vector');
+    expect(sql).toContain('websearch_to_tsquery');
+    expect(sql).toContain('recipe_daily_stats');
+    expect(sql).not.toContain('ts_rank');
+  });
+
   it('dispatches the selecionadas origin straight to getSelectedForYouPaginated with no bucketing', async () => {
     const paginated: PaginatedRecipes = { items: [], nextCursor: null };
     getSelectedForYouPaginated.mockResolvedValue(paginated);

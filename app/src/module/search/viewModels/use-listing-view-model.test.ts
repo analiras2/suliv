@@ -67,6 +67,15 @@ describe('useListingViewModel', () => {
     expect(result.current.title).toBe('Café da manhã');
   });
 
+  it("UT-013: origin: 'categoria' seeds the initial request filters with the category key", async () => {
+    await setup({ origin: 'categoria', categoryKey: 'cafe_da_manha' });
+
+    expect(mockedUseSearchQuery).toHaveBeenCalledWith(
+      'categoria',
+      expect.objectContaining({ category: 'cafe_da_manha' }),
+    );
+  });
+
   it('UT-010: query input debounces before triggering search_used and the underlying network call', async () => {
     const { result } = await setup();
 
@@ -137,5 +146,31 @@ describe('useListingViewModel', () => {
     });
 
     expect(result.current.results.map((item) => item.id)).toEqual(['r1', 'r2', 'r3']);
+  });
+
+  it('openRecipe tracks the recipe id (not the slug) when they differ, but navigates by slug', async () => {
+    const page1 = {
+      items: [{ ...buildResult('r1'), id: 'uuid-r1', slug: 'bolo-de-cenoura' }],
+      nextCursor: null,
+    };
+    mockedUseSearchQuery.mockReturnValue({
+      data: { pages: [page1] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    } as unknown as ReturnType<typeof useSearchQuery>);
+
+    const { result } = await setup();
+
+    await act(() => {
+      result.current.openRecipe('bolo-de-cenoura');
+    });
+
+    expect(analytics.track).toHaveBeenCalledWith('recipe_opened', {
+      recipe_id: 'uuid-r1',
+      origin: 'busca',
+    });
+    expect(mockPush).toHaveBeenCalledWith('/recipe/bolo-de-cenoura');
   });
 });
