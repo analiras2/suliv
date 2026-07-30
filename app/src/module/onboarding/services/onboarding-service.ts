@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import type { UserProfile } from '@/module/auth/types';
 import type { ProfileSnapshot } from '@/module/splash/services/critical-data-service';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -63,6 +64,17 @@ async function request(
   return response;
 }
 
+function toProfileSnapshot(user: UserProfile): ProfileSnapshot {
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    onboardingCompletedAt: user.onboardingCompletedAt,
+    cachedAt: new Date().toISOString(),
+  };
+}
+
 function toOnboardingRequestBody(payload: OnboardingSubmitPayload) {
   return {
     diet_preference: payload.dietPreference,
@@ -83,7 +95,8 @@ export function createOnboardingService(authentication: AuthService = authServic
     async submitOnboarding(payload) {
       const session = await requireSession(authentication);
       const response = await request(session, '/me/onboarding', 'POST', toOnboardingRequestBody(payload));
-      return response.json() as Promise<ProfileSnapshot>;
+      const user = (await response.json()) as UserProfile;
+      return toProfileSnapshot(user);
     },
   };
 }

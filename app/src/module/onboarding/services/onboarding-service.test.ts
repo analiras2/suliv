@@ -71,20 +71,36 @@ describe('onboardingService', () => {
 
   describe('submitOnboarding', () => {
     it('maps the camelCase payload to the snake_case wire format and returns a ProfileSnapshot', async () => {
-      const snapshot = {
+      const userDto = {
         id: 'user-1',
+        email: 'ana@example.com',
         name: 'Ana',
         username: 'ana',
+        usernameUpdatedAt: null,
         avatarUrl: null,
+        dietPreference: 'vegano',
+        cookingLevel: 'iniciante',
+        cookingFrequency: 'raramente',
         onboardingCompletedAt: '2026-01-01T00:00:00.000Z',
-        cachedAt: '2026-01-01T00:00:00.000Z',
+        termsVersionAccepted: null,
+        termsAcceptedAt: null,
+        status: 'active',
+        createdAt: '2025-12-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
       };
-      fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => snapshot });
+      fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => userDto });
       const service = createOnboardingService(authentication);
 
       const result = await service.submitOnboarding(payload);
 
-      expect(result).toEqual(snapshot);
+      expect(result).toEqual({
+        id: userDto.id,
+        name: userDto.name,
+        username: userDto.username,
+        avatarUrl: userDto.avatarUrl,
+        onboardingCompletedAt: userDto.onboardingCompletedAt,
+        cachedAt: expect.any(String),
+      });
       const [, requestInit] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(JSON.parse(requestInit.body as string)).toEqual({
         diet_preference: 'vegano',
