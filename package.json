@@ -1,0 +1,13 @@
+{
+  "name": "suliv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Git hooks and repo-wide tooling for the suliv monorepo (app/ + api/)",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0"
+  }
+}

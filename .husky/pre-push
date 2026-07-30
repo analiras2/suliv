@@ -1,0 +1,7 @@
+set -e
+
+echo "[pre-push] running full app/ test suite..."
+(cd app && npm test -- --ci)
+
+echo "[pre-push] running full api/ test suite..."
+(cd api && npm test)
