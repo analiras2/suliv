@@ -33,7 +33,7 @@ export class FeedService {
     const [selectedForYou, categories, topOfWeek] = await Promise.all([
       this.rankingService.getSelectedForYou(userId, SELECTED_FOR_YOU_LIMIT),
       this.getCategoryBlocks(),
-      this.recipesService.listTopOfWeek(TOP_OF_WEEK_LIMIT),
+      this.recipesService.listTopOfWeek(TOP_OF_WEEK_LIMIT, userId),
     ]);
 
     this.logger.log(

@@ -92,7 +92,10 @@ describe('RecipesService', () => {
     Promise<Category[]>,
     [Prisma.CategoryFindManyArgs]
   >();
-  const getTopOfWeek = jest.fn<Promise<RecipeSummaryDto[]>, [number]>();
+  const getTopOfWeek = jest.fn<
+    Promise<RecipeSummaryDto[]>,
+    [number, string | undefined]
+  >();
   const getTopOfWeekByCategory = jest.fn<
     Promise<RecipeSummaryDto[]>,
     [string, number]
@@ -218,7 +221,17 @@ describe('RecipesService', () => {
     const result = await service.listTopOfWeek(5);
 
     expect(result).toBe(summaries);
-    expect(getTopOfWeek).toHaveBeenCalledWith(5);
+    expect(getTopOfWeek).toHaveBeenCalledWith(5, undefined);
+  });
+
+  it('listTopOfWeek forwards userId to PopularityService.getTopOfWeek so the diet-compatibility tie-break applies', async () => {
+    const summaries = [recipeSummaryFixture('recipe-1')];
+    getTopOfWeek.mockResolvedValue(summaries);
+
+    const result = await service.listTopOfWeek(5, 'user-1');
+
+    expect(result).toBe(summaries);
+    expect(getTopOfWeek).toHaveBeenCalledWith(5, 'user-1');
   });
 
   it('listCategories returns all seeded categories', async () => {

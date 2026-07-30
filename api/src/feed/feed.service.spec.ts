@@ -31,7 +31,10 @@ describe('FeedService', () => {
     Promise<RecipeSummaryDto[]>,
     [string, number]
   >();
-  const listTopOfWeek = jest.fn<Promise<RecipeSummaryDto[]>, [number]>();
+  const listTopOfWeek = jest.fn<
+    Promise<RecipeSummaryDto[]>,
+    [number, string | undefined]
+  >();
   const listCategories = jest.fn<Promise<Category[]>, []>();
 
   let service: FeedService;
@@ -74,7 +77,7 @@ describe('FeedService', () => {
     expect(categoriesStarted).toBe(true);
     expect(topOfWeekStarted).toBe(true);
     expect(getSelectedForYou).toHaveBeenCalledWith('user-1', 5);
-    expect(listTopOfWeek).toHaveBeenCalledWith(5);
+    expect(listTopOfWeek).toHaveBeenCalledWith(5, 'user-1');
     expect(result.selectedForYou).toHaveLength(1);
     expect(result.categories).toEqual([
       {

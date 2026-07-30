@@ -133,8 +133,8 @@ export class RecipesService {
     return this.popularityService.getTopOfWeekByCategory(categoryId, limit);
   }
 
-  listTopOfWeek(limit: number): Promise<RecipeSummaryDto[]> {
-    return this.popularityService.getTopOfWeek(limit);
+  listTopOfWeek(limit: number, userId?: string): Promise<RecipeSummaryDto[]> {
+    return this.popularityService.getTopOfWeek(limit, userId);
   }
 
   listCategories(): Promise<Category[]> {
