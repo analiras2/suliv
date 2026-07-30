@@ -86,8 +86,8 @@ describe('useRecipeDetailViewModel', () => {
     } as unknown as ReturnType<typeof useRecipeDetailQuery>);
   });
 
-  async function setup(slug = 'receita-1') {
-    return renderHook(() => useRecipeDetailViewModel(slug, analytics));
+  async function setup(slug = 'receita-1', origin?: string) {
+    return renderHook(() => useRecipeDetailViewModel(slug, analytics, origin));
   }
 
   it('UT-012: toggleSave() while unauthenticated navigates to login and does not toggle the favorite', async () => {
@@ -143,5 +143,20 @@ describe('useRecipeDetailViewModel', () => {
 
     expect(result.current.isSaved).toBe(true);
     expect(useFavoritesStore.getState().favorites['recipe-1']).toBeDefined();
+  });
+
+  it('tracks recipe_opened with the real recipe id and origin: deep_link when opened via a universal link', async () => {
+    await setup('receita-1', 'deep_link');
+
+    expect(analytics.track).toHaveBeenCalledWith('recipe_opened', {
+      recipe_id: 'recipe-1',
+      origin: 'deep_link',
+    });
+  });
+
+  it('does not track recipe_opened when no origin is supplied', async () => {
+    await setup('receita-1');
+
+    expect(analytics.track).not.toHaveBeenCalledWith('recipe_opened', expect.anything());
   });
 });

@@ -30,10 +30,19 @@ export interface RecipeDetailViewModel {
 export function useRecipeDetailViewModel(
   slug: string,
   analytics: AnalyticsClient = analyticsClient,
+  origin?: string,
 ): RecipeDetailViewModel {
   const router = useRouter();
   const detailQuery = useRecipeDetailQuery(slug);
   const recipe = detailQuery.data;
+
+  const hasFiredOpenedRef = useRef(false);
+  useEffect(() => {
+    if (origin === 'deep_link' && recipe && !hasFiredOpenedRef.current) {
+      hasFiredOpenedRef.current = true;
+      analytics.track('recipe_opened', { recipe_id: recipe.id, origin });
+    }
+  }, [analytics, origin, recipe]);
 
   const isAuthenticated = useSessionStore((state) => state.status === 'authenticated');
   const favorites = useFavoritesStore((state) => state.favorites);

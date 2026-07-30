@@ -14,9 +14,10 @@ import { useRecipeDetailViewModel } from '@/module/recipes/viewModels/use-recipe
 
 export type RecipeDetailScreenProps = {
   recipeId: string;
+  origin?: string;
 };
 
-export function RecipeDetailScreen({ recipeId }: RecipeDetailScreenProps) {
+export function RecipeDetailScreen({ recipeId, origin }: RecipeDetailScreenProps) {
   const {
     recipe,
     isLoading,
@@ -31,7 +32,7 @@ export function RecipeDetailScreen({ recipeId }: RecipeDetailScreenProps) {
     startCooking,
     goBack,
     refetch,
-  } = useRecipeDetailViewModel(recipeId);
+  } = useRecipeDetailViewModel(recipeId, undefined, origin);
 
   if (notFound) {
     return (
