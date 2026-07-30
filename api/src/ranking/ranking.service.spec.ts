@@ -264,6 +264,73 @@ describe('RankingService', () => {
     });
   });
 
+  describe('editorial boosts', () => {
+    function boostFixture(overrides: Partial<EditorialBoost>): EditorialBoost {
+      return {
+        id: `boost-${Math.random()}`,
+        recipeId: 'recipe-1',
+        weight: 0,
+        appliedByAdminId: null,
+        startsAt: NOW,
+        endsAt: NOW,
+        ...overrides,
+      };
+    }
+
+    it('queries editorialBoost filtered to rows active right now, excluding expired/future rows at the database level', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      findManyRecipe.mockResolvedValue([recipeFixture({ id: 'recipe-1' })]);
+
+      await service.getSelectedForYouPaginated('user-1', undefined, 2);
+
+      const queryArgs = findManyEditorialBoost.mock.calls[0][0];
+      const where = queryArgs.where as {
+        startsAt?: { lte?: Date };
+        endsAt?: { gte?: Date };
+      };
+      expect(where.startsAt?.lte).toBeInstanceOf(Date);
+      expect(where.endsAt?.gte).toBeInstanceOf(Date);
+    });
+
+    it('sums the weight of multiple simultaneous active boosts for the same recipe', async () => {
+      findUniqueUser.mockResolvedValue(userFixture());
+      const doubleBoosted = recipeFixture({ id: 'double-boosted' });
+      const singleBoosted = recipeFixture({ id: 'single-boosted' });
+      findManyRecipe.mockResolvedValue([singleBoosted, doubleBoosted]);
+      findManyEditorialBoost.mockResolvedValue([
+        boostFixture({
+          recipeId: 'double-boosted',
+          weight: 10,
+          startsAt: new Date(NOW.getTime() - MS_PER_DAY),
+          endsAt: new Date(NOW.getTime() + MS_PER_DAY),
+        }),
+        boostFixture({
+          recipeId: 'double-boosted',
+          weight: 15,
+          startsAt: new Date(NOW.getTime() - MS_PER_DAY),
+          endsAt: new Date(NOW.getTime() + MS_PER_DAY),
+        }),
+        boostFixture({
+          recipeId: 'single-boosted',
+          weight: 20,
+          startsAt: new Date(NOW.getTime() - MS_PER_DAY),
+          endsAt: new Date(NOW.getTime() + MS_PER_DAY),
+        }),
+      ]);
+
+      const result = await service.getSelectedForYouPaginated(
+        'user-1',
+        undefined,
+        2,
+      );
+
+      expect(result.items.map((item) => item.id)).toEqual([
+        'double-boosted',
+        'single-boosted',
+      ]);
+    });
+  });
+
   describe('getSelectedForYouPaginated', () => {
     it('UT-007 first page returns up to limit items and a non-null nextCursor when more exist', async () => {
       findUniqueUser.mockResolvedValue(userFixture());

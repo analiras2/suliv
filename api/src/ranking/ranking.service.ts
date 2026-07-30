@@ -8,7 +8,6 @@ import { PopularityService } from './popularity.service';
 import {
   calculateTotalScore,
   categoryPerformsWell,
-  computeEditorialBoostWeight,
   computeMedian,
   computeTopNCutoff,
   hasAllergyConflict,
@@ -151,12 +150,17 @@ export class RankingService {
     }
 
     const recipeIds = candidates.map((recipe) => recipe.id);
-    const [recipeAllergens, editorialBoosts] = await Promise.all([
+    const now = new Date();
+    const [recipeAllergens, activeEditorialBoosts] = await Promise.all([
       this.prisma.recipeAllergen.findMany({
         where: { recipeId: { in: recipeIds } },
       }),
       this.prisma.editorialBoost.findMany({
-        where: { recipeId: { in: recipeIds } },
+        where: {
+          recipeId: { in: recipeIds },
+          startsAt: { lte: now },
+          endsAt: { gte: now },
+        },
       }),
     ]);
 
@@ -171,13 +175,13 @@ export class RankingService {
       recipeAllergenMap.set(recipeAllergen.recipeId, set);
     }
 
-    const now = new Date();
-    const editorialBoostByRecipeId = new Map<
-      string,
-      { startsAt: Date; endsAt: Date; weight: number }
-    >();
-    for (const boost of editorialBoosts) {
-      editorialBoostByRecipeId.set(boost.recipeId, boost);
+    const editorialBoostWeightByRecipeId = new Map<string, number>();
+    for (const boost of activeEditorialBoosts) {
+      editorialBoostWeightByRecipeId.set(
+        boost.recipeId,
+        (editorialBoostWeightByRecipeId.get(boost.recipeId) ?? 0) +
+          boost.weight,
+      );
     }
 
     const weeklyPopularityByRecipeId = new Map<string, number>();
@@ -238,10 +242,8 @@ export class RankingService {
           categoryAverageById.get(recipe.categoryId) ?? 0,
           crossCategoryMedian,
         ),
-        editorialBoostWeight: computeEditorialBoostWeight(
-          editorialBoostByRecipeId.get(recipe.id) ?? null,
-          now,
-        ),
+        editorialBoostWeight:
+          editorialBoostWeightByRecipeId.get(recipe.id) ?? 0,
       };
       return { recipe, score: calculateTotalScore(signals), signals };
     });
