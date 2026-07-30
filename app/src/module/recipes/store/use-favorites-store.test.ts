@@ -18,7 +18,7 @@ const mockEvictCachedRecipeDetail = jest.fn<(slug: string) => void>();
 const mockGetCachedRecipeDetail = jest.fn<(slug: string) => (RecipeDetail & { cachedAt: string }) | null>();
 const mockEnqueueAdd = jest.fn<(recipeId: string, occurredAt: string) => void>();
 const mockEnqueueRemove = jest.fn<(recipeId: string, occurredAt: string) => void>();
-const mockFavoritesList = jest.fn<() => Promise<{ items: unknown[]; nextCursor: string | null }>>();
+const mockFavoritesList = jest.fn<(cursor?: string) => Promise<{ items: unknown[]; nextCursor: string | null }>>();
 
 let netInfoListener: NetInfoListener = () => {};
 let authStateListener: AuthStateListener = () => {};
@@ -69,14 +69,14 @@ jest.mock('@/module/recipes/services/favorites-sync-service', () => ({
 }));
 
 jest.mock('@/module/recipes/services/favorites-service', () => ({
-  favoritesService: { list: () => mockFavoritesList() },
+  favoritesService: { list: (cursor?: string) => mockFavoritesList(cursor) },
 }));
 
 // A plain require (not a hoisted ES import) so this runs after the mock
 // fn consts above are assigned — the store calls offlineCache.get() as a
 // module-load side effect, which would otherwise hit the mocks before they exist.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { useFavoritesStore, useFavoritesList } = require('./use-favorites-store') as typeof import('./use-favorites-store');
+const { useFavoritesStore, useFavoritesList, reconcileWithServer } = require('./use-favorites-store') as typeof import('./use-favorites-store');
 
 const recipe: RecipeDetail = {
   id: 'recipe-1',
@@ -260,6 +260,57 @@ describe('useFavoritesStore', () => {
 
     expect(result.current.items).toEqual([]);
     expect(useFavoritesStore.getState().favorites[recipe.id]).toBeDefined();
+  });
+
+  // Issue 003: reconciliation must not stop at the first page — the server
+  // paginates GET /favorites and only reports the true end via `nextCursor: null`.
+  it('reconciles every page of server favorites, following nextCursor until it is null', async () => {
+    mockGetSession.mockResolvedValue({ access_token: 'token', user: { id: 'user-1' } });
+    mockFavoritesList.mockImplementation((cursor?: string) => {
+      if (!cursor) {
+        return Promise.resolve({
+          items: [
+            {
+              id: 'recipe-1',
+              slug: 'bolo-de-cenoura',
+              title: 'Bolo de cenoura',
+              coverImageUrl: null,
+              category: recipe.category,
+              timeBucket: recipe.timeBucket,
+              difficulty: recipe.difficulty,
+              dietPreference: recipe.dietPreference,
+            },
+          ],
+          nextCursor: 'page-2',
+        });
+      }
+      return Promise.resolve({
+        items: [
+          {
+            id: 'recipe-2',
+            slug: 'panqueca',
+            title: 'Panqueca',
+            coverImageUrl: null,
+            category: recipe.category,
+            timeBucket: recipe.timeBucket,
+            difficulty: recipe.difficulty,
+            dietPreference: recipe.dietPreference,
+          },
+        ],
+        nextCursor: null,
+      });
+    });
+
+    await reconcileWithServer();
+
+    expect(mockFavoritesList).toHaveBeenNthCalledWith(1, undefined);
+    expect(mockFavoritesList).toHaveBeenNthCalledWith(2, 'page-2');
+    expect(useFavoritesStore.getState().favorites['recipe-1']).toEqual(
+      expect.objectContaining({ recipeId: 'recipe-1', slug: 'bolo-de-cenoura' }),
+    );
+    expect(useFavoritesStore.getState().favorites['recipe-2']).toEqual(
+      expect.objectContaining({ recipeId: 'recipe-2', slug: 'panqueca' }),
+    );
   });
 
   // Issue 001: the persisted favorites index and in-memory store must be

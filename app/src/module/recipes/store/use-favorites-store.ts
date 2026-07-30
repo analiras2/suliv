@@ -134,12 +134,19 @@ export const useFavoritesStore = create<FavoritesStore>((set, get) => ({
   },
 }));
 
-async function reconcileWithServer(): Promise<void> {
+export async function reconcileWithServer(): Promise<void> {
   const session = await authService.getSession();
   if (!session) return;
 
   try {
-    const { items } = await favoritesService.list();
+    const items: Recipe[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await favoritesService.list(cursor);
+      items.push(...page.items);
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor);
+
     const entries: FavoriteEntry[] = items.map((item: Recipe) => ({
       recipeId: item.id,
       slug: item.slug,
