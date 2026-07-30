@@ -109,14 +109,14 @@ Para evitar revisar coisas dependentes antes da base, a rodada deve seguir nesta
 
 Feature atual da rodada:
 
-- `preparo-guiado`
+- `perfil-configuracoes`
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name preparo-guiado`
+1. Rodar `compozy tasks validate --name perfil-configuracoes`
 2. Abrir a rodada manual de review dessa feature
 3. Registrar os issues encontrados
-4. Corrigir antes de avançar para `perfil-configuracoes`
+4. Corrigir antes de avançar para `criacao-envio-receitas`
 
 ## Registro da rodada
 
@@ -199,14 +199,14 @@ Passos imediatos:
 
 ### 8. `preparo-guiado`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-07-30 (`all tasks valid`, 5 tasks escaneadas)
+- Review round: `.compozy/tasks/preparo-guiado/reviews-001/`
+- Issues encontradas: 3 high, 1 medium
+- Correções aplicadas: `issue_001.md`, `issue_002.md`, `issue_003.md` e `issue_004.md` marcadas como `resolved`; commits `c07f4f1 fix(api): preserve existing comment text on rating-only updates`, `26c694a fix(guided-cooking): cancel scheduled timer notification on session abandon`, `ba1d216 fix(app): reload guided cooking session when the route slug changes` e `9335d05 fix(guided-cooking): attach session Authorization header to analytics flush`
+- QA funcional: em 2026-07-30, `tasks validate` passou novamente; `npm run lint` no `api` passou; `npm run lint` no `app` passou com 0 erros e 4 warnings já conhecidos; testes focados do backend passaram com `--watchman=false` (2 suites / 12 testes); testes focados do app passaram com `--watchman=false --forceExit` (3 suites / 36 testes)
+- Decisão final: liberado para avançar para `perfil-configuracoes`
+- Próximo passo: revisar `perfil-configuracoes`
 
 ### 9. `favoritos`
 
