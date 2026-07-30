@@ -68,7 +68,7 @@ export function useGuidedCookingViewModel(
   );
 
   useTimerElapseWatch(activeTimer, timerService, analyticsService, isConnectedRef);
-  useAbandonOnUnmount(analyticsService, isConnectedRef);
+  useAbandonOnUnmount(analyticsService, timerService, isConnectedRef);
 
   const rate = useCallback(
     (stars: number) => {

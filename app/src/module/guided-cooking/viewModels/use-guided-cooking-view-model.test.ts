@@ -331,6 +331,22 @@ describe('useGuidedCookingViewModel', () => {
     expect(abandonCalls).toEqual([[{ type: 'guided_cook_abandoned', recipeId: 'recipe-1', lastStepIndex: 0 }, true]]);
   });
 
+  // ADR-001: abandoning a session with an active timer must cancel the scheduled notification.
+  it('cancels the active timer notification and clears it on unmount mid-session', async () => {
+    const { result, deps, unmount } = await setup();
+
+    await act(async () => {
+      result.current.startTimer(0);
+    });
+    await flush();
+    expect(result.current.activeTimer).toEqual(expect.objectContaining({ notificationId: 'notification-1' }));
+
+    await unmount();
+
+    expect(deps.timerService.cancel).toHaveBeenCalledWith('notification-1');
+    expect(useGuidedCookingStore.getState().activeTimer).toBeNull();
+  });
+
   it('does not fire guided_cook_abandoned on unmount while finished', async () => {
     const { result, deps, unmount } = await setup();
 

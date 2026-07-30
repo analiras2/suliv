@@ -41,9 +41,10 @@ export function useTimerElapseWatch(
   }, [activeTimer, timerService, analyticsService, isConnectedRef]);
 }
 
-/** Fires `guided_cook_abandoned` exactly once, only when the screen unmounts mid-session. */
+/** Fires `guided_cook_abandoned` exactly once, only when the screen unmounts mid-session; also cancels any active timer notification (ADR-001). */
 export function useAbandonOnUnmount(
   analyticsService: GuidedCookingAnalyticsService,
+  timerService: GuidedCookingTimerService,
   isConnectedRef: MutableRefObject<boolean>,
 ): void {
   const hasFiredRef = useRef(false);
@@ -53,11 +54,15 @@ export function useAbandonOnUnmount(
       const state = useGuidedCookingStore.getState();
       if (state.phase === 'cooking' && state.recipeId && !hasFiredRef.current) {
         hasFiredRef.current = true;
+        if (state.activeTimer) {
+          void timerService.cancel(state.activeTimer.notificationId);
+          useGuidedCookingStore.getState().setActiveTimer(null);
+        }
         analyticsService.track(
           { type: 'guided_cook_abandoned', recipeId: state.recipeId, lastStepIndex: state.currentStepIndex },
           isConnectedRef.current,
         );
       }
     };
-  }, [analyticsService, isConnectedRef]);
+  }, [analyticsService, timerService, isConnectedRef]);
 }
