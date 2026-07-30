@@ -36,6 +36,8 @@ export interface AnalyticsClient {
 
 export const analyticsClient: AnalyticsClient = {
   track(event, properties) {
+    // Placeholder sink until a real analytics backend is wired up.
+    // eslint-disable-next-line no-console
     console.info(`[analytics] ${event}`, properties);
   },
 };

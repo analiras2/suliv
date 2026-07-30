@@ -88,6 +88,7 @@ export function useGuidedCookingViewModel(
     if (!session.recipeId || !session.slug) return;
     const cached = getCachedRecipeDetail(session.slug);
     if (!cached) return;
+    // eslint-disable-next-line sonarjs/no-unused-vars -- dropping `cachedAt` via destructure
     const { cachedAt: _cachedAt, ...detail } = cached;
     useFavoritesStore.getState().toggleFavorite(detail);
   }, []);

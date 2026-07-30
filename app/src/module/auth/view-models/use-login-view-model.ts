@@ -6,7 +6,14 @@ import { authService, type AuthService, type OAuthProvider } from '@/module/auth
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_LOCAL_MAX_LENGTH = 64;
+const EMAIL_DOMAIN_MAX_LENGTH = 255;
+const EMAIL_TLD_MAX_LENGTH = 24;
+// Bounded quantifiers (vs. unbounded `+`) keep this linear time to satisfy
+// sonarjs/super-linear-regex while still validating a plain email shape.
+const EMAIL_PATTERN = new RegExp(
+  `^[^\\s@]{1,${EMAIL_LOCAL_MAX_LENGTH}}@[^\\s@]{1,${EMAIL_DOMAIN_MAX_LENGTH}}\\.[^\\s@]{1,${EMAIL_TLD_MAX_LENGTH}}$`,
+);
 const COMPLETE_PROFILE_ROUTE = '/complete-profile' as Href;
 
 export type LoginStatus = 'idle' | 'submitting' | 'sent' | 'authenticating' | 'error';

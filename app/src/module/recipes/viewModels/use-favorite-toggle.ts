@@ -27,6 +27,7 @@ export function useFavoriteToggle(recipes: Recipe[]): FavoriteToggle {
 
       const cached = getCachedRecipeDetail(recipe.slug);
       if (cached) {
+        // eslint-disable-next-line sonarjs/no-unused-vars -- dropping `cachedAt` via destructure
         const { cachedAt: _cachedAt, ...detail } = cached;
         useFavoritesStore.getState().toggleFavorite(detail);
         return;

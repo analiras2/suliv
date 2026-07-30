@@ -6,6 +6,9 @@ import { syncQueue, type QueuedAction } from '@/lib/sync-queue';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
+// Non-cryptographic use: only needs to be unique per session for analytics
+// grouping, not unguessable, so Math.random is fine here.
+// eslint-disable-next-line sonarjs/pseudo-random
 const SESSION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export type GuidedCookingAnalyticsEvent =
@@ -62,6 +65,8 @@ function buildEventDto(event: GuidedCookingAnalyticsEvent): AnalyticsEventDto {
 }
 
 function createIdempotencyKey(): string {
+  // Non-cryptographic use: only needs to be unique for dedup, not unguessable.
+  // eslint-disable-next-line sonarjs/pseudo-random
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 

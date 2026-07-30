@@ -32,7 +32,8 @@ export function createFavoritesService(authentication: AuthService = authService
       if (cursor) params.set('cursor', cursor);
       const query = params.toString();
 
-      const response = await fetch(`${API_BASE_URL}/favorites${query ? `?${query}` : ''}`, {
+      const queryString = query ? `?${query}` : '';
+      const response = await fetch(`${API_BASE_URL}/favorites${queryString}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 

@@ -182,6 +182,6 @@ describe('recipeImageUploadService', () => {
     await attemptAutoUpload('draft-1', 'file://local.jpg');
 
     // the 4th attempt never calls the network at all
-    expect(fetchMock.mock.calls.length).toBe(callsBeforeFourthAttempt);
+    expect(fetchMock.mock.calls).toHaveLength(callsBeforeFourthAttempt);
   });
 });

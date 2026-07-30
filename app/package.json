@@ -47,6 +47,8 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.0",
+    "eslint-plugin-security": "^4.0.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "jest-expo": "~57.0.1",
     "typescript": "~6.0.3"
   },

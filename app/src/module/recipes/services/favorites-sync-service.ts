@@ -18,6 +18,8 @@ export interface FavoritesSyncService {
 }
 
 function createIdempotencyKey(): string {
+  // Non-cryptographic use: only needs to be unique for dedup, not unguessable.
+  // eslint-disable-next-line sonarjs/pseudo-random
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 

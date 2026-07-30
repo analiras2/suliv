@@ -321,8 +321,7 @@ describe('useGuidedCookingViewModel', () => {
 
   // UT-014
   it('fires guided_cook_abandoned exactly once on unmount while cooking, not when finished', async () => {
-    const { result, deps, unmount } = await setup();
-    void result;
+    const { deps, unmount } = await setup();
 
     await unmount();
 

@@ -29,6 +29,12 @@ export function RecipeFormScreen({ recipeId }: RecipeFormScreenProps) {
   return <RecipeFormBody existing={existing} />;
 }
 
+function getSubmitLabel(isSubmitting: boolean, isApprovedEdit: boolean): string {
+  if (isSubmitting) return 'Enviando…';
+  if (isApprovedEdit) return 'Salvar alterações';
+  return 'Enviar para moderação';
+}
+
 function RecipeFormBody({ existing }: { existing?: RecipeFormExisting }) {
   const form = useRecipeFormScreenViewModel(existing);
   const categoriesQuery = useRecipeCategoriesQuery();
@@ -70,7 +76,7 @@ function RecipeFormBody({ existing }: { existing?: RecipeFormExisting }) {
           style={styles.submitButton}
           onPress={() => void form.submit()}
           testID="recipe-form-submit">
-          {form.isSubmitting ? 'Enviando…' : form.isApprovedEdit ? 'Salvar alterações' : 'Enviar para moderação'}
+          {getSubmitLabel(form.isSubmitting, form.isApprovedEdit)}
         </Button>
       </ScrollView>
     </SafeAreaView>

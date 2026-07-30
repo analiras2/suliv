@@ -72,34 +72,21 @@ describe('_layout routing decision (IT-001..IT-006)', () => {
     jest.clearAllMocks();
   });
 
-  it('IT-001: session + online + onboarding complete resolves to (tabs)', async () => {
-    mockSplash('ready', '(tabs)');
+  it.each<[id: string, description: string, status: SplashStatus, route: '(auth)' | '(onboarding)' | '(tabs)']>([
+    ['IT-001', 'session + online + onboarding complete resolves to (tabs)', 'ready', '(tabs)'],
+    ['IT-002', 'no session resolves to (auth)', 'ready', '(auth)'],
+    ['IT-003', 'session + online + onboarding incomplete resolves to (onboarding)', 'ready', '(onboarding)'],
+    ['IT-004', 'session + offline + cached onboarding complete resolves to (tabs), offline flag set', 'offline', '(tabs)'],
+    [
+      'IT-005',
+      'session + offline + cached onboarding incomplete resolves to (onboarding), offline flag set',
+      'offline',
+      '(onboarding)',
+    ],
+  ])('%s: %s', async (_id, _description, status, route) => {
+    mockSplash(status, route);
     const rendered = await render(<RootLayout />);
-    expectOnlyGroupVisible(rendered, '(tabs)');
-  });
-
-  it('IT-002: no session resolves to (auth)', async () => {
-    mockSplash('ready', '(auth)');
-    const rendered = await render(<RootLayout />);
-    expectOnlyGroupVisible(rendered, '(auth)');
-  });
-
-  it('IT-003: session + online + onboarding incomplete resolves to (onboarding)', async () => {
-    mockSplash('ready', '(onboarding)');
-    const rendered = await render(<RootLayout />);
-    expectOnlyGroupVisible(rendered, '(onboarding)');
-  });
-
-  it('IT-004: session + offline + cached onboarding complete resolves to (tabs), offline flag set', async () => {
-    mockSplash('offline', '(tabs)');
-    const rendered = await render(<RootLayout />);
-    expectOnlyGroupVisible(rendered, '(tabs)');
-  });
-
-  it('IT-005: session + offline + cached onboarding incomplete resolves to (onboarding), offline flag set', async () => {
-    mockSplash('offline', '(onboarding)');
-    const rendered = await render(<RootLayout />);
-    expectOnlyGroupVisible(rendered, '(onboarding)');
+    expectOnlyGroupVisible(rendered, route);
   });
 
   it('IT-006: session + offline + no cache shows the error/retry view, no route group rendered', async () => {

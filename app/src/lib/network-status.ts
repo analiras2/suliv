@@ -23,11 +23,9 @@ export function useNetworkStatus(): NetworkStatus {
     // NetInfo delivers the current connectivity to the listener immediately on
     // subscribe, then again on every change — a single subscription covers both
     // the initial-mount value and later updates without a separate fetch call.
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    return NetInfo.addEventListener((state) => {
       setIsConnected(Boolean(state.isConnected));
     });
-
-    return unsubscribe;
   }, []);
 
   return { isConnected };

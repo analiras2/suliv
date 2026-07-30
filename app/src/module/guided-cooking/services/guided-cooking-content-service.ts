@@ -23,6 +23,7 @@ async function load(slug: string, isConnected: boolean): Promise<GuidedContentRe
     return { kind: 'unavailable' };
   }
 
+  // eslint-disable-next-line sonarjs/no-unused-vars -- dropping `cachedAt` via destructure
   const { cachedAt: _cachedAt, ...detail } = cached;
   return { kind: 'offline', detail };
 }

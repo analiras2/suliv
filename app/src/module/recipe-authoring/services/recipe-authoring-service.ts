@@ -95,7 +95,8 @@ export function createRecipeAuthoringService(
       if (cursor) params.set('cursor', cursor);
       const query = params.toString();
 
-      const response = await authorizedFetch(authentication, `/me/recipes${query ? `?${query}` : ''}`);
+      const queryString = query ? `?${query}` : '';
+      const response = await authorizedFetch(authentication, `/me/recipes${queryString}`);
       return response.json() as Promise<PaginatedMyRecipes>;
     },
 

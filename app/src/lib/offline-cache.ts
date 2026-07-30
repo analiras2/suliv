@@ -19,6 +19,7 @@ function createStorage(): MMKV | null {
     // MMKV links native code; a missed dev-client rebuild fails here at first
     // access rather than at build time. Log it clearly instead of crashing so
     // reads degrade to cache misses (see TechSpec Known Risks / ADR-001).
+    // eslint-disable-next-line no-console
     console.error('Failed to initialize MMKV storage.', error);
     return null;
   }

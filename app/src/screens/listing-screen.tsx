@@ -16,6 +16,21 @@ export type ListingScreenProps = {
   categoryKey?: RecipeCategoryKey;
 };
 
+function getEmptyState(isLoading: boolean, isEmpty: boolean) {
+  if (isLoading) {
+    return <ActivityIndicator style={styles.loading} color={semanticColors.brand} testID="listing-loading" />;
+  }
+  if (isEmpty) {
+    return (
+      <View style={styles.emptyState} testID="listing-empty-state">
+        <Text style={styles.emptyTitle}>Nenhuma receita encontrada</Text>
+        <Text style={styles.emptyBody}>Tente ajustar sua busca ou os filtros para descobrir novas receitas.</Text>
+      </View>
+    );
+  }
+  return null;
+}
+
 export function ListingScreen({ origin, categoryKey }: ListingScreenProps) {
   const listing = useListingViewModel({ origin, categoryKey });
   const { data: allergenOptions } = useApprovedAllergensQuery();
@@ -46,16 +61,7 @@ export function ListingScreen({ origin, categoryKey }: ListingScreenProps) {
     </View>
   );
 
-  const empty = listing.isLoading ? (
-    <ActivityIndicator style={styles.loading} color={semanticColors.brand} testID="listing-loading" />
-  ) : listing.isEmpty ? (
-    <View style={styles.emptyState} testID="listing-empty-state">
-      <Text style={styles.emptyTitle}>Nenhuma receita encontrada</Text>
-      <Text style={styles.emptyBody}>
-        Tente ajustar sua busca ou os filtros para descobrir novas receitas.
-      </Text>
-    </View>
-  ) : null;
+  const empty = getEmptyState(listing.isLoading, listing.isEmpty);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

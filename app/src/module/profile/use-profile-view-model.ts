@@ -60,16 +60,22 @@ export function useProfileViewModel() {
     }
   };
 
+  const getSettingOnPress = (id: string): (() => void) | undefined => {
+    switch (id) {
+      case 'sign-out':
+        return () => void signOut();
+      case 'delete-account':
+        return account.requestAccountDeletion;
+      case 'my-recipes':
+        return () => router.push(MY_RECIPES_ROUTE);
+      default:
+        return undefined;
+    }
+  };
+
   const settings = SETTINGS.map((item) => ({
     ...item,
-    onPress:
-      item.id === 'sign-out'
-        ? () => void signOut()
-        : item.id === 'delete-account'
-          ? account.requestAccountDeletion
-          : item.id === 'my-recipes'
-            ? () => router.push(MY_RECIPES_ROUTE)
-            : undefined,
+    onPress: getSettingOnPress(item.id),
     testID: `settings-${item.id}`,
   }));
   const user = profile.data ?? cachedUser;
