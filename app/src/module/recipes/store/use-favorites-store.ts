@@ -6,12 +6,38 @@ import { authService } from '@/module/auth/services/auth-service';
 import { getCachedRecipeDetail, cacheRecipeDetail, evictCachedRecipeDetail } from '@/module/recipes/services/recipe-detail-cache';
 import { favoritesService } from '@/module/recipes/services/favorites-service';
 import { favoritesSyncService } from '@/module/recipes/services/favorites-sync-service';
-import type { Recipe, RecipeDetail } from '@/module/recipes/types';
+import type { Category, Difficulty, DietPreference, Recipe, RecipeDetail, TimeBucket } from '@/module/recipes/types';
 
 export interface FavoriteEntry {
   recipeId: string;
   slug: string;
   favoritedAt: string;
+  // Optional: populated on writes (toggle, reconciliation) so a favorite can
+  // render as a list card before its full RecipeDetail is cached (issue 002
+  // — a server-only favorite has no local detail cache to hydrate from yet).
+  // Absent on entries persisted before this field existed.
+  title?: string;
+  coverImageUrl?: string | null;
+  category?: Category;
+  timeBucket?: TimeBucket;
+  difficulty?: Difficulty;
+  dietPreference?: DietPreference;
+}
+
+function toFavoriteSummary(entry: FavoriteEntry): Recipe | null {
+  if (!entry.title || !entry.category || !entry.timeBucket || !entry.difficulty || !entry.dietPreference) {
+    return null;
+  }
+  return {
+    id: entry.recipeId,
+    slug: entry.slug,
+    title: entry.title,
+    coverImageUrl: entry.coverImageUrl ?? null,
+    category: entry.category,
+    timeBucket: entry.timeBucket,
+    difficulty: entry.difficulty,
+    dietPreference: entry.dietPreference,
+  };
 }
 
 interface FavoritesIndex {
@@ -28,16 +54,28 @@ export interface FavoritesStore {
 }
 
 const FAVORITES_INDEX_KEY = 'cache:favorites-index';
+const ANONYMOUS_SCOPE = 'anonymous';
 
-function loadIndex(): FavoritesIndex {
-  return offlineCache.get<FavoritesIndex>(FAVORITES_INDEX_KEY) ?? { favorites: {}, hasReconciled: false };
+// The index is persisted per authenticated user id (falling back to a fixed
+// anonymous scope) so one account's favorites never load into another's
+// session on the same device (see issue: favorites cache shared across users).
+type UserScope = string | null;
+
+let currentUserId: UserScope = null;
+
+function favoritesIndexKey(userId: UserScope): string {
+  return `${FAVORITES_INDEX_KEY}:${userId ?? ANONYMOUS_SCOPE}`;
+}
+
+function loadIndex(userId: UserScope): FavoritesIndex {
+  return offlineCache.get<FavoritesIndex>(favoritesIndexKey(userId)) ?? { favorites: {}, hasReconciled: false };
 }
 
 function persistIndex(favorites: Record<string, FavoriteEntry>, hasReconciled: boolean): void {
-  offlineCache.set<FavoritesIndex>(FAVORITES_INDEX_KEY, { favorites, hasReconciled });
+  offlineCache.set<FavoritesIndex>(favoritesIndexKey(currentUserId), { favorites, hasReconciled });
 }
 
-const initialIndex = loadIndex();
+const initialIndex = loadIndex(currentUserId);
 
 export const useFavoritesStore = create<FavoritesStore>((set, get) => ({
   favorites: initialIndex.favorites,
@@ -55,7 +93,17 @@ export const useFavoritesStore = create<FavoritesStore>((set, get) => ({
       delete nextFavorites[recipe.id];
       evictCachedRecipeDetail(recipe.slug);
     } else {
-      nextFavorites[recipe.id] = { recipeId: recipe.id, slug: recipe.slug, favoritedAt: occurredAt };
+      nextFavorites[recipe.id] = {
+        recipeId: recipe.id,
+        slug: recipe.slug,
+        favoritedAt: occurredAt,
+        title: recipe.title,
+        coverImageUrl: recipe.coverImageUrl,
+        category: recipe.category,
+        timeBucket: recipe.timeBucket,
+        difficulty: recipe.difficulty,
+        dietPreference: recipe.dietPreference,
+      };
       cacheRecipeDetail(recipe.slug, recipe);
     }
 
@@ -96,6 +144,12 @@ async function reconcileWithServer(): Promise<void> {
       recipeId: item.id,
       slug: item.slug,
       favoritedAt: new Date().toISOString(),
+      title: item.title,
+      coverImageUrl: item.coverImageUrl,
+      category: item.category,
+      timeBucket: item.timeBucket,
+      difficulty: item.difficulty,
+      dietPreference: item.dietPreference,
     }));
     useFavoritesStore.getState().mergeFromServer(entries);
   } catch {
@@ -103,6 +157,20 @@ async function reconcileWithServer(): Promise<void> {
     // must never block or corrupt the local-first list (ADR-001).
   }
 }
+
+// Swaps the active persisted scope whenever the authenticated user changes
+// (sign-in, sign-out, or user switch on the same device) so one account's
+// favorites and reconciliation state never leak into another's session.
+function applyUserScope(userId: UserScope): void {
+  if (userId === currentUserId) return;
+  currentUserId = userId;
+  const index = loadIndex(userId);
+  useFavoritesStore.setState({ favorites: index.favorites, hasReconciled: index.hasReconciled });
+}
+
+authService.onAuthStateChange((session) => {
+  applyUserScope(session?.user.id ?? null);
+});
 
 // Mirrors favorites-sync-service.ts's precedent: network-status.ts only exposes
 // a React hook, so a plain module needing a reconnect trigger subscribes to
@@ -131,24 +199,32 @@ export interface FavoritesListResult {
 // calls favorites-service.list() (UT-012). Empty state is derived from the
 // favorites map itself, not from the filtered items (UT-013), and a `removida`
 // cached detail is excluded from `items` without mutating `favorites` (UT-014,
-// TechSpec Data Flow step 6).
+// TechSpec Data Flow step 6). A server-only entry merged by reconciliation has
+// no cached RecipeDetail yet, so it falls back to the summary captured on the
+// entry itself rather than being dropped (issue 002).
 export function useFavoritesList(): FavoritesListResult {
   const favorites = useFavoritesStore((state) => state.favorites);
 
   const items: Recipe[] = [];
   for (const entry of Object.values(favorites)) {
     const cached = getCachedRecipeDetail(entry.slug);
-    if (!cached || cached.status === 'removida') continue;
-    items.push({
-      id: cached.id,
-      slug: cached.slug,
-      title: cached.title,
-      coverImageUrl: cached.coverImageUrl,
-      category: cached.category,
-      timeBucket: cached.timeBucket,
-      difficulty: cached.difficulty,
-      dietPreference: cached.dietPreference,
-    });
+    if (cached?.status === 'removida') continue;
+
+    const summary = cached
+      ? {
+          id: cached.id,
+          slug: cached.slug,
+          title: cached.title,
+          coverImageUrl: cached.coverImageUrl,
+          category: cached.category,
+          timeBucket: cached.timeBucket,
+          difficulty: cached.difficulty,
+          dietPreference: cached.dietPreference,
+        }
+      : toFavoriteSummary(entry);
+    if (!summary) continue;
+
+    items.push(summary);
   }
 
   return { items, isEmpty: Object.keys(favorites).length === 0 };

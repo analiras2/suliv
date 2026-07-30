@@ -5,11 +5,14 @@ import type { RecipeDetail } from '@/module/recipes/types';
 
 type NetInfoState = { isConnected: boolean | null };
 type NetInfoListener = (state: NetInfoState) => void;
+type Session = { access_token: string; user: { id: string } };
+type AuthStateListener = (session: Session | null) => void;
 
 const mockOfflineGet = jest.fn<(key: string) => unknown>();
 const mockOfflineSet = jest.fn<(key: string, value: unknown) => void>();
 const mockAddEventListener = jest.fn<(listener: NetInfoListener) => () => void>();
-const mockGetSession = jest.fn<() => Promise<{ access_token: string } | null>>();
+const mockGetSession = jest.fn<() => Promise<Session | null>>();
+const mockOnAuthStateChange = jest.fn<(listener: AuthStateListener) => () => void>();
 const mockCacheRecipeDetail = jest.fn<(slug: string, detail: RecipeDetail) => void>();
 const mockEvictCachedRecipeDetail = jest.fn<(slug: string) => void>();
 const mockGetCachedRecipeDetail = jest.fn<(slug: string) => (RecipeDetail & { cachedAt: string }) | null>();
@@ -18,6 +21,16 @@ const mockEnqueueRemove = jest.fn<(recipeId: string, occurredAt: string) => void
 const mockFavoritesList = jest.fn<() => Promise<{ items: unknown[]; nextCursor: string | null }>>();
 
 let netInfoListener: NetInfoListener = () => {};
+let authStateListener: AuthStateListener = () => {};
+
+// The store subscribes to onAuthStateChange as a module-load side effect (like
+// offlineCache.get() below), so this implementation must be wired before the
+// require() call captures the real listener — setting it inside beforeEach
+// would be too late for that first, module-load-time subscription.
+mockOnAuthStateChange.mockImplementation((listener) => {
+  authStateListener = listener;
+  return jest.fn();
+});
 
 jest.mock('@/lib/offline-cache', () => ({
   offlineCache: {
@@ -35,7 +48,10 @@ jest.mock('@react-native-community/netinfo', () => ({
 }));
 
 jest.mock('@/module/auth/services/auth-service', () => ({
-  authService: { getSession: () => mockGetSession() },
+  authService: {
+    getSession: () => mockGetSession(),
+    onAuthStateChange: (listener: AuthStateListener) => mockOnAuthStateChange(listener),
+  },
 }));
 
 jest.mock('@/module/recipes/services/recipe-detail-cache', () => ({
@@ -82,8 +98,11 @@ const recipe: RecipeDetail = {
 describe('useFavoritesStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useFavoritesStore.setState({ favorites: {}, hasReconciled: false });
     mockOfflineGet.mockReturnValue(null);
+    // Forces the module's internal currentUserId back to anonymous before each
+    // test, since it is not part of the store state reset below.
+    authStateListener(null);
+    useFavoritesStore.setState({ favorites: {}, hasReconciled: false });
     mockGetSession.mockResolvedValue(null);
     mockGetCachedRecipeDetail.mockReturnValue(null);
     mockFavoritesList.mockResolvedValue({ items: [], nextCursor: null });
@@ -186,6 +205,47 @@ describe('useFavoritesStore', () => {
     expect(result.current.items).toEqual([]);
   });
 
+  // Issue 002: a favorite merged from GET /favorites (new device/reinstall)
+  // has no local RecipeDetail cache yet — it must still render as a card.
+  it('renders a server-only reconciled favorite using its summary, with no cached detail', async () => {
+    netInfoListener({ isConnected: true });
+    useFavoritesStore.getState().mergeFromServer([
+      {
+        recipeId: 'recipe-2',
+        slug: 'panqueca',
+        favoritedAt: '2026-07-20T10:00:00.000Z',
+        title: 'Panqueca',
+        coverImageUrl: null,
+        category: { id: 'cat-2', key: 'cafe_da_manha', label: 'Café da manhã' },
+        timeBucket: 'ate_15',
+        difficulty: 'iniciante',
+        dietPreference: 'vegetariano',
+      },
+    ]);
+    mockGetCachedRecipeDetail.mockReturnValue(null);
+
+    const { result } = await renderHook(() => useFavoritesList());
+
+    expect(result.current.items).toEqual([
+      expect.objectContaining({ id: 'recipe-2', slug: 'panqueca', title: 'Panqueca' }),
+    ]);
+    expect(result.current.isEmpty).toBe(false);
+  });
+
+  // Legacy entries persisted before summary fields existed on FavoriteEntry
+  // have no data to render a card from and no cached detail to fall back to.
+  it('drops a favorite entry with no summary data and no cached detail', async () => {
+    netInfoListener({ isConnected: true });
+    useFavoritesStore.getState().mergeFromServer([
+      { recipeId: 'recipe-3', slug: 'torta', favoritedAt: '2026-07-20T10:00:00.000Z' },
+    ]);
+    mockGetCachedRecipeDetail.mockReturnValue(null);
+
+    const { result } = await renderHook(() => useFavoritesList());
+
+    expect(result.current.items).toEqual([]);
+  });
+
   // UT-014
   it('excludes a removida-status favorited recipe from rendered items, leaving the store entry unchanged', async () => {
     netInfoListener({ isConnected: true });
@@ -200,5 +260,84 @@ describe('useFavoritesStore', () => {
 
     expect(result.current.items).toEqual([]);
     expect(useFavoritesStore.getState().favorites[recipe.id]).toBeDefined();
+  });
+
+  // Issue 001: the persisted favorites index and in-memory store must be
+  // scoped per authenticated user id, never shared across accounts.
+  describe('user-scoped persistence across sign-in/sign-out', () => {
+    it('signing in as a user loads that user\'s persisted favorites into the store, not another scope\'s', () => {
+      netInfoListener({ isConnected: true });
+      mockOfflineGet.mockImplementation((key: string) => {
+        if (key === 'cache:favorites-index:user-a') {
+          return {
+            favorites: { 'recipe-9': { recipeId: 'recipe-9', slug: 'panqueca', favoritedAt: '2026-01-01T00:00:00.000Z' } },
+            hasReconciled: true,
+          };
+        }
+        return null;
+      });
+
+      authStateListener({ access_token: 'token-a', user: { id: 'user-a' } });
+
+      expect(useFavoritesStore.getState().favorites).toEqual({
+        'recipe-9': { recipeId: 'recipe-9', slug: 'panqueca', favoritedAt: '2026-01-01T00:00:00.000Z' },
+      });
+      expect(useFavoritesStore.getState().hasReconciled).toBe(true);
+    });
+
+    it('user B never inherits user A\'s favorites when signing in on the same device', () => {
+      netInfoListener({ isConnected: true });
+      mockOfflineGet.mockImplementation((key: string) => {
+        if (key === 'cache:favorites-index:user-a') {
+          return {
+            favorites: { 'recipe-9': { recipeId: 'recipe-9', slug: 'panqueca', favoritedAt: '2026-01-01T00:00:00.000Z' } },
+            hasReconciled: true,
+          };
+        }
+        return null;
+      });
+      authStateListener({ access_token: 'token-a', user: { id: 'user-a' } });
+      expect(useFavoritesStore.getState().isFavorited('recipe-9')).toBe(true);
+
+      authStateListener({ access_token: 'token-b', user: { id: 'user-b' } });
+
+      expect(useFavoritesStore.getState().favorites).toEqual({});
+      expect(useFavoritesStore.getState().isFavorited('recipe-9')).toBe(false);
+      expect(useFavoritesStore.getState().hasReconciled).toBe(false);
+    });
+
+    it('signing out after an authenticated session clears that user\'s favorites from the store', () => {
+      netInfoListener({ isConnected: true });
+      mockOfflineGet.mockImplementation((key: string) => {
+        if (key === 'cache:favorites-index:user-a') {
+          return {
+            favorites: { 'recipe-9': { recipeId: 'recipe-9', slug: 'panqueca', favoritedAt: '2026-01-01T00:00:00.000Z' } },
+            hasReconciled: true,
+          };
+        }
+        return null;
+      });
+      authStateListener({ access_token: 'token-a', user: { id: 'user-a' } });
+
+      authStateListener(null);
+
+      expect(useFavoritesStore.getState().favorites).toEqual({});
+      expect(useFavoritesStore.getState().hasReconciled).toBe(false);
+    });
+
+    it('persists a toggled favorite under the active authenticated user\'s scoped cache key', () => {
+      netInfoListener({ isConnected: true });
+      mockOfflineGet.mockReturnValue(null);
+      authStateListener({ access_token: 'token-b', user: { id: 'user-b' } });
+
+      useFavoritesStore.getState().toggleFavorite(recipe);
+
+      expect(mockOfflineSet).toHaveBeenCalledWith(
+        'cache:favorites-index:user-b',
+        expect.objectContaining({
+          favorites: expect.objectContaining({ [recipe.id]: expect.any(Object) }),
+        }),
+      );
+    });
   });
 });
