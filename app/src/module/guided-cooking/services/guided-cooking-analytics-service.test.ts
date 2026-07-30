@@ -1,17 +1,25 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 type NetInfoState = { isConnected: boolean | null };
 type NetInfoListener = (state: NetInfoState) => void;
 
-const mockEnqueue = jest.fn<(action: Record<string, unknown>) => void>();
-const mockFlush = jest.fn<(send: (action: Record<string, unknown>) => Promise<void>) => Promise<void>>();
+interface QueuedAction {
+  idempotencyKey: string;
+  actionType: string;
+  payload: unknown;
+  occurredAt: string;
+}
+
+const mockEnqueue = jest.fn<(action: QueuedAction) => void>();
+const mockFlush = jest.fn<(send: (action: QueuedAction) => Promise<void>) => Promise<void>>();
 const mockAddEventListener = jest.fn<(listener: NetInfoListener) => () => void>();
 const mockUnsubscribe = jest.fn();
+const mockGetSession = jest.fn<() => Promise<{ access_token: string } | null>>();
 
 jest.mock('@/lib/sync-queue', () => ({
   syncQueue: {
-    enqueue: (action: Record<string, unknown>) => mockEnqueue(action),
-    flush: (send: (action: Record<string, unknown>) => Promise<void>) => mockFlush(send),
+    enqueue: (action: QueuedAction) => mockEnqueue(action),
+    flush: (send: (action: QueuedAction) => Promise<void>) => mockFlush(send),
   },
 }));
 
@@ -27,14 +35,29 @@ jest.mock('expo-constants', () => ({
   default: { expoConfig: { version: '1.0.0' } },
 }));
 
+jest.mock('@/module/auth/services/auth-service', () => ({
+  authService: { getSession: () => mockGetSession() },
+}));
+
 // eslint-disable-next-line import/first
 import { guidedCookingAnalyticsService, type GuidedCookingAnalyticsEvent } from './guided-cooking-analytics-service';
 
+const originalFetch = global.fetch;
+
 describe('guidedCookingAnalyticsService', () => {
+  let fetchMock: jest.Mock<(...args: Parameters<typeof fetch>) => Promise<Partial<Response>>>;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockFlush.mockResolvedValue(undefined);
+    mockGetSession.mockResolvedValue({ access_token: 'token-123' });
     mockAddEventListener.mockImplementation(() => mockUnsubscribe);
+    fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   it('enqueues a single analytics_batch action per tracked event with a fresh idempotencyKey', () => {
@@ -42,8 +65,8 @@ describe('guidedCookingAnalyticsService', () => {
     guidedCookingAnalyticsService.track({ type: 'guided_cook_started', recipeId: 'recipe-1' }, true);
 
     expect(mockEnqueue).toHaveBeenCalledTimes(2);
-    const [firstAction] = mockEnqueue.mock.calls[0] as [Record<string, unknown>];
-    const [secondAction] = mockEnqueue.mock.calls[1] as [Record<string, unknown>];
+    const [firstAction] = mockEnqueue.mock.calls[0] as [QueuedAction];
+    const [secondAction] = mockEnqueue.mock.calls[1] as [QueuedAction];
     expect(firstAction.actionType).toBe('analytics_batch');
     expect(firstAction.idempotencyKey).not.toEqual(secondAction.idempotencyKey);
     expect(firstAction.payload).toEqual({
@@ -61,6 +84,39 @@ describe('guidedCookingAnalyticsService', () => {
 
     expect(mockFlush).toHaveBeenCalledTimes(1);
     expect(mockAddEventListener).not.toHaveBeenCalled();
+  });
+
+  // IT-003
+  it('attaches Authorization: Bearer <access_token> to /events for an authenticated session', async () => {
+    fetchMock.mockResolvedValue({ ok: true });
+    guidedCookingAnalyticsService.track({ type: 'guided_cook_started', recipeId: 'recipe-1' }, true);
+
+    const [send] = mockFlush.mock.calls[mockFlush.mock.calls.length - 1] as [(action: QueuedAction) => Promise<void>];
+    const [action] = mockEnqueue.mock.calls[mockEnqueue.mock.calls.length - 1] as [QueuedAction];
+    await send(action);
+
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/events'),
+      expect.objectContaining({
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer token-123' },
+      }),
+    );
+  });
+
+  it('omits the Authorization header for an anonymous session', async () => {
+    mockGetSession.mockResolvedValue(null);
+    fetchMock.mockResolvedValue({ ok: true });
+    guidedCookingAnalyticsService.track({ type: 'guided_cook_started', recipeId: 'recipe-1' }, true);
+
+    const [send] = mockFlush.mock.calls[mockFlush.mock.calls.length - 1] as [(action: QueuedAction) => Promise<void>];
+    const [action] = mockEnqueue.mock.calls[mockEnqueue.mock.calls.length - 1] as [QueuedAction];
+    await send(action);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/events'),
+      expect.objectContaining({ headers: { 'Content-Type': 'application/json' } }),
+    );
   });
 
   // UT-021
@@ -112,7 +168,7 @@ describe('guidedCookingAnalyticsService', () => {
   ] as [GuidedCookingAnalyticsEvent, Record<string, unknown>][])('builds the PRD §18.1 payload for %o', (event, properties) => {
     guidedCookingAnalyticsService.track(event, true);
 
-    const [action] = mockEnqueue.mock.calls[mockEnqueue.mock.calls.length - 1] as [Record<string, unknown>];
+    const [action] = mockEnqueue.mock.calls[mockEnqueue.mock.calls.length - 1] as [QueuedAction];
     const payload = action.payload as { events: { eventName: string; properties: unknown }[] };
     expect(payload.events[0]).toEqual(expect.objectContaining({ eventName: event.type, properties }));
   });

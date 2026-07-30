@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
+import { authService } from '@/module/auth/services/auth-service';
 import { syncQueue, type QueuedAction } from '@/lib/sync-queue';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -73,9 +74,13 @@ function createIdempotencyKey(): string {
 async function sendAnalyticsBatch(action: QueuedAction): Promise<void> {
   const { events } = action.payload as { events: AnalyticsEventDto[] };
 
+  const session = await authService.getSession();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (session) headers.Authorization = `Bearer ${session.access_token}`;
+
   const response = await fetch(`${API_BASE_URL}/events`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ events, idempotencyKey: action.idempotencyKey }),
   });
 
