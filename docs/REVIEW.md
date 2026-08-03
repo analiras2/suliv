@@ -109,14 +109,14 @@ Para evitar revisar coisas dependentes antes da base, a rodada deve seguir nesta
 
 Feature atual da rodada:
 
-- `perfil-configuracoes`
+- `painel-administrativo-moderacao`
 
 Passos imediatos:
 
-1. Revisar `criacao-envio-receitas`
-2. Rodar `compozy tasks validate --name criacao-envio-receitas`
-3. Abrir a rodada manual de review dessa feature
-4. Corrigir antes de avançar para `painel-administrativo-moderacao`
+1. Rodar `compozy tasks validate --name painel-administrativo-moderacao`
+2. Abrir a rodada manual de review dessa feature
+3. Registrar os issues encontrados
+4. Corrigir antes de avançar para `comentarios-avaliacoes`
 
 ## Registro da rodada
 
@@ -232,14 +232,14 @@ Passos imediatos:
 
 ### 11. `criacao-envio-receitas`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-08-03 (`all tasks valid`, 4 tasks escaneadas)
+- Review round: `.compozy/tasks/criacao-envio-receitas/reviews-001/`
+- Issues encontradas: 2 high
+- Correções aplicadas: `issue_001.md` e `issue_002.md` marcadas como `resolved`; commits `923b5bb fix(recipe-authoring): skip enqueuing partial drafts to sync queue` e `91e7cca fix(recipe-authoring): retry failed cover-image attach PATCH on reconnect`
+- QA funcional: em 2026-08-03, `tasks validate` passou novamente; testes focados do app passaram com `--watchman=false --forceExit` (2 suites / 15 testes); `npm run lint` no app passou com 0 erros e 4 warnings já conhecidos
+- Decisão final: liberado para avançar para `painel-administrativo-moderacao`
+- Próximo passo: revisar `painel-administrativo-moderacao`
 
 ### 12. `painel-administrativo-moderacao`
 
