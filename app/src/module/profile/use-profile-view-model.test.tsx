@@ -86,7 +86,9 @@ describe('useProfileViewModel', () => {
     const { result } = await renderHook(() => useProfileViewModel(), { wrapper });
     const myRecipes = result.current.settings.find((item) => item.id === 'my-recipes');
 
-    act(() => myRecipes?.onPress?.());
+    await act(async () => {
+      myRecipes?.onPress?.();
+    });
 
     expect(mockPush).toHaveBeenCalledWith('/profile/my-recipes');
   });

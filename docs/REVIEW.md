@@ -113,10 +113,10 @@ Feature atual da rodada:
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name perfil-configuracoes`
-2. Abrir a rodada manual de review dessa feature
-3. Registrar os issues encontrados
-4. Corrigir antes de avançar para `criacao-envio-receitas`
+1. Revisar `criacao-envio-receitas`
+2. Rodar `compozy tasks validate --name criacao-envio-receitas`
+3. Abrir a rodada manual de review dessa feature
+4. Corrigir antes de avançar para `painel-administrativo-moderacao`
 
 ## Registro da rodada
 
@@ -221,14 +221,14 @@ Passos imediatos:
 
 ### 10. `perfil-configuracoes`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-08-02 (`all tasks valid`, 2 tasks escaneadas)
+- Review round: `.compozy/tasks/perfil-configuracoes/reviews-001/`
+- Issues encontradas: 1 critical
+- Correções aplicadas: `issue_001.md` marcada como `resolved`; task 2 implementada com store de tema, service/profile VM, avatar, telas de settings e testes UT-001 a UT-014
+- QA funcional: em 2026-08-02, testes focados do app passaram com `--watchman=false --forceExit` (7 suites / 27 testes); `tasks validate` passou novamente
+- Decisão final: liberado para avançar para `criacao-envio-receitas`
+- Próximo passo: revisar `criacao-envio-receitas`
 
 ### 11. `criacao-envio-receitas`
 
