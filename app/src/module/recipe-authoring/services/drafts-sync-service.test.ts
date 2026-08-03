@@ -188,6 +188,67 @@ describe('draftsSyncService', () => {
     expect(listener).toHaveBeenCalledWith('draft-42', expect.any(String));
   });
 
+  it('enqueueUpsert does not enqueue a partial draft missing server-required fields', () => {
+    const { draftsSyncService } = loadService();
+    netInfoListener({ isConnected: true });
+    mockEnqueue.mockClear();
+    mockFlush.mockClear();
+
+    draftsSyncService.enqueueUpsert(
+      buildDraft({
+        categoryId: null,
+        prepTimeMinutes: null,
+        servings: null,
+        difficulty: null,
+        dietPreference: null,
+        ingredients: [],
+        steps: [],
+      }),
+      '2026-07-23T10:00:00.000Z',
+    );
+
+    expect(mockEnqueue).not.toHaveBeenCalled();
+    expect(mockFlush).not.toHaveBeenCalled();
+  });
+
+  it('a title-only draft update does not block a later complete update from reaching the backend', async () => {
+    const { draftsSyncService } = loadService();
+    netInfoListener({ isConnected: true });
+    mockEnqueue.mockClear();
+    mockFlush.mockClear();
+    fetchMock.mockResolvedValue({ ok: true, status: 201 });
+
+    draftsSyncService.enqueueUpsert(
+      buildDraft({
+        categoryId: null,
+        prepTimeMinutes: null,
+        servings: null,
+        difficulty: null,
+        dietPreference: null,
+        ingredients: [],
+        steps: [],
+      }),
+      '2026-07-23T10:00:00.000Z',
+    );
+    expect(mockEnqueue).not.toHaveBeenCalled();
+
+    draftsSyncService.enqueueUpsert(buildDraft(), '2026-07-23T10:05:00.000Z');
+    expect(mockEnqueue).toHaveBeenCalledTimes(1);
+
+    const [send] = mockFlush.mock.calls[mockFlush.mock.calls.length - 1] as [
+      (action: QueuedAction) => Promise<void>,
+    ];
+    const [action] = mockEnqueue.mock.calls[0] as [QueuedAction];
+
+    await expect(send(action)).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/sync'),
+      expect.objectContaining({
+        body: expect.stringContaining('"id":"draft-1"'),
+      }),
+    );
+  });
+
   it('onDraftSynced returns an unsubscribe function', async () => {
     const { draftsSyncService } = loadService();
     netInfoListener({ isConnected: true });

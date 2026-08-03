@@ -18,6 +18,23 @@ function createIdempotencyKey(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// CreateRecipeDto (api/src/recipes/dto/create-recipe.dto.ts) requires all of
+// these fields, with ingredients/steps needing at least one entry. Queuing a
+// draft_upsert before the draft satisfies this contract makes the server
+// reject it, and that failed action then blocks every later valid update
+// behind it in the FIFO sync queue.
+function isSyncable(draft: RecipeDraft): boolean {
+  return (
+    draft.categoryId !== null &&
+    draft.prepTimeMinutes !== null &&
+    draft.servings !== null &&
+    draft.difficulty !== null &&
+    draft.dietPreference !== null &&
+    draft.ingredients.length > 0 &&
+    draft.steps.length > 0
+  );
+}
+
 // draft_upsert's wire payload matches CreateRecipePayload verbatim (ADR-003):
 // localImageUri, coverImageUrl-when-absent, lastSyncedAt, and createdAt are
 // local-only bookkeeping and must never reach the server.
@@ -87,6 +104,8 @@ NetInfo.addEventListener((state) => {
 });
 
 function enqueueUpsert(draft: RecipeDraft, occurredAt: string): void {
+  if (!isSyncable(draft)) return;
+
   syncQueue.enqueue({
     idempotencyKey: createIdempotencyKey(),
     actionType: 'draft_upsert',
