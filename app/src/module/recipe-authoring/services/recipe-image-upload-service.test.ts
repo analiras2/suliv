@@ -154,6 +154,28 @@ describe('recipeImageUploadService', () => {
     expect(mockSetCoverImageUrl).toHaveBeenCalledWith('draft-1', 'https://cdn/img.jpg');
   });
 
+  it('retries a failed attach PATCH on the next reconnect until it succeeds', async () => {
+    const { attemptAutoUpload, hasPendingCoverAttach } = loadService();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => signature } as Response)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ secure_url: 'https://cdn/img.jpg' }) } as Response);
+    mockAuthoringUpdate.mockRejectedValueOnce(new Error('network error'));
+
+    await attemptAutoUpload('draft-1', 'file://local.jpg');
+
+    expect(mockAuthoringUpdate).toHaveBeenCalledTimes(1);
+    expect(hasPendingCoverAttach('draft-1')).toBe(true);
+
+    mockAuthoringUpdate.mockResolvedValueOnce({});
+    netInfoListener({ isConnected: false });
+    netInfoListener({ isConnected: true });
+    await flushMicrotasks();
+
+    expect(mockAuthoringUpdate).toHaveBeenCalledTimes(2);
+    expect(mockAuthoringUpdate).toHaveBeenLastCalledWith('draft-1', { coverImageUrl: 'https://cdn/img.jpg' });
+    expect(hasPendingCoverAttach('draft-1')).toBe(false);
+  });
+
   it('does not auto-upload a draft whose text fields have never synced (lastSyncedAt null)', async () => {
     mockStoreDrafts = { 'draft-1': buildDraft({ lastSyncedAt: null }) };
     loadService();

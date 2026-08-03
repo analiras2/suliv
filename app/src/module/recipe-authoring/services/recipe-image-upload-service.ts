@@ -103,6 +103,20 @@ export function resetImageUploadState(draftId: string): void {
   uploadStates.delete(draftId);
 }
 
+interface PendingCoverAttach {
+  coverImageUrl: string;
+  authoring: RecipeAuthoringService;
+}
+
+// draft_upsert's update branch does not persist coverImageUrl server-side, so
+// a failed attach PATCH cannot rely on the next text-field sync to retry it.
+// Track it here instead and retry the PATCH itself on the next reconnect.
+const pendingCoverAttaches = new Map<string, PendingCoverAttach>();
+
+export function hasPendingCoverAttach(draftId: string): boolean {
+  return pendingCoverAttaches.has(draftId);
+}
+
 async function attachCoverImage(
   draftId: string,
   coverImageUrl: string,
@@ -111,11 +125,19 @@ async function attachCoverImage(
   useRecipeDraftsStore.getState().setCoverImageUrl(draftId, coverImageUrl);
   try {
     await authoring.update(draftId, { coverImageUrl });
+    pendingCoverAttaches.delete(draftId);
   } catch {
-    // The local draft already reflects the uploaded image; a failed PATCH
-    // here is retried the next time the draft's text fields sync (the field
-    // is included in that same payload once set locally).
+    pendingCoverAttaches.set(draftId, { coverImageUrl, authoring });
   }
+}
+
+// Retries every attach PATCH that failed earlier, so an uploaded image whose
+// PATCH failed transiently eventually reaches the server on reconnect.
+export async function retryPendingCoverAttaches(): Promise<void> {
+  const entries = Array.from(pendingCoverAttaches.entries());
+  await Promise.all(
+    entries.map(([draftId, { coverImageUrl, authoring }]) => attachCoverImage(draftId, coverImageUrl, authoring)),
+  );
 }
 
 // UT-007/UT-008: triggered per pending draft on reconnect. Stops auto-
@@ -164,5 +186,8 @@ let isConnected = true;
 NetInfo.addEventListener((state) => {
   const wasConnected = isConnected;
   isConnected = Boolean(state.isConnected);
-  if (isConnected && !wasConnected) scanAndAutoUploadPendingImages();
+  if (isConnected && !wasConnected) {
+    void retryPendingCoverAttaches();
+    scanAndAutoUploadPendingImages();
+  }
 });
