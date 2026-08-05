@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { ReactNode } from 'react';
 
@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 // client requiring env vars not set in this test environment. Every test here injects its own
 // deps, so the defaults only need to exist as importable stubs.
 jest.mock('@/module/recipes/services/comments-service', () => ({
-  commentsService: { list: jest.fn(), upsert: jest.fn(), remove: jest.fn() },
+  commentsService: { list: jest.fn(), getOwn: jest.fn(), upsert: jest.fn(), remove: jest.fn() },
   CommentsServiceError: class CommentsServiceError extends Error {
     status: number;
     constructor(status: number) {
@@ -58,9 +58,13 @@ const ownComment: CommentRatingDto = {
   updatedAt: '2026-07-02T00:00:00.000Z',
 };
 
-function buildCommentsService(items: CommentRatingDto[]): jest.Mocked<CommentsService> {
+function buildCommentsService(
+  items: CommentRatingDto[],
+  ownReview: CommentRatingDto | null = null,
+): jest.Mocked<CommentsService> {
   return {
     list: jest.fn(async () => ({ items, nextCursor: null })),
+    getOwn: jest.fn(async () => ownReview),
     upsert: jest.fn(),
     remove: jest.fn(),
   };
@@ -102,7 +106,7 @@ describe('useCommentsViewModel', () => {
 
   // UT-015
   it('ownReview reflects the existing rating/commentText when the current user has already reviewed', async () => {
-    const commentsService = buildCommentsService([otherUserComment, ownComment]);
+    const commentsService = buildCommentsService([otherUserComment, ownComment], ownComment);
     const reportsService = buildReportsService();
 
     const { result } = await renderHook(
@@ -113,5 +117,39 @@ describe('useCommentsViewModel', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.ownReview).toEqual({ rating: 3, commentText: 'bom' });
+  });
+
+  it('ownReview is resolved via a dedicated lookup even when the current user review is outside the loaded page', async () => {
+    const commentsService = buildCommentsService([otherUserComment], ownComment);
+    const reportsService = buildReportsService();
+
+    const { result } = await renderHook(
+      () => useCommentsViewModel('recipe-1', { commentsService, reportsService }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(commentsService.getOwn).toHaveBeenCalledWith('recipe-1');
+    expect(result.current.items).toEqual([otherUserComment]);
+    expect(result.current.ownReview).toEqual({ rating: 3, commentText: 'bom' });
+  });
+
+  it('deleteOwn removes the review resolved from the dedicated lookup even when it is outside the loaded page', async () => {
+    const commentsService = buildCommentsService([otherUserComment], ownComment);
+    const reportsService = buildReportsService();
+
+    const { result } = await renderHook(
+      () => useCommentsViewModel('recipe-1', { commentsService, reportsService }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteOwn();
+    });
+
+    expect(commentsService.remove).toHaveBeenCalledWith(ownComment.id);
   });
 });

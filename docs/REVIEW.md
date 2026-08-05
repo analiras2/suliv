@@ -254,11 +254,11 @@ Passos imediatos:
 
 ### 13. `comentarios-avaliacoes`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Validado`
+- `tasks validate`: passou em 2026-08-05 (`all tasks valid`, 2 tasks escaneadas)
+- Review round: `.compozy/tasks/comentarios-avaliacoes/reviews-001/`
+- Issues encontradas: 1 high, 1 medium
+- Correções aplicadas: `issue_001.md` e `issue_002.md` marcadas como `resolved`; criada consulta dedicada para review do usuário atual e teste de integração passou a exercitar endpoint admin de resolução de denúncia
+- QA funcional: em 2026-08-05, `compozy tasks validate` passou; `api npm run lint` passou com 7 warnings conhecidos de `no-unsafe-argument`; `api npm run typecheck` passou; testes focados do backend passaram (5 suites / 63 testes); `app npm run lint` passou com 4 warnings conhecidos; testes focados do app passaram (2 suites / 21 testes)
+- Decisão final: rodada liberada; integração backend/E2E completa ainda depende de ambiente local/test seguro porque `api/.env` aponta para Supabase remoto e há alterações paralelas de importação de receitas no workspace
+- Próximo passo: finalizar commit da rodada de review de `comentarios-avaliacoes`

@@ -19,6 +19,7 @@ export interface PaginatedComments {
 
 export interface CommentsService {
   list(recipeId: string, cursor?: string): Promise<PaginatedComments>;
+  getOwn(recipeId: string): Promise<CommentRatingDto | null>;
   upsert(recipeId: string, input: { rating: number; commentText?: string }): Promise<CommentRatingDto>;
   remove(commentId: string): Promise<void>;
 }
@@ -53,6 +54,17 @@ export function createCommentsService(authentication: AuthService = authService)
       }
 
       return response.json() as Promise<PaginatedComments>;
+    },
+
+    async getOwn(recipeId) {
+      const headers = await buildHeaders(authentication, false);
+      const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/comments/me`, { headers });
+
+      if (!response.ok) {
+        throw new CommentsServiceError(response.status);
+      }
+
+      return response.json() as Promise<CommentRatingDto | null>;
     },
 
     async upsert(recipeId, input) {

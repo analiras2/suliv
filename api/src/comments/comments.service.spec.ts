@@ -193,6 +193,50 @@ describe('CommentsService', () => {
     });
   });
 
+  describe('getOwn', () => {
+    it('returns the requesting user own review when one exists and is visible', async () => {
+      findUniqueCommentRating.mockResolvedValue(
+        commentRatingFixture({
+          userId: 'user-1',
+          rating: 3,
+          commentText: 'bom',
+        }),
+      );
+      findManyUser.mockResolvedValue([
+        { id: 'user-1', name: 'Ana', username: 'ana_1' },
+      ]);
+
+      const result = await service.getOwn('recipe-1', 'user-1');
+
+      expect(result).toMatchObject({
+        rating: 3,
+        commentText: 'bom',
+        userName: 'Ana',
+      });
+      expect(findUniqueCommentRating).toHaveBeenCalledWith({
+        where: { recipeId_userId: { recipeId: 'recipe-1', userId: 'user-1' } },
+      });
+    });
+
+    it('returns null when the requesting user has no review for the recipe', async () => {
+      findUniqueCommentRating.mockResolvedValue(null);
+
+      const result = await service.getOwn('recipe-1', 'user-1');
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when the requesting user own review has been hidden by moderation', async () => {
+      findUniqueCommentRating.mockResolvedValue(
+        commentRatingFixture({ userId: 'user-1', status: 'hidden' }),
+      );
+
+      const result = await service.getOwn('recipe-1', 'user-1');
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('list', () => {
     it('UT-008 excludes hidden rows, only visible status is queried', async () => {
       findManyCommentRating.mockResolvedValue([

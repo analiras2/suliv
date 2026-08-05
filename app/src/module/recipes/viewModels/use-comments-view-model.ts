@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -82,11 +82,18 @@ export function useCommentsViewModel(
     }
   }, [query]);
 
+  const ownReviewQuery = useQuery({
+    queryKey: ['comments', recipeId, 'own', currentUserId],
+    queryFn: () => commentsService.getOwn(recipeId),
+    enabled: !!currentUserId,
+  });
+
+  const ownReviewDto = ownReviewQuery.data ?? null;
+
   const ownReview = useMemo(() => {
-    if (!currentUserId) return null;
-    const own = items.find((item) => item.userId === currentUserId);
-    return own ? { rating: own.rating, commentText: own.commentText ?? '' } : null;
-  }, [items, currentUserId]);
+    if (!ownReviewDto) return null;
+    return { rating: ownReviewDto.rating, commentText: ownReviewDto.commentText ?? '' };
+  }, [ownReviewDto]);
 
   const invalidate = useCallback(
     () => queryClient.invalidateQueries({ queryKey: ['comments', recipeId] }),
@@ -108,17 +115,16 @@ export function useCommentsViewModel(
   );
 
   const deleteOwn = useCallback(async () => {
-    const own = items.find((item) => item.userId === currentUserId);
-    if (!own) return;
+    if (!ownReviewDto) return;
     try {
-      await commentsService.remove(own.id);
+      await commentsService.remove(ownReviewDto.id);
       await invalidate();
       setError(null);
     } catch (deleteError) {
       setError(mapWriteError(deleteError));
       throw deleteError;
     }
-  }, [commentsService, currentUserId, items, invalidate]);
+  }, [commentsService, ownReviewDto, invalidate]);
 
   const report = useCallback(
     async (commentId: string, reason: ReportReason, freeText?: string) => {
@@ -135,7 +141,7 @@ export function useCommentsViewModel(
 
   return {
     items,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || ownReviewQuery.isLoading,
     loadMore,
     hasMore: query.hasNextPage ?? false,
     ownReview,

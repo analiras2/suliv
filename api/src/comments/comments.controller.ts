@@ -34,6 +34,15 @@ export class CommentsController {
     return this.commentsService.list(recipeId, query.cursor);
   }
 
+  @Get('recipes/:id/comments/me')
+  @UseGuards(SupabaseAuthGuard)
+  getOwn(
+    @Param('id') recipeId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CommentRatingDto | null> {
+    return this.commentsService.getOwn(recipeId, request.user.id);
+  }
+
   @Post('recipes/:id/comments')
   @UseGuards(SupabaseAuthGuard)
   submit(

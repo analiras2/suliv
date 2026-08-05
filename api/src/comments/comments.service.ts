@@ -63,6 +63,21 @@ export class CommentsService {
     };
   }
 
+  async getOwn(
+    recipeId: string,
+    userId: string,
+  ): Promise<CommentRatingDto | null> {
+    const row = await this.prisma.commentRating.findUnique({
+      where: { recipeId_userId: { recipeId, userId } },
+    });
+    if (!row || row.status !== CommentStatus.visible) {
+      return null;
+    }
+    const userNameById = await this.getUserNamesById([userId]);
+
+    return CommentRatingDto.fromRow(row, userNameById.get(userId) ?? userId);
+  }
+
   async upsert(
     recipeId: string,
     userId: string,

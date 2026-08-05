@@ -1,7 +1,8 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
-import { generateKeyPairSync } from 'node:crypto';
+import { hashSync } from 'bcrypt';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
@@ -36,6 +37,7 @@ describe('Comments/ratings routes (integration)', () => {
   let app: INestApplication<App>;
   let jwksServer: Server;
   let issuer: string;
+  let adminToken: string;
 
   beforeAll(async () => {
     const trustedJwk = trustedKeys.publicKey.export({ format: 'jwk' });
@@ -64,6 +66,20 @@ describe('Comments/ratings routes (integration)', () => {
       new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
     );
     await app.init();
+
+    const adminEmail = `comments-spec-admin-${randomUUID()}@example.com`;
+    await prisma.admin.create({
+      data: {
+        email: adminEmail,
+        passwordHash: hashSync('correct-password', 10),
+        role: 'moderator',
+      },
+    });
+    const loginResponse = await request(app.getHttpServer())
+      .post('/admin/auth/login')
+      .send({ email: adminEmail, password: 'correct-password' })
+      .expect(200);
+    adminToken = (loginResponse.body as { token: string }).token;
   });
 
   afterAll(async () => {
@@ -102,6 +118,25 @@ describe('Comments/ratings routes (integration)', () => {
     return request(app.getHttpServer())
       .delete(`/comments/${commentId}`)
       .set('Authorization', `Bearer ${tokenFor(userId)}`);
+  }
+
+  async function seedCommentReport(commentId: string, reporterUserId: string) {
+    return prisma.report.create({
+      data: {
+        reporterUserId,
+        targetType: 'comment',
+        targetId: commentId,
+        reason: 'conteudo_inadequado',
+        status: 'pending',
+      },
+    });
+  }
+
+  function resolveReport(reportId: string, action: string) {
+    return request(app.getHttpServer())
+      .post(`/admin/reports/${reportId}/resolve`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action });
   }
 
   async function onboard(userId: string): Promise<void> {
@@ -244,12 +279,6 @@ describe('Comments/ratings routes (integration)', () => {
     expect(rows).toHaveLength(0);
   });
 
-  // painel-administrativo-moderacao's POST /admin/reports/:id/resolve
-  // { action: 'hide_content' } is not implemented in this codebase snapshot
-  // (out of this task's scope). This simulates its documented side effect
-  // (comments_ratings.status -> hidden) directly to verify the read-side
-  // exclusion this task owns; the resolution flow itself belongs to that
-  // feature's own suite.
   it('IT-005 a comment hidden via moderator resolution disappears from list and average', async () => {
     const category = await upsertCategory(
       RecipeCategory.almoco_jantar,
@@ -257,14 +286,14 @@ describe('Comments/ratings routes (integration)', () => {
     );
     const recipe = await upsertRecipe('it-005-comments-hidden', category.id);
     const user = 'it-005-comments-user';
+    const reporter = 'it-005-comments-reporter';
     await onboard(user);
+    await onboard(reporter);
     const submitted = await submitComment(recipe.id, user, { rating: 1 });
     const commentId = (submitted.body as CommentRatingBody).id;
 
-    await prisma.commentRating.update({
-      where: { id: commentId },
-      data: { status: 'hidden' },
-    });
+    const report = await seedCommentReport(commentId, reporter);
+    await resolveReport(report.id, 'hide_content').expect(200);
 
     const list = await listComments(recipe.id).expect(200);
     const listBody = list.body as PaginatedCommentsBody;
