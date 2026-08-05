@@ -4,6 +4,7 @@
 
 - `app/` — the React Native (Expo) application. All product code lives here.
 - `api/` — the backend API (NestJS), using Supabase (Postgres) as the database.
+- `admin/` — the moderation panel (Next.js, App Router), independent of `app/`'s Expo tooling.
 - `docs/` — project documentation.
 - `.claude/rules/` — always-applied rules for this codebase (see below).
 - `.claude/skills/` — symlinked skills available to the agent (see below).
@@ -12,6 +13,10 @@
 
 Stack: Expo SDK ~57, Expo Router, React 19, React Native 0.86.
 
+Be concise during execution.
+Don't describe every step or repeat the plan.
+Show only important findings, roadblocks, and the final result.
+Avoid unnecessary intermediate summaries.
 Before writing any code, read the versioned Expo docs at https://docs.expo.dev/versions/v57.0.0/ — see `app/AGENTS.md`.
 
 ### Install dependencies
@@ -81,6 +86,39 @@ cd api
 npm run prisma:generate # generate Prisma client
 npm run prisma:migrate  # run dev migrations
 npm run prisma:validate # validate schema
+```
+
+## `admin/` — Moderation panel (Next.js)
+
+Stack: Next.js 16 (App Router), TypeScript, TanStack Query, Jest + React Testing Library, Playwright.
+
+### Install dependencies
+
+```bash
+cd admin
+npm install
+```
+
+### Run the project
+
+```bash
+cd admin
+npm run dev   # next dev, http://localhost:3100
+```
+
+### Lint
+
+```bash
+cd admin
+npm run lint
+```
+
+### Test
+
+```bash
+cd admin
+npm run test      # Jest + React Testing Library
+npm run test:e2e  # Playwright (requires api/ running against a migrated Postgres database)
 ```
 
 ## Rules (`.claude/rules/`)

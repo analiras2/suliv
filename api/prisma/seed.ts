@@ -50,7 +50,6 @@ const SEEDED_COMMENT = {
 };
 
 const EDITORIAL_BOOST_SEED_ID = '00000000-0000-0000-0000-000000000001';
-const EDITORIAL_BOOST_SEED_ADMIN_ID = 'seed-admin';
 const EDITORIAL_BOOST_SEED = {
   recipeSlug: 'mix-de-castanhas-temperadas',
   weight: 50,
@@ -1436,7 +1435,7 @@ async function seedEditorialBoost(prisma: PrismaClient): Promise<void> {
     update: {
       recipeId: recipe.id,
       weight: EDITORIAL_BOOST_SEED.weight,
-      appliedByAdminId: EDITORIAL_BOOST_SEED_ADMIN_ID,
+      appliedByAdminId: null,
       startsAt,
       endsAt,
     },
@@ -1444,7 +1443,7 @@ async function seedEditorialBoost(prisma: PrismaClient): Promise<void> {
       id: EDITORIAL_BOOST_SEED_ID,
       recipeId: recipe.id,
       weight: EDITORIAL_BOOST_SEED.weight,
-      appliedByAdminId: EDITORIAL_BOOST_SEED_ADMIN_ID,
+      appliedByAdminId: null,
       startsAt,
       endsAt,
     },

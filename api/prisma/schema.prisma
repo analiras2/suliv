@@ -87,6 +87,22 @@ enum IngredientUnit {
   a_gosto
 }
 
+enum AdminRole {
+  moderator
+  admin
+}
+
+model Admin {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(moderator)
+
+  appliedBoosts EditorialBoost[]
+
+  @@map("admins")
+}
+
 model User {
   id                    String            @id @default(uuid())
   email                 String            @unique
@@ -125,11 +141,12 @@ model UserAllergy {
 }
 
 model Allergen {
-  id        String         @id @default(uuid())
-  name      String         @unique
-  status    AllergenStatus @default(pending)
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
+  id                String         @id @default(uuid())
+  name              String         @unique
+  status            AllergenStatus @default(pending)
+  reviewedByAdminId String?        @map("reviewed_by_admin_id")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
 
   userAllergies UserAllergy[]
 
@@ -280,9 +297,11 @@ model EditorialBoost {
   id               String   @id @default(uuid())
   recipeId         String   @map("recipe_id")
   weight           Int
-  appliedByAdminId String?  @map("applied_by_admin_id") // not yet a real FK — ADR-003
+  appliedByAdminId String?  @map("applied_by_admin_id")
   startsAt         DateTime @map("starts_at")
   endsAt           DateTime @map("ends_at")
+
+  appliedByAdmin Admin? @relation(fields: [appliedByAdminId], references: [id])
 
   @@map("editorial_boosts")
 }
@@ -364,4 +383,13 @@ model Report {
 
   @@unique([reporterUserId, targetType, targetId])
   @@map("reports")
+}
+
+model FeatureFlag {
+  id                String  @id @default(uuid())
+  key               String  @unique
+  enabled           Boolean @default(false)
+  rolloutPercentage Int?    @map("rollout_percentage")
+
+  @@map("feature_flags")
 }

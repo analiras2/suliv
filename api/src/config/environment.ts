@@ -18,6 +18,8 @@ export const environmentValidationSchema = Joi.object({
   CLOUDINARY_API_KEY: Joi.string().min(1).required(),
   CLOUDINARY_API_SECRET: Joi.string().min(1).required(),
   CLOUDINARY_UPLOAD_PRESET: Joi.string().min(1).required(),
+  ADMIN_JWT_SECRET: Joi.string().min(1).required(),
+  ADMIN_JWT_EXPIRES_IN: Joi.string().min(1).default('12h'),
 });
 
 export function environmentConfiguration() {
@@ -38,6 +40,10 @@ export function environmentConfiguration() {
       apiKey: process.env.CLOUDINARY_API_KEY,
       apiSecret: process.env.CLOUDINARY_API_SECRET,
       uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET,
+    },
+    adminAuth: {
+      jwtSecret: process.env.ADMIN_JWT_SECRET,
+      jwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN ?? '12h',
     },
   };
 }

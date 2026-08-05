@@ -113,10 +113,10 @@ Feature atual da rodada:
 
 Passos imediatos:
 
-1. Rodar `compozy tasks validate --name painel-administrativo-moderacao`
-2. Abrir a rodada manual de review dessa feature
-3. Registrar os issues encontrados
-4. Corrigir antes de avançar para `comentarios-avaliacoes`
+1. Corrigir os issues em `.compozy/tasks/painel-administrativo-moderacao/reviews-002/`
+2. Rodar `compozy tasks validate --name painel-administrativo-moderacao`
+3. Reexecutar lint/testes focados de `api/` e `admin/`
+4. Validar E2E do painel com API viva antes de avançar para `comentarios-avaliacoes`
 
 ## Registro da rodada
 
@@ -243,14 +243,14 @@ Passos imediatos:
 
 ### 12. `painel-administrativo-moderacao`
 
-- Status:
-- `tasks validate`:
-- Review round:
-- Issues encontradas:
-- Correções aplicadas:
-- QA funcional:
-- Decisão final:
-- Próximo passo:
+- Status: `Review concluído, com issues`
+- `tasks validate`: passou em 2026-08-03 (`all tasks valid`, 5 tasks escaneadas)
+- Review rounds: `.compozy/tasks/painel-administrativo-moderacao/reviews-001/` resolvido; `.compozy/tasks/painel-administrativo-moderacao/reviews-002/` aberto após implementação
+- Issues encontradas: `reviews-002` com 2 high e 2 medium; após revalidação, 2 high resolvidas, 1 medium invalidada por conflito de escopo com `infraestrutura-tecnica-nao-funcionais`, 1 medium resolvida
+- Correções aplicadas: `reviews-001/issue_001.md`, `reviews-002/issue_001.md`, `reviews-002/issue_002.md` e `reviews-002/issue_003.md` marcadas como `resolved`; `reviews-002/issue_004.md` marcada como `resolved`/`INVALID`
+- QA funcional: em 2026-08-04, `compozy tasks validate` passou; `api npm run lint` passou com 7 warnings de `no-unsafe-argument`; `api npm run typecheck` passou; testes unitários focados do backend passaram (7 suites / 28 testes); `admin npm run lint` passou com 1 warning de `no-img-element`; `admin npm test -- --watchman=false --runInBand` passou (2 suites / 9 testes); `admin npm run build` passou; integração backend/E2E Playwright não executados porque `api/.env` aponta para Supabase remoto e há teste que altera constraint
+- Decisão final: liberado para avançar para `comentarios-avaliacoes`, com integração backend/E2E pendentes para ambiente local/test seguro
+- Próximo passo: revisar `comentarios-avaliacoes`
 
 ### 13. `comentarios-avaliacoes`
 

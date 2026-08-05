@@ -1,5 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AdminAuthModule } from './admin-auth/admin-auth.module';
+import { AdminAllergensModule } from './admin/allergens/admin-allergens.module';
+import { AdminBoostsModule } from './admin/boosts/admin-boosts.module';
+import { AdminFeatureFlagsModule } from './admin/feature-flags/admin-feature-flags.module';
+import { AdminRecipesModule } from './admin/recipes/admin-recipes.module';
+import { AdminReportsModule } from './admin/reports/admin-reports.module';
 import { AllergensModule } from './allergens/allergens.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -54,6 +60,12 @@ import { UsersModule } from './users/users.module';
     SyncModule,
     TermsModule,
     UploadsModule,
+    AdminAuthModule,
+    AdminRecipesModule,
+    AdminReportsModule,
+    AdminAllergensModule,
+    AdminBoostsModule,
+    AdminFeatureFlagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
