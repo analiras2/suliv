@@ -90,7 +90,7 @@ function todayUtc(): Date {
   return date;
 }
 
-function deriveTimeBucket(prepTimeMinutes: number): TimeBucket {
+export function deriveTimeBucket(prepTimeMinutes: number): TimeBucket {
   if (prepTimeMinutes <= 15) {
     return 'ate_15';
   }

@@ -29,6 +29,8 @@ function recipeFixture(overrides: Partial<Recipe> = {}): Recipe {
     removedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    externalSourceId: null,
+    externalNutritionData: null,
     ...overrides,
   };
 }

@@ -94,6 +94,20 @@ PK composta `(user_id, allergen_id)`.
 
 Só termos `approved` entram no autocomplete e contam como sinal confiável de conflito no score (PRD 9.2/7.3).
 
+### 3.3.1 `allergen_ingredient_terms`
+
+Catálogo administrável que mapeia o nome completo de um ingrediente para um alérgeno aprovado. Ele é a fonte da classificação automática; não existe `allergen_id` em `recipe_ingredients`.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| id | uuid (PK) | |
+| allergen_id | uuid (FK allergens) | só pode apontar para `allergens.status = approved` na escrita da aplicação |
+| term | text | termo revisado, exibido ao admin (ex.: `leite condensado`) |
+| normalized_term | text | minúsculas, sem acentos, espaços normalizados; usado na comparação exata |
+| created_at / updated_at | timestamptz | |
+
+Unique `(allergen_id, normalized_term)` e índice em `normalized_term`. Um mesmo termo pode ser associado a mais de um alérgeno quando necessário. A detecção compara o **nome completo** normalizado de cada ingrediente; não faz match por substring, não deduz ingredientes ocultos e não cobre contaminação cruzada.
+
 ### 3.4 `categories`
 
 | Campo | Tipo |
@@ -158,7 +172,6 @@ Unique `(recipe_id, version_number)`.
 | quantity | numeric, nullable | nulo quando `unit = a_gosto` |
 | unit | IngredientUnit | |
 | scales_with_servings | boolean | default `true`; `false` para itens tipo sal/pimenta/louro (PRD 10.2) — `pitada`/`a_gosto` nascem `false` |
-| allergen_id | uuid, nullable (FK allergens) | tag opcional pra alimentar `recipe_allergens` automaticamente quando aplicável |
 | order | int | |
 
 Unique `(recipe_id, order)`.
@@ -184,7 +197,9 @@ Tabela derivada — conflitos conhecidos entre a receita e os alergênicos fecha
 | recipe_id | uuid (FK recipes) |
 | allergen_id | uuid (FK allergens, status=approved) |
 
-PK composta `(recipe_id, allergen_id)`. Populada a partir de `recipe_ingredients.allergen_id` na escrita/edição da receita.
+PK composta `(recipe_id, allergen_id)`. É uma projeção derivada: sempre que uma receita grava ou substitui seu conjunto completo de ingredientes, o backend normaliza os nomes, busca correspondências exatas em `allergen_ingredient_terms` de alérgenos aprovados e substitui os vínculos da receita na mesma transação. Isso vale para criação, edição, `draft_upsert` e promoção de importação após a tradução pt-BR.
+
+Um conjunto vazio significa apenas que nenhum ingrediente explícito bateu com o catálogo; nunca equivale a uma garantia de segurança para alergias. O alerta personalizado só ocorre quando há interseção entre esta tabela e `user_allergies` da usuária autenticada.
 
 ### 3.10 `favorites`
 
@@ -318,6 +333,7 @@ Unique `(user_id, idempotency_key)`.
 erDiagram
     users ||--o{ user_allergies : tem
     allergens ||--o{ user_allergies : referenciado_por
+    allergens ||--o{ allergen_ingredient_terms : possui
     users ||--o{ recipes : autora
     categories ||--o{ recipes : classifica
     recipes ||--o{ recipe_versions : historico
@@ -411,6 +427,10 @@ Formato: `MÉTODO /rota` — descrição — request (campos principais) → res
 - `GET /admin/reports?status=pending`
 - `POST /admin/reports/:id/resolve` — `{ action: 'dismiss'|'hide_content'|'reopen_recipe' }`
 - `POST /admin/allergens/:id/approve` — normaliza termo pendente (PRD 7.3)
+- `GET /admin/allergens?status=approved` — lista alérgenos aprovados e seus termos de ingredientes para manutenção editorial
+- `POST /admin/allergens/:allergenId/ingredient-terms` — `{ term }`, cria termo normalizado para alérgeno aprovado
+- `PATCH /admin/allergens/:allergenId/ingredient-terms/:termId` — `{ term }`, corrige termo existente
+- `DELETE /admin/allergens/:allergenId/ingredient-terms/:termId` — remove termo; receitas históricas só são recalculadas pelo comando explícito de backfill
 - `POST /admin/boosts` — `{ recipe_id, weight, starts_at, ends_at }`
 - `PATCH /admin/feature-flags/:key` — `{ enabled, rollout_percentage? }`
 

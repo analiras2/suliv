@@ -395,6 +395,8 @@ Unidades de ingrediente padronizadas (lista fechada inicial):
 - nao fica no cabecalho
 - objetivo e contextualizar o conflito sem assustar antes da leitura
 - sem sugestao de substituicao de ingrediente no MVP - a faixa so alerta, a usuaria decide como adaptar
+- alerta alergico personalizado so aparece quando um ingrediente explicitamente listado na receita corresponde ao catalogo de termos e esse alergeno tambem esta salvo no perfil da usuaria
+- ausencia de alerta nao declara a receita segura: o MVP nao infere contaminacao cruzada, ingredientes ocultos ou termos ainda ausentes do catalogo
 
 ### 10.4 Fora do MVP
 

@@ -47,6 +47,8 @@ function recipeFixture(
     removedAt: null,
     createdAt: NOW,
     updatedAt: NOW,
+    externalSourceId: null,
+    externalNutritionData: null,
     ...overrides,
     category,
   };

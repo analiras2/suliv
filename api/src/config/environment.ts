@@ -20,6 +20,11 @@ export const environmentValidationSchema = Joi.object({
   CLOUDINARY_UPLOAD_PRESET: Joi.string().min(1).required(),
   ADMIN_JWT_SECRET: Joi.string().min(1).required(),
   ADMIN_JWT_EXPIRES_IN: Joi.string().min(1).default('12h'),
+  SPOONACULAR_API_KEY: Joi.string().min(1).required(),
+  // Optional: when unset, the Anthropic SDK falls back to its own credential
+  // chain (ANTHROPIC_AUTH_TOKEN, then an `ant auth login` profile on disk),
+  // so local development needs no key. Production must set it.
+  ANTHROPIC_API_KEY: Joi.string().min(1).optional(),
 });
 
 export function environmentConfiguration() {
@@ -44,6 +49,12 @@ export function environmentConfiguration() {
     adminAuth: {
       jwtSecret: process.env.ADMIN_JWT_SECRET,
       jwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN ?? '12h',
+    },
+    spoonacular: {
+      apiKey: process.env.SPOONACULAR_API_KEY,
+    },
+    anthropic: {
+      apiKey: process.env.ANTHROPIC_API_KEY,
     },
   };
 }

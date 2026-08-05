@@ -20,6 +20,7 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { FeedModule } from './feed/feed.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RankingModule } from './ranking/ranking.module';
+import { RecipeImportModule } from './recipe-import/recipe-import.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { ReportsModule } from './reports/reports.module';
 import { SearchModule } from './search/search.module';
@@ -53,6 +54,7 @@ import { UsersModule } from './users/users.module';
     SearchModule,
     FeedModule,
     RecipesModule,
+    RecipeImportModule,
     EventsModule,
     CommentsModule,
     ReportsModule,

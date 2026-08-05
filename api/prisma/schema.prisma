@@ -213,6 +213,16 @@ model Recipe {
   createdAt                DateTime          @default(now()) @map("created_at")
   updatedAt                DateTime          @updatedAt @map("updated_at")
 
+  // Set only for recipes created by the daily import job; identifies the
+  // upstream provider recipe so re-runs can skip ones already imported.
+  externalSourceId String? @unique @map("external_source_id")
+
+  // Raw, unparsed nutrition payload captured at import time (free-tier quota
+  // is cheap to spend now, but re-fetching a specific past recipe later is
+  // not guaranteed). No feature reads this yet; it exists so the nutrition
+  // feature won't need the upstream provider again when it's built.
+  externalNutritionData Json? @map("external_nutrition_data")
+
   // Kept in sync via DB triggers (not a native Prisma-managed generated
   // column) because it depends on the joined categories.label — see the
   // 20260716190000_add_recipe_search_vector migration and ADR-002.
@@ -229,6 +239,31 @@ model Recipe {
   @@index([categoryId, status])
   @@index([searchVector], type: Gin)
   @@map("recipes")
+}
+
+// A daily-import reserve pool: recipes fetched from the upstream provider
+// but not yet promoted into Recipe. Grown independently of the promotion
+// rate so quota available on a free/cheap plan today isn't wasted — if the
+// plan tightens or starts charging later, promotion can keep drawing from
+// this backlog without spending any further provider requests.
+model RecipeImportCandidate {
+  id                    String         @id @default(uuid())
+  externalSourceId      String         @unique @map("external_source_id")
+  title                 String
+  description           String
+  category              RecipeCategory
+  prepTimeMinutes       Int            @map("prep_time_minutes")
+  servings              Int
+  difficulty            CookingLevel
+  coverImageUrl         String?        @map("cover_image_url")
+  ingredients           Json
+  steps                 Json
+  externalNutritionData Json?          @map("external_nutrition_data")
+  fetchedAt             DateTime       @default(now()) @map("fetched_at")
+  promotedAt            DateTime?      @map("promoted_at")
+
+  @@index([promotedAt])
+  @@map("recipe_import_candidates")
 }
 
 model RecipeVersion {
