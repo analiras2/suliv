@@ -19,12 +19,16 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:integration": "prisma migrate reset --force && jest --config ./test/jest-integration.json --runInBand",
+    "test:integration": "node ../scripts/local-test-env.mjs api:integration",
+    "db:migrate:test": "node ../scripts/local-test-env.mjs api:migrate",
+    "db:seed:test": "node ../scripts/local-test-env.mjs api:seed",
+    "start:test": "node ../scripts/local-test-env.mjs api:start:test",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:validate": "prisma validate",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "import:recipes": "ts-node src/recipe-import/recipe-import.cli.ts"
+    "import:recipes": "ts-node src/recipe-import/recipe-import.cli.ts",
+    "allergens:backfill": "ts-node src/allergen-classification/allergen-backfill.cli.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

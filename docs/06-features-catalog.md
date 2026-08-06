@@ -58,23 +58,26 @@ Aplicação web interna separada do app de usuária final, com autenticação e 
 
 Nota obrigatória de 1 a 5 estrelas + comentário de texto opcional por receita, uma avaliação por usuária por receita (avaliar de novo edita a existente, nunca duplica). Não entra no cálculo de score no MVP — só exibida/agregada na tela da receita. Sujeito ao mesmo mecanismo de denúncia da feature 12, com rate limit de 20/dia por usuária.
 
-## 14. Notificações
+## 14. Catalogo de Termos Alergenicos
+
+
+## 15. Notificações
 
 Três notificações transacionais confirmadas: fim de timer (local, agendada no device — não depende do backend), receita aprovada e receita precisando de ajustes (push remoto via Firebase Cloud Messaging, cobrindo Android e iOS). Magic Link continua existindo como email transacional de autenticação, fora do escopo de notificação push. Notificações de engajamento (comentário recebido, nova receita popular) ficam fora do MVP.
 
-## 15. Sincronização Offline (Favoritos e Rascunhos)
+## 16. Sincronização Offline (Favoritos e Rascunhos)
 
 Ações offline (favoritar/desfavoritar, editar rascunho) entram em fila local e sincronizam ao reconectar, sem perda de conteúdo em caso de erro de envio. Conflito entre dispositivos (mesma ação/rascunho editado offline em mais de um aparelho) é resolvido por last-write-wins, aplicado igualmente a favoritos e rascunhos — simplificação consciente do MVP. Rascunho com imagem não tem limite de tempo local, mas exibe aviso soft após 7 dias sem sincronizar.
 
-## 16. Estados de Erro e Empty States
+## 17. Estados de Erro e Empty States
 
 Cobertura obrigatória de 8 estados: splash sem conexão, login sem conexão/sessão, busca sem resultado, feed sem receitas relevantes, favoritos vazio, minhas receitas vazio, erro de envio para moderação, receita não encontrada/inativa. Todos devem explicar a situação em linguagem simples, sugerir a próxima ação e nunca virar beco sem saída — trabalho compartilhado entre design e frontend, tocando praticamente todas as outras features.
 
-## 17. Analytics e Instrumentação de Eventos
+## 18. Analytics e Instrumentação de Eventos
 
 ~30 eventos fechados cobrindo auth/onboarding, descoberta, receita/favoritos, guided cooking, minhas receitas e perfil — cada um com payload de propriedades específico já definido, mais um contexto padrão (session_id, platform, app_version) em todo evento. Usado para medir descoberta por origem de abertura, retenção pelo funil de guided cooking (a métrica-norte) e criação pelo funil de envio para moderação.
 
-## 18. Infraestrutura Técnica e Requisitos Não-Funcionais
+## 19. Infraestrutura Técnica e Requisitos Não-Funcionais
 
 Workstream transversal, sem tela própria, mas necessário para o MVP funcionar de ponta a ponta: busca full-text nativa do Postgres, paginação cursor-based em toda lista com scroll infinito, armazenamento/moderação automática de imagem (Cloudinary), i18n-ready (só pt-BR no MVP), acessibilidade básica (contraste, área de toque, screen reader), 3 ambientes (dev/staging/prod) com feature flags, SLA de performance (p95 < 500ms para listagem/feed) e rate limiting consolidado (receitas, comentários, denúncias).
 

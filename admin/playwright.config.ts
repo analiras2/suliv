@@ -13,7 +13,7 @@ export default defineConfig({
   // Assumes the admin API (Task 1) is already running with a migrated,
   // reachable Postgres database — Playwright only boots the admin app itself.
   webServer: {
-    command: 'npm run build && npm run start',
+    command: 'npm run dev',
     url: ADMIN_BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

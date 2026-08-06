@@ -148,9 +148,25 @@ model Allergen {
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
-  userAllergies UserAllergy[]
+  userAllergies   UserAllergy[]
+  ingredientTerms AllergenIngredientTerm[]
+  recipeAllergens RecipeAllergen[]
 
   @@map("allergens")
+}
+
+model AllergenIngredientTerm {
+  id             String   @id @default(uuid())
+  allergenId     String   @map("allergen_id")
+  term           String
+  normalizedTerm String   @map("normalized_term")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  allergen       Allergen @relation(fields: [allergenId], references: [id], onDelete: Cascade)
+
+  @@unique([allergenId, normalizedTerm])
+  @@index([normalizedTerm])
+  @@map("allergen_ingredient_terms")
 }
 
 model DeviceToken {
@@ -228,12 +244,13 @@ model Recipe {
   // 20260716190000_add_recipe_search_vector migration and ADR-002.
   searchVector Unsupported("tsvector")? @map("search_vector")
 
-  user        User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  category    Category           @relation(fields: [categoryId], references: [id])
-  dailyStats  RecipeDailyStats[]
-  ingredients RecipeIngredient[]
-  steps       RecipeStep[]
-  versions    RecipeVersion[]
+  user            User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  category        Category           @relation(fields: [categoryId], references: [id])
+  dailyStats      RecipeDailyStats[]
+  ingredients     RecipeIngredient[]
+  steps           RecipeStep[]
+  versions        RecipeVersion[]
+  recipeAllergens RecipeAllergen[]
 
   @@index([status])
   @@index([categoryId, status])
@@ -321,8 +338,10 @@ model RecipeDailyStats {
 }
 
 model RecipeAllergen {
-  recipeId   String @map("recipe_id")
-  allergenId String @map("allergen_id")
+  recipeId   String   @map("recipe_id")
+  allergenId String   @map("allergen_id")
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  allergen   Allergen @relation(fields: [allergenId], references: [id], onDelete: Cascade)
 
   @@id([recipeId, allergenId])
   @@map("recipe_allergens")

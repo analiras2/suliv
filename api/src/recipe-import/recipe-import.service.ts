@@ -6,6 +6,7 @@ import {
   RecipeStatus,
 } from '@prisma/client';
 import { createHash } from 'node:crypto';
+import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { deriveTimeBucket } from '../recipes/recipes.service';
 import {
@@ -60,6 +61,7 @@ export class RecipeImportService {
     private readonly prisma: PrismaService,
     private readonly spoonacularClient: SpoonacularClient,
     private readonly translationService: RecipeTranslationService,
+    private readonly allergenClassification: AllergenClassificationService,
   ) {}
 
   async runImport(
@@ -189,8 +191,8 @@ export class RecipeImportService {
       return false;
     }
 
-    await this.prisma.$transaction([
-      this.prisma.recipe.create({
+    await this.prisma.$transaction(async (tx) => {
+      const recipe = await tx.recipe.create({
         data: {
           slug: slugFor(translated.title, candidate.externalSourceId),
           externalSourceId: candidate.externalSourceId,
@@ -221,12 +223,19 @@ export class RecipeImportService {
             })),
           },
         },
-      }),
-      this.prisma.recipeImportCandidate.update({
+      });
+
+      await this.allergenClassification.syncRecipeAllergens(
+        tx,
+        recipe.id,
+        translated.ingredientNames,
+      );
+
+      await tx.recipeImportCandidate.update({
         where: { id: candidate.id },
         data: { promotedAt: new Date() },
-      }),
-    ]);
+      });
+    });
 
     return true;
   }

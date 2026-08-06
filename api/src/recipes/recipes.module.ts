@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AllergenClassificationModule } from '../allergen-classification/allergen-classification.module';
 import { AuthModule } from '../auth/auth.module';
 import { RankingModule } from '../ranking/ranking.module';
 import { MyRecipesController } from './my-recipes.controller';
@@ -6,7 +7,7 @@ import { RecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
 
 @Module({
-  imports: [RankingModule, AuthModule],
+  imports: [RankingModule, AuthModule, AllergenClassificationModule],
   controllers: [RecipesController, MyRecipesController],
   providers: [RecipesService],
   exports: [RecipesService],

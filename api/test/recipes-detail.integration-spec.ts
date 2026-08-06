@@ -1,12 +1,13 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -32,6 +33,7 @@ jest.setTimeout(20000);
 
 describe('GET /recipes/:slug (integration)', () => {
   const prisma = new PrismaClient();
+  const classifier = new AllergenClassificationService();
   const trustedKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const supabaseAdmin = { deleteUser: jest.fn<Promise<void>, [string]>() };
   let app: INestApplication<App>;
@@ -171,6 +173,41 @@ describe('GET /recipes/:slug (integration)', () => {
         stepTimeSeconds: 60,
       },
     });
+  }
+
+  // task_04: seeds a catalog term and materializes recipe_allergens through
+  // the shared classifier (production write path), not a direct
+  // recipeAllergen.upsert fixture, so these tests prove the personalized
+  // read paths react to catalog-derived projections.
+  async function seedApprovedTerm(term: string) {
+    const allergen = await prisma.allergen.create({
+      data: { name: `Alergeno-${randomUUID()}`, status: 'approved' },
+    });
+    await prisma.allergenIngredientTerm.create({
+      data: {
+        allergenId: allergen.id,
+        term,
+        normalizedTerm: classifier.normalizeIngredientName(term),
+      },
+    });
+    return allergen;
+  }
+
+  async function setIngredients(recipeId: string, names: string[]) {
+    await prisma.recipeIngredient.deleteMany({ where: { recipeId } });
+    await prisma.recipeIngredient.createMany({
+      data: names.map((name, index) => ({
+        recipeId,
+        order: index + 1,
+        name,
+        quantity: 1,
+        unit: 'unidade' as const,
+        scalesWithServings: true,
+      })),
+    });
+    await prisma.$transaction((tx) =>
+      classifier.syncRecipeAllergens(tx, recipeId, names),
+    );
   }
 
   it('IT-001 public request (no Authorization) returns 200 with content, no authenticated-only fields', async () => {
@@ -336,5 +373,212 @@ describe('GET /recipes/:slug (integration)', () => {
 
     expect(body.averageRating).toBeNull();
     expect(body.ratingCount).toBe(0);
+  });
+
+  it('IT-008 a recipe classified through catalog ingredients returns conflictsWithUser: true and the allergen name for a matching user', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.sobremesa,
+      'Sobremesa',
+    );
+    const recipe = await upsertRecipe({
+      slug: 'it-008-recipe-detail-classified-conflict',
+      categoryId: category.id,
+    });
+    const milk = await seedApprovedTerm('Leite');
+    await setIngredients(recipe.id, ['Leite']);
+    const user = 'it-008-recipe-detail-user';
+    await onboard(user, [milk.id]);
+
+    const response = await getBySlug(
+      'it-008-recipe-detail-classified-conflict',
+      user,
+    ).expect(200);
+    const body = response.body as RecipeDetailBody;
+
+    expect(body.conflictsWithUser).toBe(true);
+    expect(body.conflictingAllergens).toContain(milk.name);
+  });
+
+  it('IT-009 a user with no saved allergies and a user allergic only to another allergen both receive no allergy conflict for the same classified recipe', async () => {
+    const category = await upsertCategory(RecipeCategory.lanche, 'LancheIT009');
+    const recipe = await upsertRecipe({
+      slug: 'it-009-recipe-detail-no-conflict',
+      categoryId: category.id,
+    });
+    await seedApprovedTerm('Leite');
+    const soy = await seedApprovedTerm('Soja');
+    await setIngredients(recipe.id, ['Leite']);
+
+    const noAllergyUser = 'it-009-recipe-detail-no-allergy-user';
+    await onboard(noAllergyUser, []);
+    const otherAllergyUser = 'it-009-recipe-detail-other-allergy-user';
+    await onboard(otherAllergyUser, [soy.id]);
+
+    const noAllergyResponse = await getBySlug(
+      'it-009-recipe-detail-no-conflict',
+      noAllergyUser,
+    ).expect(200);
+    const otherAllergyResponse = await getBySlug(
+      'it-009-recipe-detail-no-conflict',
+      otherAllergyUser,
+    ).expect(200);
+
+    expect((noAllergyResponse.body as RecipeDetailBody).conflictsWithUser).toBe(
+      false,
+    );
+    expect(
+      (otherAllergyResponse.body as RecipeDetailBody).conflictsWithUser,
+    ).toBe(false);
+  });
+
+  it('IT-010 anonymous GET /recipes/:slug for a classified recipe returns content without personalized conflict fields', async () => {
+    const category = await upsertCategory(RecipeCategory.bebida, 'BebidaIT010');
+    const recipe = await upsertRecipe({
+      slug: 'it-010-recipe-detail-anonymous-classified',
+      categoryId: category.id,
+    });
+    await seedApprovedTerm('Leite');
+    await setIngredients(recipe.id, ['Leite']);
+
+    const response = await getBySlug(
+      'it-010-recipe-detail-anonymous-classified',
+    ).expect(200);
+    const body = response.body as RecipeDetailBody;
+
+    expect(body.conflictsWithUser).toBeUndefined();
+    expect(body.conflictingAllergens).toBeUndefined();
+  });
+
+  it('IT-011 a recipe classified with two allergens returns each conflicting name once for a user saved against both', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.almoco_jantar,
+      'AlmocoIT011',
+    );
+    const recipe = await upsertRecipe({
+      slug: 'it-011-recipe-detail-double-conflict',
+      categoryId: category.id,
+    });
+    const milk = await seedApprovedTerm('Leite');
+    const egg = await seedApprovedTerm('Ovos');
+    await setIngredients(recipe.id, ['Leite', 'Ovos']);
+    const user = 'it-011-recipe-detail-double-conflict-user';
+    await onboard(user, [milk.id, egg.id]);
+
+    const response = await getBySlug(
+      'it-011-recipe-detail-double-conflict',
+      user,
+    ).expect(200);
+    const body = response.body as RecipeDetailBody;
+
+    expect(body.conflictsWithUser).toBe(true);
+    expect(body.conflictingAllergens).toHaveLength(2);
+    expect(new Set(body.conflictingAllergens)).toEqual(
+      new Set([milk.name, egg.name]),
+    );
+  });
+
+  it('IT-012 a concurrent detail read observes only the fully committed old or new allergen set, never a mixed state', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.molhos_acompanhamentos,
+      'MolhosIT012',
+    );
+    const recipe = await upsertRecipe({
+      slug: 'it-012-recipe-detail-concurrent-replacement',
+      categoryId: category.id,
+    });
+    const milk = await seedApprovedTerm('Leite');
+    const soy = await seedApprovedTerm('Soja');
+    await setIngredients(recipe.id, ['Leite']);
+    const user = 'it-012-recipe-detail-concurrent-user';
+    await onboard(user, [milk.id, soy.id]);
+
+    let releaseTransaction: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseTransaction = resolve;
+    });
+    let transactionStarted: () => void = () => {};
+    const started = new Promise<void>((resolve) => {
+      transactionStarted = resolve;
+    });
+    const updatePromise = prisma.$transaction(async (tx) => {
+      await tx.recipeIngredient.deleteMany({
+        where: { recipeId: recipe.id },
+      });
+      await tx.recipeIngredient.create({
+        data: {
+          recipeId: recipe.id,
+          order: 1,
+          name: 'Soja',
+          quantity: 1,
+          unit: 'unidade',
+          scalesWithServings: true,
+        },
+      });
+      await classifier.syncRecipeAllergens(tx, recipe.id, ['Soja']);
+      transactionStarted();
+      await gate;
+    });
+    await started;
+
+    const concurrentResponse = await getBySlug(
+      'it-012-recipe-detail-concurrent-replacement',
+      user,
+    ).expect(200);
+    const duringTx =
+      (concurrentResponse.body as RecipeDetailBody).conflictingAllergens ?? [];
+    releaseTransaction();
+    await updatePromise;
+
+    expect(duringTx).toHaveLength(1);
+    expect([milk.name, soy.name]).toContain(duringTx[0]);
+
+    const afterCommitResponse = await getBySlug(
+      'it-012-recipe-detail-concurrent-replacement',
+      user,
+    ).expect(200);
+    expect(
+      (afterCommitResponse.body as RecipeDetailBody).conflictingAllergens,
+    ).toEqual([soy.name]);
+  });
+
+  it('E2E-003 opening the same classified recipe as a matching user, a nonmatching user, and anonymously only shows the banner to the matching user', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.cafe_da_manha,
+      'CafeIT-E2E003',
+    );
+    const recipe = await upsertRecipe({
+      slug: 'e2e-003-recipe-detail-warning-scope',
+      categoryId: category.id,
+    });
+    const milk = await seedApprovedTerm('Leite');
+    const soy = await seedApprovedTerm('Soja');
+    await setIngredients(recipe.id, ['Leite']);
+
+    const matchingUser = 'e2e-003-matching-user';
+    await onboard(matchingUser, [milk.id]);
+    const nonmatchingUser = 'e2e-003-nonmatching-user';
+    await onboard(nonmatchingUser, [soy.id]);
+
+    const matchingResponse = await getBySlug(
+      'e2e-003-recipe-detail-warning-scope',
+      matchingUser,
+    ).expect(200);
+    const nonmatchingResponse = await getBySlug(
+      'e2e-003-recipe-detail-warning-scope',
+      nonmatchingUser,
+    ).expect(200);
+    const anonymousResponse = await getBySlug(
+      'e2e-003-recipe-detail-warning-scope',
+    ).expect(200);
+
+    expect((matchingResponse.body as RecipeDetailBody).conflictsWithUser).toBe(
+      true,
+    );
+    expect(
+      (nonmatchingResponse.body as RecipeDetailBody).conflictsWithUser,
+    ).toBe(false);
+    expect(
+      (anonymousResponse.body as RecipeDetailBody).conflictsWithUser,
+    ).toBeUndefined();
   });
 });

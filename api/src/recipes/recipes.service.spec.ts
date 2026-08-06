@@ -5,6 +5,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Category, Prisma, Recipe } from '@prisma/client';
+import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PopularityService } from '../ranking/popularity.service';
 import { RecipeSummaryDto } from './recipe-summary.dto';
@@ -115,16 +116,22 @@ describe('RecipesService', () => {
   const findUniqueOrThrowRecipe = jest.fn();
   const updateRecipeTx = jest.fn();
   const upsertRecipeTx = jest.fn();
+  const createRecipeTx = jest.fn();
   const createRecipeVersion = jest.fn();
   const deleteManyIngredient = jest.fn();
   const createManyIngredient = jest.fn();
   const deleteManyStep = jest.fn();
   const createManyStep = jest.fn();
+  const syncRecipeAllergens = jest.fn<
+    Promise<void>,
+    [unknown, string, string[]]
+  >();
   const txClient = {
     recipe: {
       findUniqueOrThrow: findUniqueOrThrowRecipe,
       update: updateRecipeTx,
       upsert: upsertRecipeTx,
+      create: createRecipeTx,
     },
     recipeVersion: { create: createRecipeVersion },
     recipeIngredient: {
@@ -159,6 +166,7 @@ describe('RecipesService', () => {
     $transaction: transaction,
   };
   const popularityService = { getTopOfWeek, getTopOfWeekByCategory };
+  const allergenClassification = { syncRecipeAllergens };
   let service: RecipesService;
 
   const ingredientPayload = {
@@ -195,6 +203,7 @@ describe('RecipesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     upsertRecipeTx.mockResolvedValue({ id: 'recipe-1' });
+    createRecipeTx.mockResolvedValue({ id: 'recipe-1', status: 'rascunho' });
     findUniqueFavorite.mockResolvedValue(null);
     aggregateCommentRating.mockResolvedValue({
       _avg: { rating: null },
@@ -203,6 +212,7 @@ describe('RecipesService', () => {
     service = new RecipesService(
       prisma as unknown as PrismaService,
       popularityService as unknown as PopularityService,
+      allergenClassification as unknown as AllergenClassificationService,
     );
   });
 
@@ -399,22 +409,23 @@ describe('RecipesService', () => {
   });
 
   describe('create', () => {
-    it('creates a rascunho with a client-supplied id and nested ingredients/steps', async () => {
-      createRecipe.mockResolvedValue({ id: 'recipe-1', status: 'rascunho' });
-
+    it('creates a rascunho with a client-supplied id and nested ingredients/steps, then syncs allergens within the same transaction', async () => {
       await service.create('author-1', createRecipePayloadFixture());
 
-      const [{ data }] = createRecipe.mock.calls[0] as [
+      const [{ data }] = createRecipeTx.mock.calls[0] as [
         { data: Record<string, unknown> },
       ];
       expect(data.id).toBe('recipe-1');
       expect(data.authorId).toBe('author-1');
       expect(data.status).toBe('rascunho');
       expect(data.timeBucket).toBe('ate_15');
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'Banana',
+      ]);
     });
 
     it('converts a foreign-key violation on categoryId into a 400', async () => {
-      createRecipe.mockRejectedValue(
+      createRecipeTx.mockRejectedValue(
         new Prisma.PrismaClientKnownRequestError('FK violation', {
           code: 'P2003',
           clientVersion: 'test',
@@ -424,6 +435,7 @@ describe('RecipesService', () => {
       await expect(
         service.create('author-1', createRecipePayloadFixture()),
       ).rejects.toThrow('categoryId does not reference an existing category');
+      expect(syncRecipeAllergens).not.toHaveBeenCalled();
     });
   });
 
@@ -493,7 +505,7 @@ describe('RecipesService', () => {
       });
     });
 
-    it('replaces ingredients/steps in full (delete-and-recreate) when provided', async () => {
+    it('replaces ingredients/steps in full (delete-and-recreate) when provided, then syncs allergens with the replaced names', async () => {
       findUniqueRecipe.mockResolvedValue(
         recipeWithDetailsFixture({ status: 'rascunho' }),
       );
@@ -518,6 +530,20 @@ describe('RecipesService', () => {
       expect(createManyStep).toHaveBeenCalledWith({
         data: [expect.objectContaining({ recipeId: 'recipe-1', order: 1 })],
       });
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'Banana',
+      ]);
+    });
+
+    it('does not recompute the allergen projection when ingredients are not part of the update', async () => {
+      findUniqueRecipe.mockResolvedValue(
+        recipeWithDetailsFixture({ status: 'rascunho' }),
+      );
+      updateRecipeTx.mockResolvedValue({ id: 'recipe-1' });
+
+      await service.update('author-1', 'recipe-1', { title: 'Novo titulo' });
+
+      expect(syncRecipeAllergens).not.toHaveBeenCalled();
     });
   });
 
@@ -667,9 +693,12 @@ describe('RecipesService', () => {
       expect(createManyStep).toHaveBeenCalledWith({
         data: [expect.objectContaining({ recipeId: 'recipe-1', order: 1 })],
       });
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'Banana',
+      ]);
     });
 
-    it('does not call createMany when the payload has no ingredients/steps', async () => {
+    it('does not call createMany when the payload has no ingredients/steps, but still syncs an empty allergen projection', async () => {
       const payload = createRecipePayloadFixture({
         ingredients: [],
         steps: [],
@@ -679,6 +708,20 @@ describe('RecipesService', () => {
 
       expect(createManyIngredient).not.toHaveBeenCalled();
       expect(createManyStep).not.toHaveBeenCalled();
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(
+        txClient,
+        'recipe-1',
+        [],
+      );
+    });
+
+    it('IT-005 replaying the same draft_upsert payload twice syncs allergens on every replay (idempotent)', async () => {
+      const payload = createRecipePayloadFixture();
+
+      await service.upsertDraft('author-1', payload);
+      await service.upsertDraft('author-1', payload);
+
+      expect(syncRecipeAllergens).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -1,12 +1,13 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { AppModule } from '../src/app.module';
 import { RankingService } from '../src/ranking/ranking.service';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
@@ -30,6 +31,7 @@ interface PaginatedRecipesBody {
 
 describe('GET /recipes/search (integration)', () => {
   const prisma = new PrismaClient();
+  const classifier = new AllergenClassificationService();
   const trustedKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const supabaseAdmin = { deleteUser: jest.fn<Promise<void>, [string]>() };
   let app: INestApplication<App>;
@@ -217,6 +219,47 @@ describe('GET /recipes/search (integration)', () => {
     expect(compatibleIndex).toBeLessThan(conflictingIndex);
     expect(body.items[compatibleIndex].conflictsWithUser).toBe(false);
     expect(body.items[conflictingIndex].conflictsWithUser).toBe(true);
+  });
+
+  // task_04/IT-011: proves search marks a recipe conflicting through a
+  // projection materialized by the shared classifier (production write
+  // path), not a direct recipeAllergen.upsert fixture.
+  it('IT-011 search marks a recipe conflicting through a catalog-classification-derived projection', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.sobremesa,
+      'SobremesaIT011',
+    );
+    const allergen = await prisma.allergen.create({
+      data: { name: `Leite-${randomUUID()}`, status: 'approved' },
+    });
+    await prisma.allergenIngredientTerm.create({
+      data: {
+        allergenId: allergen.id,
+        term: 'Leite',
+        normalizedTerm: classifier.normalizeIngredientName('Leite'),
+      },
+    });
+    const user = 'it-011-search-user';
+    await onboard(user, 'vegano', [allergen.id]);
+
+    const recipe = await upsertRecipe({
+      slug: 'it-011-search-classified-conflict',
+      title: 'BoloBuscaIt011 leite',
+      categoryId: category.id,
+      dietPreference: 'vegano',
+    });
+    await prisma.$transaction((tx) =>
+      classifier.syncRecipeAllergens(tx, recipe.id, ['Leite']),
+    );
+
+    const response = await search(
+      user,
+      '?origin=busca&q=BoloBuscaIt011',
+    ).expect(200);
+    const body = response.body as PaginatedRecipesBody;
+    const item = body.items.find((entry) => entry.id === recipe.id);
+
+    expect(item?.conflictsWithUser).toBe(true);
   });
 
   it('IT-002 origin=categoria: every item belongs to the category, ordered by category-scoped popularity', async () => {

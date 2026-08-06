@@ -8,7 +8,7 @@
     "start": "next start -p 3100",
     "lint": "eslint",
     "test": "jest",
-    "test:e2e": "playwright test"
+    "test:e2e": "node ../scripts/local-test-env.mjs admin:e2e"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",

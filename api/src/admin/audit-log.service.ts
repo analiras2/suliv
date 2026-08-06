@@ -10,6 +10,9 @@ export type AuditLogAction =
   | 'resolve'
   | 'allergen-approve'
   | 'allergen-reject'
+  | 'allergen-term-create'
+  | 'allergen-term-update'
+  | 'allergen-term-delete'
   | 'boost-create'
   | 'feature-flag-update';
 

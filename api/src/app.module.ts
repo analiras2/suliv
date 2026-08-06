@@ -6,6 +6,7 @@ import { AdminBoostsModule } from './admin/boosts/admin-boosts.module';
 import { AdminFeatureFlagsModule } from './admin/feature-flags/admin-feature-flags.module';
 import { AdminRecipesModule } from './admin/recipes/admin-recipes.module';
 import { AdminReportsModule } from './admin/reports/admin-reports.module';
+import { AllergenClassificationModule } from './allergen-classification/allergen-classification.module';
 import { AllergensModule } from './allergens/allergens.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     AllergensModule,
+    AllergenClassificationModule,
     RankingModule,
     // SearchModule must be scanned before FeedModule: FeedModule
     // transitively imports RecipesModule (for its own use of

@@ -22,11 +22,14 @@ export async function ensureCategoryId(client: Client): Promise<string> {
 export async function createAuthor(client: Client): Promise<string> {
   const id = randomUUID();
   const suffix = randomUUID().replace(/-/g, '').slice(0, 16);
-  await client.query('INSERT INTO users (id, email, username) VALUES ($1, $2, $3)', [
-    id,
-    `author-${suffix}@example.com`,
-    `author_${suffix}`,
-  ]);
+  await client.query(
+    'INSERT INTO users (id, email, username, created_at, updated_at) VALUES ($1, $2, $3, now(), now())',
+    [
+      id,
+      `author-${suffix}@example.com`,
+      `author_${suffix}`,
+    ],
+  );
   return id;
 }
 
@@ -51,8 +54,8 @@ export async function createRecipe(client: Client, options: CreateRecipeOptions)
   await client.query(
     `INSERT INTO recipes (
       id, slug, author_id, title, description, category_id, prep_time_minutes,
-      time_bucket, servings, difficulty, diet_preference, status, submitted_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, now())`,
+      time_bucket, servings, difficulty, diet_preference, status, submitted_at, created_at, updated_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, now(), now(), now())`,
     [
       id,
       slug,
@@ -104,13 +107,24 @@ export interface CreatedAllergen {
 }
 
 export async function createApprovedAllergen(client: Client): Promise<CreatedAllergen> {
+  return createAllergen(client, 'approved');
+}
+
+export async function createPendingAllergen(client: Client): Promise<CreatedAllergen> {
+  return createAllergen(client, 'pending');
+}
+
+async function createAllergen(
+  client: Client,
+  status: 'approved' | 'pending',
+): Promise<CreatedAllergen> {
   const id = randomUUID();
   const suffix = randomUUID().slice(0, 8);
   const name = `E2E Allergen ${suffix}`;
 
   await client.query(
-    "INSERT INTO allergens (id, name, status, created_at, updated_at) VALUES ($1, $2, 'approved', now(), now())",
-    [id, name],
+    'INSERT INTO allergens (id, name, status, created_at, updated_at) VALUES ($1, $2, $3, now(), now())',
+    [id, name, status],
   );
 
   return { id, name };

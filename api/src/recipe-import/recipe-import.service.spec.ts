@@ -4,6 +4,7 @@ import {
   Recipe,
   RecipeImportCandidate,
 } from '@prisma/client';
+import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecipeImportService } from './recipe-import.service';
 import {
@@ -87,7 +88,6 @@ describe('RecipeImportService', () => {
     Promise<RecipeImportCandidate[]>,
     [Prisma.RecipeImportCandidateFindManyArgs]
   >();
-  const transaction = jest.fn<Promise<unknown[]>, [unknown[]]>();
   const createRecipe = jest.fn<Promise<Recipe>, [Prisma.RecipeCreateArgs]>();
   const updateCandidate = jest.fn<
     Promise<RecipeImportCandidate>,
@@ -101,6 +101,17 @@ describe('RecipeImportService', () => {
     Promise<number>,
     [Prisma.RecipeImportCandidateCountArgs]
   >();
+  const syncRecipeAllergens = jest.fn<
+    Promise<void>,
+    [unknown, string, string[]]
+  >();
+  const txClient = {
+    recipe: { create: createRecipe },
+    recipeImportCandidate: { update: updateCandidate },
+  };
+  const transaction = jest.fn(
+    (callback: (tx: typeof txClient) => Promise<unknown>) => callback(txClient),
+  );
 
   const prisma = {
     category: { findUnique: findUniqueCategory },
@@ -122,10 +133,15 @@ describe('RecipeImportService', () => {
     translateToPortuguese,
   } as unknown as RecipeTranslationService;
 
+  const allergenClassification = {
+    syncRecipeAllergens,
+  } as unknown as AllergenClassificationService;
+
   const service = new RecipeImportService(
     prisma,
     spoonacularClient,
     translationService,
+    allergenClassification,
   );
 
   beforeEach(() => {
@@ -141,10 +157,15 @@ describe('RecipeImportService', () => {
     );
     findManyCandidate.mockResolvedValue([]);
     countCandidate.mockResolvedValue(0);
-    transaction.mockImplementation((ops: unknown[]) => Promise.resolve(ops));
+    transaction.mockImplementation(
+      (callback: (tx: typeof txClient) => Promise<unknown>) =>
+        callback(txClient),
+    );
+    createRecipe.mockResolvedValue({ id: 'recipe-1' } as Recipe);
     updateCandidate.mockResolvedValue(
       undefined as unknown as RecipeImportCandidate,
     );
+    syncRecipeAllergens.mockResolvedValue(undefined);
     translateToPortuguese.mockResolvedValue({
       title: 'Sopa de Lentilha Vegana',
       description: 'Uma sopa vegana reconfortante.',
@@ -317,6 +338,86 @@ describe('RecipeImportService', () => {
 
       expect(transaction).not.toHaveBeenCalled();
       expect(updateCandidate).not.toHaveBeenCalled();
+      expect(syncRecipeAllergens).not.toHaveBeenCalled();
+    });
+
+    it('UT-009 classifies the translated Portuguese ingredient names using the same transaction client used to promote the recipe', async () => {
+      findManyCandidate.mockResolvedValue([candidateFixture()]);
+
+      await service.runImport();
+
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'lentilhas',
+      ]);
+      const syncOrder = syncRecipeAllergens.mock.invocationCallOrder[0];
+      const updateOrder = updateCandidate.mock.invocationCallOrder[0];
+      expect(syncOrder).toBeLessThan(updateOrder);
+    });
+
+    it('UT-010 a transaction rejection after translation leaves the candidate unpromoted with no committed projection replacement', async () => {
+      findManyCandidate.mockResolvedValue([candidateFixture()]);
+      createRecipe.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('unique violation', {
+          code: 'P2002',
+          clientVersion: 'test',
+        }),
+      );
+
+      await expect(service.runImport()).rejects.toThrow();
+
+      expect(syncRecipeAllergens).not.toHaveBeenCalled();
+      expect(updateCandidate).not.toHaveBeenCalled();
+    });
+
+    it('UT-011 an unmatched translated ingredient list still promotes the candidate successfully', async () => {
+      findManyCandidate.mockResolvedValue([candidateFixture()]);
+      translateToPortuguese.mockResolvedValue({
+        title: 'Sopa desconhecida',
+        description: 'Sem alergenos conhecidos.',
+        ingredientNames: ['ingrediente nao catalogado'],
+        stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
+      });
+
+      await expect(service.runImport()).resolves.not.toThrow();
+
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'ingrediente nao catalogado',
+      ]);
+      expect(updateCandidate).toHaveBeenCalledWith({
+        where: { id: 'candidate-1' },
+        data: { promotedAt: expect.any(Date) as Date },
+      });
+    });
+
+    it('UT-012 a candidate with 100 ingredients triggers exactly one classification call, not one per ingredient', async () => {
+      const manyIngredients = Array.from({ length: 100 }, (_, index) => ({
+        name: `ingredient-${index}`,
+        quantity: 1,
+        unit: 'g',
+        scalesWithServings: true,
+        order: index,
+      }));
+      const manyTranslatedNames = manyIngredients.map(
+        (ingredient) => `traduzido-${ingredient.name}`,
+      );
+      findManyCandidate.mockResolvedValue([
+        candidateFixture({ ingredients: manyIngredients }),
+      ]);
+      translateToPortuguese.mockResolvedValue({
+        title: 'Sopa de Lentilha Vegana',
+        description: 'Uma sopa vegana reconfortante.',
+        ingredientNames: manyTranslatedNames,
+        stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
+      });
+
+      await service.runImport();
+
+      expect(syncRecipeAllergens).toHaveBeenCalledTimes(1);
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(
+        txClient,
+        'recipe-1',
+        manyTranslatedNames,
+      );
     });
   });
 });

@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { PrismaModule } from '../src/prisma/prisma.module';
 import { RankingModule } from '../src/ranking/ranking.module';
 import { RankingService } from '../src/ranking/ranking.service';
@@ -8,6 +10,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 describe('RankingService (integration)', () => {
   const prisma = new PrismaClient();
+  const classifier = new AllergenClassificationService();
   let rankingService: RankingService;
 
   beforeAll(async () => {
@@ -159,6 +162,49 @@ describe('RankingService (integration)', () => {
     });
     // No recipe_daily_stats rows: fails the lifetime eligibility floor, so
     // it can only ever appear via the cold-start slot, not the scored top.
+
+    const result = await rankingService.getSelectedForYou(user.id, 5);
+
+    expect(result.some((r) => r.id === conflictRecipe.id)).toBe(true);
+  });
+
+  // task_04/IT-011: proves ranking marks a recipe conflicting through a
+  // projection materialized by the shared classifier (production write
+  // path), not a direct recipeAllergen.upsert fixture — the conflicting
+  // recipe is excluded from scoring but still reachable via cold-start,
+  // exactly like the direct-fixture case above.
+  it('IT-011 ranking marks a recipe conflicting through a catalog-classification-derived projection', async () => {
+    const category = await upsertCategory(
+      RecipeCategory.molhos_acompanhamentos,
+      'MolhosIT011',
+    );
+    const user = await upsertUser({
+      id: 'it-011-ranking-user',
+      dietPreference: 'flexitariano',
+    });
+    const allergen = await prisma.allergen.create({
+      data: { name: `Leite-${randomUUID()}`, status: 'approved' },
+    });
+    await prisma.allergenIngredientTerm.create({
+      data: {
+        allergenId: allergen.id,
+        term: 'Leite',
+        normalizedTerm: classifier.normalizeIngredientName('Leite'),
+      },
+    });
+    await prisma.userAllergy.create({
+      data: { userId: user.id, allergenId: allergen.id },
+    });
+
+    const conflictRecipe = await upsertRecipe({
+      slug: 'it-011-ranking-classified-conflict',
+      categoryId: category.id,
+      dietPreference: 'flexitariano',
+      approvedAt: new Date(Date.now() + 1000 * MS_PER_DAY),
+    });
+    await prisma.$transaction((tx) =>
+      classifier.syncRecipeAllergens(tx, conflictRecipe.id, ['Leite']),
+    );
 
     const result = await rankingService.getSelectedForYou(user.id, 5);
 

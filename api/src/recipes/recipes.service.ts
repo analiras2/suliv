@@ -22,6 +22,7 @@ import {
 } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
+import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PopularityService } from '../ranking/popularity.service';
 import { CreateRecipeDto } from './dto';
@@ -124,6 +125,7 @@ export class RecipesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly popularityService: PopularityService,
+    private readonly allergenClassification: AllergenClassificationService,
   ) {}
 
   listByCategory(
@@ -180,39 +182,49 @@ export class RecipesService {
 
   async create(userId: string, payload: CreateRecipePayload): Promise<Recipe> {
     try {
-      return await this.prisma.recipe.create({
-        data: {
-          id: payload.id,
-          authorId: userId,
-          slug: slugFor(payload.id, payload.title),
-          title: payload.title,
-          description: payload.description,
-          categoryId: payload.categoryId,
-          prepTimeMinutes: payload.prepTimeMinutes,
-          timeBucket: deriveTimeBucket(payload.prepTimeMinutes),
-          servings: payload.servings,
-          difficulty: payload.difficulty,
-          dietPreference: payload.dietPreference,
-          status: RecipeStatus.rascunho,
-          authorMessageToModerator: payload.authorMessageToModerator,
-          coverImageUrl: payload.coverImageUrl,
-          ingredients: {
-            create: payload.ingredients.map((ingredient) => ({
-              name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit,
-              scalesWithServings: ingredient.scalesWithServings,
-              order: ingredient.order,
-            })),
+      return await this.prisma.$transaction(async (tx) => {
+        const recipe = await tx.recipe.create({
+          data: {
+            id: payload.id,
+            authorId: userId,
+            slug: slugFor(payload.id, payload.title),
+            title: payload.title,
+            description: payload.description,
+            categoryId: payload.categoryId,
+            prepTimeMinutes: payload.prepTimeMinutes,
+            timeBucket: deriveTimeBucket(payload.prepTimeMinutes),
+            servings: payload.servings,
+            difficulty: payload.difficulty,
+            dietPreference: payload.dietPreference,
+            status: RecipeStatus.rascunho,
+            authorMessageToModerator: payload.authorMessageToModerator,
+            coverImageUrl: payload.coverImageUrl,
+            ingredients: {
+              create: payload.ingredients.map((ingredient) => ({
+                name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                scalesWithServings: ingredient.scalesWithServings,
+                order: ingredient.order,
+              })),
+            },
+            steps: {
+              create: payload.steps.map((step) => ({
+                order: step.order,
+                description: step.description,
+                stepTimeSeconds: step.stepTimeSeconds,
+              })),
+            },
           },
-          steps: {
-            create: payload.steps.map((step) => ({
-              order: step.order,
-              description: step.description,
-              stepTimeSeconds: step.stepTimeSeconds,
-            })),
-          },
-        },
+        });
+
+        await this.allergenClassification.syncRecipeAllergens(
+          tx,
+          recipe.id,
+          payload.ingredients.map((ingredient) => ingredient.name),
+        );
+
+        return recipe;
       });
     } catch (error: unknown) {
       if (this.isForeignKeyViolation(error)) {
@@ -296,6 +308,11 @@ export class RecipesService {
             order: ingredient.order,
           })),
         });
+        await this.allergenClassification.syncRecipeAllergens(
+          tx,
+          recipe.id,
+          payload.ingredients.map((ingredient) => ingredient.name),
+        );
       }
       if (payload.steps) {
         await tx.recipeStep.deleteMany({ where: { recipeId: recipe.id } });
@@ -481,6 +498,12 @@ export class RecipesService {
         })),
       });
     }
+
+    await this.allergenClassification.syncRecipeAllergens(
+      tx,
+      recipe.id,
+      payload.ingredients.map((ingredient) => ingredient.name),
+    );
 
     return recipe;
   }

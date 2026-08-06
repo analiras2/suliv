@@ -3,9 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { hashSync } from 'bcryptjs';
 import { Client } from 'pg';
-
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/suliv?schema=public';
+import { requireLocalTestDatabaseUrl } from './test-database';
 
 export const CREDENTIALS_FILE = path.join(__dirname, '.auth', 'admin-credentials.json');
 
@@ -14,7 +12,7 @@ export default async function globalSetup() {
   const password = 'correct-password';
   const passwordHash = hashSync(password, 10);
 
-  const client = new Client({ connectionString: DATABASE_URL });
+  const client = new Client({ connectionString: requireLocalTestDatabaseUrl() });
   await client.connect();
   try {
     await client.query('INSERT INTO admins (id, email, password_hash) VALUES ($1, $2, $3)', [

@@ -6,6 +6,7 @@ import {
   RecipeCategory,
   TimeBucket,
 } from '@prisma/client';
+import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 
 const APPROVED_ALLERGENS = [
   'Leite',
@@ -17,6 +18,36 @@ const APPROVED_ALLERGENS = [
   'Gergelim',
 ];
 
+/**
+ * Reviewed initial ingredient-term catalog (ADR-001/ADR-002): only exact
+ * full-ingredient names an operator has curated, no substrings such as
+ * "leite" ⊂ "leite de coco". Recipe-allergen projections are derived from
+ * this catalog by the shared classifier, not written as manual fixtures.
+ */
+const ALLERGEN_INGREDIENT_TERMS: Record<string, string[]> = {
+  Leite: [
+    'Leite',
+    'Leite integral',
+    'Leite condensado',
+    'Manteiga',
+    'Queijo ralado',
+    'Parmesão ralado',
+  ],
+  Ovos: ['Ovos'],
+  'Trigo (Glúten)': ['Farinha de trigo', 'Pão integral'],
+  Amendoim: ['Amendoim', 'Pasta de amendoim'],
+  'Castanhas e Nozes': [
+    'Castanhas',
+    'Castanhas picadas',
+    'Creme de castanha',
+    'Castanha-do-pará',
+    'Amêndoas',
+    'Nozes',
+  ],
+  Soja: ['Leite de soja', 'Molho de soja', 'Tofu'],
+  Gergelim: ['Gergelim', 'Óleo de gergelim', 'Tahine'],
+};
+
 const CATEGORIES: { key: RecipeCategory; label: string }[] = [
   { key: 'cafe_da_manha', label: 'Café da manhã' },
   { key: 'almoco_jantar', label: 'Almoço/Jantar' },
@@ -25,17 +56,6 @@ const CATEGORIES: { key: RecipeCategory; label: string }[] = [
   { key: 'bebida', label: 'Bebida' },
   { key: 'molhos_acompanhamentos', label: 'Molhos/Acompanhamentos' },
 ];
-
-/**
- * Fixed fixtures consumed directly by task_03's integration tests
- * (IT-002, IT-003, IT-004) — keep slugs/ids stable across seed runs.
- */
-const SEEDED_ALLERGY_CONFLICTS: { recipeSlug: string; allergenName: string }[] =
-  [
-    { recipeSlug: 'omelete-de-espinafre', allergenName: 'Leite' },
-    { recipeSlug: 'pudim-de-leite-condensado', allergenName: 'Leite' },
-    { recipeSlug: 'limonada-suica', allergenName: 'Leite' },
-  ];
 
 // Fixed fixture consumed by the comentarios-avaliacoes Maestro suite (E2E-004):
 // a comment from another (non-logged-in) seeded author, so "denunciar comentário"
@@ -1365,22 +1385,56 @@ async function seedRecipeDetails(prisma: PrismaClient): Promise<void> {
   }
 }
 
-async function seedAllergyConflicts(prisma: PrismaClient): Promise<void> {
-  for (const conflict of SEEDED_ALLERGY_CONFLICTS) {
-    const recipe = await prisma.recipe.findUniqueOrThrow({
-      where: { slug: conflict.recipeSlug },
-    });
+async function seedAllergenIngredientTerms(
+  prisma: PrismaClient,
+  classifier: AllergenClassificationService,
+): Promise<void> {
+  for (const [allergenName, terms] of Object.entries(
+    ALLERGEN_INGREDIENT_TERMS,
+  )) {
     const allergen = await prisma.allergen.findUniqueOrThrow({
-      where: { name: conflict.allergenName },
+      where: { name: allergenName },
     });
 
-    await prisma.recipeAllergen.upsert({
-      where: {
-        recipeId_allergenId: { recipeId: recipe.id, allergenId: allergen.id },
-      },
-      update: {},
-      create: { recipeId: recipe.id, allergenId: allergen.id },
+    for (const term of terms) {
+      const normalizedTerm = classifier.normalizeIngredientName(term);
+      await prisma.allergenIngredientTerm.upsert({
+        where: {
+          allergenId_normalizedTerm: {
+            allergenId: allergen.id,
+            normalizedTerm,
+          },
+        },
+        update: { term },
+        create: { allergenId: allergen.id, term, normalizedTerm },
+      });
+    }
+  }
+}
+
+/**
+ * Derives recipe_allergens from the seeded catalog via the shared classifier
+ * rather than writing manual fixture rows (ADR-002): the seed's projection
+ * output must match what production writers/backfill would produce.
+ */
+async function seedRecipeAllergenProjections(
+  prisma: PrismaClient,
+  classifier: AllergenClassificationService,
+): Promise<void> {
+  for (const recipeSeed of RECIPES) {
+    const recipe = await prisma.recipe.findUniqueOrThrow({
+      where: { slug: recipeSeed.slug },
     });
+    const ingredients = await prisma.recipeIngredient.findMany({
+      where: { recipeId: recipe.id },
+      select: { name: true },
+    });
+
+    await classifier.syncRecipeAllergens(
+      prisma,
+      recipe.id,
+      ingredients.map((ingredient) => ingredient.name),
+    );
   }
 }
 
@@ -1452,6 +1506,7 @@ async function seedEditorialBoost(prisma: PrismaClient): Promise<void> {
 
 async function main(): Promise<void> {
   const prisma = new PrismaClient();
+  const classifier = new AllergenClassificationService();
   try {
     for (const name of APPROVED_ALLERGENS) {
       await prisma.allergen.upsert({
@@ -1461,10 +1516,11 @@ async function main(): Promise<void> {
       });
     }
 
+    await seedAllergenIngredientTerms(prisma, classifier);
     const categoryIds = await seedCategories(prisma);
     await seedRecipes(prisma, categoryIds);
     await seedRecipeDetails(prisma);
-    await seedAllergyConflicts(prisma);
+    await seedRecipeAllergenProjections(prisma, classifier);
     await seedComments(prisma);
     await seedEditorialBoost(prisma);
   } finally {
