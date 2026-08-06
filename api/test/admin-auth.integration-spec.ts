@@ -17,6 +17,10 @@ const ISSUER_PATH = '/auth/v1';
 // runs, so an unseeded id is fine for the rejection-contract assertions.
 const GUARDED_ADMIN_ROUTE = `/admin/recipes/${randomUUID()}`;
 
+// Integration requests share a local Postgres/JWKS environment and need a
+// less aggressive deadline than Jest's unit-test default.
+jest.setTimeout(20_000);
+
 describe('Admin auth (integration)', () => {
   const prisma = new PrismaClient();
   const trustedKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });

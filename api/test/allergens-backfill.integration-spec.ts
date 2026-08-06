@@ -156,19 +156,21 @@ describe('Allergen backfill CLI (task_04)', () => {
   }
 
   it('IT-019 the backfill regenerates stale/missing projections to match current ingredient detection', async () => {
-    const milk = await seedApprovedTerm('Leite');
-    const egg = await seedApprovedTerm('Ovos');
+    const milkTerm = `leite it-019 ${randomUUID()}`;
+    const eggTerm = `ovos it-019 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
+    const egg = await seedApprovedTerm(eggTerm);
     const stray = await prisma.allergen.create({
       data: { name: `Estranho-${randomUUID()}`, status: 'approved' },
     });
 
     const missingProjection = await createApprovedRecipe(
       `it-019-missing-${randomUUID()}`,
-      ['Leite'],
+      [milkTerm],
     );
     const staleProjection = await createApprovedRecipe(
       `it-019-stale-${randomUUID()}`,
-      ['Ovos'],
+      [eggTerm],
     );
     await prisma.recipeAllergen.create({
       data: { recipeId: staleProjection.id, allergenId: stray.id },
@@ -190,11 +192,12 @@ describe('Allergen backfill CLI (task_04)', () => {
   });
 
   it('IT-020 running the backfill twice across multiple batches converges to the same duplicate-free projection', async () => {
-    const milk = await seedApprovedTerm('Leite');
+    const milkTerm = `leite it-020 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
     const recipes = await Promise.all(
       Array.from({ length: 3 }, (_, index) =>
         createApprovedRecipe(`it-020-recipe-${index}-${randomUUID()}`, [
-          'Leite',
+          milkTerm,
         ]),
       ),
     );
@@ -235,9 +238,10 @@ describe('Allergen backfill CLI (task_04)', () => {
   });
 
   it('E2E-005 running the backfill against a historical recipe with matching ingredients but no projection surfaces the allergy banner', async () => {
-    const milk = await seedApprovedTerm('Leite');
+    const milkTerm = `leite e2e-005 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
     const slug = `e2e-005-historical-${randomUUID()}`;
-    await createApprovedRecipe(slug, ['Leite']);
+    await createApprovedRecipe(slug, [milkTerm]);
 
     const preBackfill = await prisma.recipeAllergen.findMany({
       where: { recipe: { slug } },

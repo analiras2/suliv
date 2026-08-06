@@ -103,13 +103,14 @@ describe('Recipe import classification integration (task_02)', () => {
   }
 
   it('IT-006 promoting a candidate translated to "leite condensado" commits the recipe and its Milk projection together', async () => {
-    const milk = await seedApprovedTerm('leite condensado');
+    const milkTerm = `leite condensado it-006 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
     const externalSourceId = `spoonacular:it-006-${randomUUID()}`;
     await seedCandidate({ externalSourceId, ingredientName: 'lentils' });
     translateToPortuguese.mockResolvedValue({
-      title: 'Sopa de lentilha com leite condensado',
+      title: `Sopa de lentilha com ${milkTerm}`,
       description: 'Uma sopa vegana reconfortante.',
-      ingredientNames: ['leite condensado'],
+      ingredientNames: [milkTerm],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
 
@@ -119,7 +120,7 @@ describe('Recipe import classification integration (task_02)', () => {
       where: { externalSourceId },
       include: { ingredients: true },
     });
-    expect(recipe.ingredients[0]?.name).toBe('leite condensado');
+    expect(recipe.ingredients[0]?.name).toBe(milkTerm);
     const projection = await prisma.recipeAllergen.findMany({
       where: { recipeId: recipe.id },
     });

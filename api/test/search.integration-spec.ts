@@ -16,6 +16,10 @@ const ISSUER_PATH = '/auth/v1';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_PAGE_LIMIT = 20;
 
+// The pagination case materializes 22 real recipes and can legitimately take
+// longer than Jest's unit-test default on the shared local Postgres service.
+jest.setTimeout(20_000);
+
 interface RecipeSearchResultBody {
   id: string;
   slug: string;
@@ -321,8 +325,10 @@ describe('GET /recipes/search (integration)', () => {
       categoryId: category.id,
       dietPreference: 'flexitariano',
     });
-    await addWeeklyPopularity(morePopular.id, 900);
-    await addWeeklyPopularity(lessPopular.id, 2);
+    // Keep both fixtures on the first fixed-size page even when other
+    // integration files have added approved recipes to the shared test DB.
+    await addWeeklyPopularity(morePopular.id, 100_000);
+    await addWeeklyPopularity(lessPopular.id, 99_999);
 
     const response = await search(user, '?origin=top_semana').expect(200);
     const body = response.body as PaginatedRecipesBody;

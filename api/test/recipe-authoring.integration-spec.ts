@@ -60,13 +60,17 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     supabaseAdmin.deleteUser.mockResolvedValue(undefined);
-    await prisma.recipeVersion.deleteMany();
-    await prisma.favorite.deleteMany();
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipeStep.deleteMany();
-    await prisma.syncOperation.deleteMany();
-    await prisma.recipe.deleteMany();
-    await prisma.user.deleteMany();
+    const fixtureUserIds = ['user-1', 'user-2'];
+    await prisma.syncOperation.deleteMany({
+      where: { userId: { in: fixtureUserIds } },
+    });
+    await prisma.favorite.deleteMany({
+      where: { userId: { in: fixtureUserIds } },
+    });
+    await prisma.recipe.deleteMany({
+      where: { authorId: { in: fixtureUserIds } },
+    });
+    await prisma.user.deleteMany({ where: { id: { in: fixtureUserIds } } });
   });
 
   afterAll(async () => {
@@ -162,7 +166,7 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
           },
         ],
       })
-      .expect(201);
+      .expect(200);
 
     const recipe = await prisma.recipe.findUnique({
       where: { id: 'a0000000-0000-4000-8000-000000000001' },
@@ -188,7 +192,7 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
           },
         ],
       })
-      .expect(201);
+      .expect(200);
 
     await request(app.getHttpServer())
       .post('/sync')
@@ -213,7 +217,7 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
           },
         ],
       })
-      .expect(201);
+      .expect(200);
 
     const ingredients = await prisma.recipeIngredient.findMany({
       where: { recipeId },

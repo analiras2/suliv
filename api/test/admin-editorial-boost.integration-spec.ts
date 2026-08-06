@@ -80,6 +80,13 @@ describe('Admin editorial boost (integration)', () => {
 
   async function seedRecipe(slug: string, categoryId: string) {
     const authorId = `boost-author-${randomUUID()}`;
+    await prisma.user.create({
+      data: {
+        id: authorId,
+        email: `${authorId}@example.com`,
+        username: authorId,
+      },
+    });
     return prisma.recipe.create({
       data: {
         slug,

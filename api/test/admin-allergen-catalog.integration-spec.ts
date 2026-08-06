@@ -296,17 +296,20 @@ describe('Admin allergen catalog CRUD (integration)', () => {
 
   it('IT-018 deleting a term keeps the already-classified recipe row and blocks a subsequent match', async () => {
     const allergen = await seedApprovedAllergen(`it-018-${randomUUID()}`);
+    const termValue = `leite it-018 ${randomUUID()}`;
     const term = await prisma.allergenIngredientTerm.create({
       data: {
         allergenId: allergen.id,
-        term: 'Leite',
-        normalizedTerm: classifier.normalizeIngredientName('Leite'),
+        term: termValue,
+        normalizedTerm: classifier.normalizeIngredientName(termValue),
       },
     });
 
     const alreadyClassifiedRecipe = await createBareRecipe();
     await prisma.$transaction((tx) =>
-      classifier.syncRecipeAllergens(tx, alreadyClassifiedRecipe.id, ['Leite']),
+      classifier.syncRecipeAllergens(tx, alreadyClassifiedRecipe.id, [
+        termValue,
+      ]),
     );
     const beforeDelete = await prisma.recipeAllergen.findMany({
       where: { recipeId: alreadyClassifiedRecipe.id },
@@ -325,7 +328,7 @@ describe('Admin allergen catalog CRUD (integration)', () => {
 
     const newRecipe = await createBareRecipe();
     await prisma.$transaction((tx) =>
-      classifier.syncRecipeAllergens(tx, newRecipe.id, ['Leite']),
+      classifier.syncRecipeAllergens(tx, newRecipe.id, [termValue]),
     );
     const newRecipeProjection = await prisma.recipeAllergen.findMany({
       where: { recipeId: newRecipe.id },

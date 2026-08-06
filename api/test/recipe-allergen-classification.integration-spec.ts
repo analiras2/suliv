@@ -181,7 +181,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
   }
 
   async function loginAdmin(): Promise<string> {
-    const email = `admin-allergen-classification-${randomUUID()}@example.com`;
+    const email = `allergen-classify-${randomUUID()}@example.com`;
     await prisma.admin.create({
       data: {
         email,
@@ -200,7 +200,8 @@ describe('Recipe allergen classification integration (task_02)', () => {
     it('IT-001 an approved matching ingredient produces exactly one recipe_allergens row', async () => {
       const userId = `it-001-author-${randomUUID()}`;
       await bootstrapUser(userId);
-      const milk = await seedApprovedTerm('Leite');
+      const milkTerm = `leite it-001 ${randomUUID()}`;
+      const milk = await seedApprovedTerm(milkTerm);
       const recipeId = randomUUID();
 
       await request(app.getHttpServer())
@@ -209,7 +210,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
         .send(
           draftPayload({
             id: recipeId,
-            ingredients: [ingredientNamed('Leite')],
+            ingredients: [ingredientNamed(milkTerm)],
           }),
         )
         .expect(201);
@@ -246,12 +247,14 @@ describe('Recipe allergen classification integration (task_02)', () => {
     it('IT-004 two ingredient names matching the same allergen produce exactly one composite recipe/allergen row', async () => {
       const userId = `it-004-author-${randomUUID()}`;
       await bootstrapUser(userId);
-      const milk = await seedApprovedTerm('Leite');
+      const milkTerm = `leite it-004 ${randomUUID()}`;
+      const milkIntegralTerm = `${milkTerm} integral`;
+      const milk = await seedApprovedTerm(milkTerm);
       await prisma.allergenIngredientTerm.create({
         data: {
           allergenId: milk.id,
-          term: 'Leite integral',
-          normalizedTerm: classifier.normalizeIngredientName('Leite integral'),
+          term: milkIntegralTerm,
+          normalizedTerm: classifier.normalizeIngredientName(milkIntegralTerm),
         },
       });
       const recipeId = randomUUID();
@@ -263,8 +266,8 @@ describe('Recipe allergen classification integration (task_02)', () => {
           draftPayload({
             id: recipeId,
             ingredients: [
-              ingredientNamed('Leite', 1),
-              ingredientNamed('Leite integral', 2),
+              ingredientNamed(milkTerm, 1),
+              ingredientNamed(milkIntegralTerm, 2),
             ],
           }),
         )
@@ -282,8 +285,10 @@ describe('Recipe allergen classification integration (task_02)', () => {
     it('IT-002 replacing a Milk ingredient with a Soy ingredient leaves only the Soy row', async () => {
       const userId = `it-002-author-${randomUUID()}`;
       await bootstrapUser(userId);
-      const milk = await seedApprovedTerm('Leite');
-      const soy = await seedApprovedTerm('Soja');
+      const milkTerm = `leite it-002 ${randomUUID()}`;
+      const soyTerm = `soja it-002 ${randomUUID()}`;
+      const milk = await seedApprovedTerm(milkTerm);
+      const soy = await seedApprovedTerm(soyTerm);
       const recipeId = randomUUID();
 
       await request(app.getHttpServer())
@@ -292,7 +297,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
         .send(
           draftPayload({
             id: recipeId,
-            ingredients: [ingredientNamed('Leite')],
+            ingredients: [ingredientNamed(milkTerm)],
           }),
         )
         .expect(201);
@@ -304,7 +309,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
       await request(app.getHttpServer())
         .patch(`/recipes/${recipeId}`)
         .set('Authorization', `Bearer ${tokenFor(userId)}`)
-        .send({ ingredients: [ingredientNamed('Soja')] })
+        .send({ ingredients: [ingredientNamed(soyTerm)] })
         .expect(200);
 
       const afterUpdate = await prisma.recipeAllergen.findMany({
@@ -317,7 +322,8 @@ describe('Recipe allergen classification integration (task_02)', () => {
     it('does not recompute the projection when the update omits ingredients', async () => {
       const userId = `it-002b-author-${randomUUID()}`;
       await bootstrapUser(userId);
-      const milk = await seedApprovedTerm('Leite');
+      const milkTerm = `leite it-002b ${randomUUID()}`;
+      const milk = await seedApprovedTerm(milkTerm);
       const recipeId = randomUUID();
 
       await request(app.getHttpServer())
@@ -326,7 +332,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
         .send(
           draftPayload({
             id: recipeId,
-            ingredients: [ingredientNamed('Leite')],
+            ingredients: [ingredientNamed(milkTerm)],
           }),
         )
         .expect(201);
@@ -349,11 +355,12 @@ describe('Recipe allergen classification integration (task_02)', () => {
     it('IT-005 posting the same draft_upsert payload twice succeeds both times and leaves one row per detected allergen', async () => {
       const userId = `it-005-author-${randomUUID()}`;
       await bootstrapUser(userId);
-      const milk = await seedApprovedTerm('Leite');
+      const milkTerm = `leite it-005 ${randomUUID()}`;
+      const milk = await seedApprovedTerm(milkTerm);
       const recipeId = randomUUID();
       const payload = draftPayload({
         id: recipeId,
-        ingredients: [ingredientNamed('Leite')],
+        ingredients: [ingredientNamed(milkTerm)],
       });
 
       await request(app.getHttpServer())
@@ -368,7 +375,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
             },
           ],
         })
-        .expect(201);
+        .expect(200);
 
       await request(app.getHttpServer())
         .post('/sync')
@@ -382,7 +389,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
             },
           ],
         })
-        .expect(201);
+        .expect(200);
 
       const projection = await prisma.recipeAllergen.findMany({
         where: { recipeId },
@@ -395,14 +402,18 @@ describe('Recipe allergen classification integration (task_02)', () => {
   it('E2E-001 an authored recipe with a cataloged ingredient shows the allergy banner to a matching user once approved', async () => {
     const authorId = `e2e-001-author-${randomUUID()}`;
     await bootstrapUser(authorId, 'v1');
-    const milk = await seedApprovedTerm('Leite');
+    const milkTerm = `leite e2e-001 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
     const recipeId = randomUUID();
 
     const created = await request(app.getHttpServer())
       .post('/recipes')
       .set('Authorization', `Bearer ${tokenFor(authorId)}`)
       .send(
-        draftPayload({ id: recipeId, ingredients: [ingredientNamed('Leite')] }),
+        draftPayload({
+          id: recipeId,
+          ingredients: [ingredientNamed(milkTerm)],
+        }),
       )
       .expect(201);
     const slug = (created.body as { slug: string }).slug;
@@ -437,7 +448,8 @@ describe('Recipe allergen classification integration (task_02)', () => {
   });
 
   it('E2E-002 an imported recipe translated to a cataloged ingredient shows the allergy banner once promoted and approved', async () => {
-    const milk = await seedApprovedTerm('leite condensado');
+    const milkTerm = `leite condensado e2e-002 ${randomUUID()}`;
+    const milk = await seedApprovedTerm(milkTerm);
     const externalSourceId = `spoonacular:e2e-002-${randomUUID()}`;
     await prisma.recipeImportCandidate.create({
       data: {
@@ -468,9 +480,9 @@ describe('Recipe allergen classification integration (task_02)', () => {
       },
     });
     translateToPortuguese.mockResolvedValue({
-      title: 'Sopa de lentilha com leite condensado',
+      title: `Sopa de lentilha com ${milkTerm}`,
       description: 'Uma sopa vegana reconfortante.',
-      ingredientNames: ['leite condensado'],
+      ingredientNames: [milkTerm],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
 

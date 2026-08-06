@@ -16,10 +16,18 @@ describe('editorial_boosts.applied_by_admin_id FK backfill (migration)', () => {
       update: {},
       create: { key: RecipeCategory.lanche, label: 'Lanche' },
     });
+    const authorId = `fk-migration-author-${randomUUID()}`;
+    await prisma.user.create({
+      data: {
+        id: authorId,
+        email: `${authorId}@example.com`,
+        username: authorId,
+      },
+    });
     const recipe = await prisma.recipe.create({
       data: {
         slug: `fk-migration-${randomUUID()}`,
-        authorId: `fk-migration-author-${randomUUID()}`,
+        authorId,
         title: 'FK migration fixture',
         description: 'Fixture recipe for FK backfill test',
         categoryId: category.id,

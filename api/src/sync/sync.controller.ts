@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { AuthenticatedUser } from '../auth/supabase-jwt.strategy';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
@@ -12,6 +20,7 @@ export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   @UseGuards(SupabaseAuthGuard)
   apply(
     @Body() body: SyncRequestDto,

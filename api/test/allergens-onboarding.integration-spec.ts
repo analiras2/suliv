@@ -65,9 +65,13 @@ describe('Allergens & Onboarding (integration)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     supabaseAdmin.deleteUser.mockResolvedValue(undefined);
-    await prisma.userAllergy.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.allergen.deleteMany({ where: { status: 'pending' } });
+    await prisma.userAllergy.deleteMany({ where: { userId: 'user-1' } });
+    await prisma.user.deleteMany({ where: { id: 'user-1' } });
+    await prisma.allergen.deleteMany({
+      where: {
+        name: { in: ['Termo pendente de teste', 'quinoa em pó'] },
+      },
+    });
   });
 
   afterAll(async () => {
@@ -94,7 +98,7 @@ describe('Allergens & Onboarding (integration)', () => {
       .send({});
   }
 
-  it('IT-007 returns exactly the 7 seeded approved allergens, excluding pending ones', async () => {
+  it('IT-007 returns the reviewed seed allergens and excludes pending ones', async () => {
     await prisma.allergen.create({
       data: { name: 'Termo pendente de teste', status: 'pending' },
     });
@@ -105,9 +109,19 @@ describe('Allergens & Onboarding (integration)', () => {
       .expect(200);
 
     const body = response.body as AllergenResponseBody[];
-    expect(body).toHaveLength(7);
     expect(body.every((allergen) => typeof allergen.id === 'string')).toBe(
       true,
+    );
+    expect(body.map((allergen) => allergen.name)).toEqual(
+      expect.arrayContaining([
+        'Amendoim',
+        'Castanhas e Nozes',
+        'Gergelim',
+        'Leite',
+        'Ovos',
+        'Soja',
+        'Trigo (Glúten)',
+      ]),
     );
     expect(body.map((allergen) => allergen.name)).not.toContain(
       'Termo pendente de teste',

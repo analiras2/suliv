@@ -72,12 +72,33 @@ describe('UsersController (integration)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     supabaseAdmin.deleteUser.mockResolvedValue(undefined);
-    await prisma.analyticsEvent.deleteMany();
-    await prisma.deviceToken.deleteMany();
-    await prisma.userAllergy.deleteMany();
-    await prisma.recipe.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.allergen.deleteMany();
+    const fixtureUserIds = ['user-1', 'user-2'];
+    await prisma.analyticsEvent.deleteMany({
+      where: { userId: { in: fixtureUserIds } },
+    });
+    await prisma.deviceToken.deleteMany({
+      where: { userId: { in: fixtureUserIds } },
+    });
+    await prisma.userAllergy.deleteMany({
+      where: { userId: { in: fixtureUserIds } },
+    });
+    await prisma.recipe.deleteMany({
+      where: { authorId: { in: fixtureUserIds } },
+    });
+    await prisma.user.deleteMany({ where: { id: { in: fixtureUserIds } } });
+    await prisma.allergen.deleteMany({
+      where: {
+        name: {
+          in: [
+            'Leite - users IT-009',
+            'Allergen A',
+            'Allergen B',
+            'Allergen C',
+            'ingrediente-raro',
+          ],
+        },
+      },
+    });
   });
 
   afterAll(async () => {
@@ -216,7 +237,7 @@ describe('UsersController (integration)', () => {
   it('IT-009 anonymizes the account and clears private relations', async () => {
     await bootstrap('user-1', 'Ana').expect(201);
     const allergen = await prisma.allergen.create({
-      data: { name: 'Leite', status: 'approved' },
+      data: { name: 'Leite - users IT-009', status: 'approved' },
     });
     await prisma.userAllergy.create({
       data: { userId: 'user-1', allergenId: allergen.id },

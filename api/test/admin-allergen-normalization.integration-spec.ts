@@ -45,7 +45,7 @@ describe('Admin allergen normalization (integration)', () => {
     );
     await app.init();
 
-    const adminEmail = `admin-allergen-normalization-${randomUUID()}@example.com`;
+    const adminEmail = `allergen-norm-${randomUUID()}@example.com`;
     await prisma.admin.create({
       data: {
         email: adminEmail,
@@ -87,7 +87,7 @@ describe('Admin allergen normalization (integration)', () => {
     expect(updated.reviewedByAdminId).not.toBeNull();
 
     const listResponse = await request(app.getHttpServer())
-      .get('/allergens')
+      .get('/admin/allergens')
       .query({ status: 'approved' })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);

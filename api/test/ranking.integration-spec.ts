@@ -182,14 +182,15 @@ describe('RankingService (integration)', () => {
       id: 'it-011-ranking-user',
       dietPreference: 'flexitariano',
     });
+    const milkTerm = `leite it-011 ${randomUUID()}`;
     const allergen = await prisma.allergen.create({
       data: { name: `Leite-${randomUUID()}`, status: 'approved' },
     });
     await prisma.allergenIngredientTerm.create({
       data: {
         allergenId: allergen.id,
-        term: 'Leite',
-        normalizedTerm: classifier.normalizeIngredientName('Leite'),
+        term: milkTerm,
+        normalizedTerm: classifier.normalizeIngredientName(milkTerm),
       },
     });
     await prisma.userAllergy.create({
@@ -203,7 +204,7 @@ describe('RankingService (integration)', () => {
       approvedAt: new Date(Date.now() + 1000 * MS_PER_DAY),
     });
     await prisma.$transaction((tx) =>
-      classifier.syncRecipeAllergens(tx, conflictRecipe.id, ['Leite']),
+      classifier.syncRecipeAllergens(tx, conflictRecipe.id, [milkTerm]),
     );
 
     const result = await rankingService.getSelectedForYou(user.id, 5);
@@ -229,6 +230,16 @@ describe('RankingService (integration)', () => {
     const withoutBoost = await rankingService.getSelectedForYou(user.id, 1000);
     const baselineIndex = withoutBoost.findIndex((r) => r.id === target.id);
     expect(baselineIndex).toBeGreaterThanOrEqual(0);
+
+    await prisma.admin.upsert({
+      where: { id: 'it-003-admin' },
+      update: {},
+      create: {
+        id: 'it-003-admin',
+        email: 'it-003-admin@example.com',
+        passwordHash: 'not-used-by-ranking-test',
+      },
+    });
 
     const activeBoost = await prisma.editorialBoost.create({
       data: {
