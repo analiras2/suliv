@@ -1,11 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
-
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/suliv?schema=public';
+import { requireLocalTestDatabaseUrl } from './test-database';
 
 export function createDbClient(): Client {
-  return new Client({ connectionString: DATABASE_URL });
+  return new Client({ connectionString: requireLocalTestDatabaseUrl() });
 }
 
 export async function ensureCategoryId(client: Client): Promise<string> {
@@ -98,6 +96,24 @@ export async function fetchRecipeAdjustment(
   );
   const row = result.rows[0];
   return { status: row.status, adjustmentReason: row.adjustment_reason, adjustmentNote: row.adjustment_note };
+}
+
+export interface CreatedAllergen {
+  id: string;
+  name: string;
+}
+
+export async function createApprovedAllergen(client: Client): Promise<CreatedAllergen> {
+  const id = randomUUID();
+  const suffix = randomUUID().slice(0, 8);
+  const name = `E2E Allergen ${suffix}`;
+
+  await client.query(
+    "INSERT INTO allergens (id, name, status, created_at, updated_at) VALUES ($1, $2, 'approved', now(), now())",
+    [id, name],
+  );
+
+  return { id, name };
 }
 
 export async function createReport(

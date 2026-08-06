@@ -1,5 +1,6 @@
 import type {
   Allergen,
+  AllergenIngredientTerm,
   Boost,
   FeatureFlag,
   PaginatedRecipes,
@@ -80,6 +81,32 @@ export function approveAllergen(id: string): Promise<void> {
 
 export function rejectAllergen(id: string): Promise<void> {
   return request<void>(`/allergens/${id}`, { method: 'DELETE' });
+}
+
+export function fetchApprovedAllergens(): Promise<Allergen[]> {
+  return request<Allergen[]>('/allergens?status=approved');
+}
+
+export function createAllergenTerm(allergenId: string, term: string): Promise<AllergenIngredientTerm> {
+  return request<AllergenIngredientTerm>(`/allergens/${allergenId}/ingredient-terms`, {
+    method: 'POST',
+    body: JSON.stringify({ term }),
+  });
+}
+
+export function updateAllergenTerm(
+  allergenId: string,
+  termId: string,
+  term: string,
+): Promise<AllergenIngredientTerm> {
+  return request<AllergenIngredientTerm>(`/allergens/${allergenId}/ingredient-terms/${termId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ term }),
+  });
+}
+
+export function deleteAllergenTerm(allergenId: string, termId: string): Promise<void> {
+  return request<void>(`/allergens/${allergenId}/ingredient-terms/${termId}`, { method: 'DELETE' });
 }
 
 export function fetchBoosts(): Promise<Boost[]> {

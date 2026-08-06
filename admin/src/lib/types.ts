@@ -89,11 +89,18 @@ export type ResolveReportAction = 'dismiss' | 'hide_content' | 'reopen_recipe';
 
 export type AllergenStatus = 'approved' | 'pending';
 
+export interface AllergenIngredientTerm {
+  id: string;
+  allergenId: string;
+  term: string;
+}
+
 export interface Allergen {
   id: string;
   name: string;
   status: AllergenStatus;
   createdAt: string;
+  ingredientTerms?: AllergenIngredientTerm[];
 }
 
 export type BoostStatus = 'upcoming' | 'active' | 'expired';
