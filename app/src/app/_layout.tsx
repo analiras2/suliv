@@ -7,10 +7,14 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { SplashErrorView } from '@/components/splash-error-view';
 import { semanticColors } from '@/design-system/tokens';
 import { useSulivFonts } from '@/design-system/fonts';
-import { useSessionStore } from '@/module/auth/store/use-session-store';
+import { useSessionStore, type SessionStatus } from '@/module/auth/store/use-session-store';
+import type { UserProfile } from '@/module/auth/types';
 import { useSessionViewModel } from '@/module/auth/view-models/use-session-view-model';
 import { OfflineModeProvider } from '@/module/splash/context/offline-mode-context';
-import { useSplashViewModel } from '@/module/splash/viewModels/use-splash-view-model';
+import {
+  useSplashViewModel,
+  type InitialRoute,
+} from '@/module/splash/viewModels/use-splash-view-model';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,20 +32,38 @@ const sulivTheme = {
   },
 };
 
+/**
+ * The splash decides the initial group once, before any sign-in happens in this app run.
+ * Every later transition of the session has to move the guard itself, or the Stack keeps
+ * rendering the group the splash resolved to and `router.replace` has no mounted target:
+ * a sign-out must bring (auth) back, and a sign-in must leave it — otherwise the user
+ * stays on the login/complete-profile screen with the navigation call silently doing
+ * nothing. While the profile is still loading (`user` is null) the splash answer stands.
+ */
+function resolveActiveRoute(
+  sessionStatus: SessionStatus,
+  user: UserProfile | null,
+  initialRoute: InitialRoute,
+): InitialRoute {
+  if (sessionStatus === 'unauthenticated') return '(auth)';
+  if (sessionStatus !== 'authenticated' || !user) return initialRoute;
+  // complete-profile lives inside (auth), so a nameless profile must stay in that group.
+  if (!user.name) return '(auth)';
+  return user.onboardingCompletedAt === null ? '(onboarding)' : '(tabs)';
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useSulivFonts();
   useSessionViewModel();
   const splash = useSplashViewModel();
   const sessionStatus = useSessionStore((state) => state.status);
+  const user = useSessionStore((state) => state.user);
 
   if (!fontsLoaded || splash.status === 'loading') {
     return null;
   }
 
-  // A live sign-out/account-deletion (session status flips to `unauthenticated` after the
-  // splash decision was already made) must force the (auth) group back on, otherwise the
-  // Stack keeps the group the initial splash resolved to and (auth) never remounts.
-  const activeRoute = sessionStatus === 'unauthenticated' ? '(auth)' : splash.initialRoute;
+  const activeRoute = resolveActiveRoute(sessionStatus, user, splash.initialRoute);
 
   if (splash.status === 'error') {
     return (

@@ -3,6 +3,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { useSessionStore } from '@/module/auth/store/use-session-store';
+import type { UserProfile } from '@/module/auth/types';
 import type { InitialRoute, SplashStatus } from '@/module/splash/viewModels/use-splash-view-model';
 
 jest.mock('expo-splash-screen', () => ({ preventAutoHideAsync: jest.fn() }));
@@ -53,6 +54,27 @@ const mockUseSplashViewModel = useSplashViewModel as jest.Mock;
 
 function mockSplash(status: SplashStatus, initialRoute: InitialRoute, retry = jest.fn()) {
   mockUseSplashViewModel.mockReturnValue({ status, initialRoute, retry });
+}
+
+function profileWith(overrides: Partial<UserProfile>): UserProfile {
+  return {
+    id: 'user-1',
+    email: 'ana@example.com',
+    name: 'Ana',
+    username: 'ana',
+    usernameUpdatedAt: null,
+    avatarUrl: null,
+    dietPreference: null,
+    cookingLevel: null,
+    cookingFrequency: null,
+    onboardingCompletedAt: null,
+    termsVersionAccepted: null,
+    termsAcceptedAt: null,
+    status: 'active',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
 }
 
 function expectOnlyGroupVisible(
@@ -122,5 +144,45 @@ describe('_layout auth guard reacts to live session state', () => {
     });
 
     expectOnlyGroupVisible(rendered, '(auth)');
+  });
+
+  it('keeps (auth) mounted while the signed-in profile still has no name', async () => {
+    useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
+    mockSplash('ready', '(auth)');
+    const rendered = await render(<RootLayout />);
+
+    await act(async () => {
+      useSessionStore.getState().setUser(profileWith({ name: null }));
+    });
+
+    // complete-profile is a screen inside (auth), so the group must not change yet.
+    expectOnlyGroupVisible(rendered, '(auth)');
+  });
+
+  it('leaves (auth) for (onboarding) once the profile gains a name mid-session', async () => {
+    useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
+    mockSplash('ready', '(auth)');
+    const rendered = await render(<RootLayout />);
+    expectOnlyGroupVisible(rendered, '(auth)');
+
+    await act(async () => {
+      useSessionStore.getState().setUser(profileWith({ onboardingCompletedAt: null }));
+    });
+
+    expectOnlyGroupVisible(rendered, '(onboarding)');
+  });
+
+  it('leaves (auth) for (tabs) when the signed-in profile already completed onboarding', async () => {
+    useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
+    mockSplash('ready', '(auth)');
+    const rendered = await render(<RootLayout />);
+
+    await act(async () => {
+      useSessionStore
+        .getState()
+        .setUser(profileWith({ onboardingCompletedAt: '2026-01-01T00:00:00.000Z' }));
+    });
+
+    expectOnlyGroupVisible(rendered, '(tabs)');
   });
 });
