@@ -1,6 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingProgressHeader } from '@/components/molecules/onboarding-progress-header';
@@ -57,24 +57,33 @@ export default function OnboardingScreen() {
       <View style={styles.container}>
         <OnboardingProgressHeader currentStep={vm.step} totalSteps={TOTAL_STEPS} label={STEP_LABELS[vm.step]} />
 
-        {vm.step === 0 && <OnboardingDietStep dietPreference={vm.dietPreference} onSelect={vm.setDietPreference} />}
-        {vm.step === 1 && (
-          <OnboardingAllergiesStep
-            allergenIds={vm.allergenIds}
-            newTerms={vm.newTerms}
-            onAddNewTerm={vm.addNewTerm}
-            onClearAllergies={vm.clearAllergies}
-            onToggleAllergen={vm.toggleAllergen}
-          />
-        )}
-        {vm.step === 2 && (
-          <OnboardingLevelFrequencyStep
-            cookingFrequency={vm.cookingFrequency}
-            cookingLevel={vm.cookingLevel}
-            onSelectFrequency={vm.setCookingFrequency}
-            onSelectLevel={vm.setCookingLevel}
-          />
-        )}
+        {/* The allergen catalog is unbounded, so the step body has to scroll on its own:
+            without this the list grows past the viewport and pushes the footer — and with
+            it the only way forward — off screen. Progress header and footer stay fixed. */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
+          testID="onboarding-step-scroll">
+          {vm.step === 0 && <OnboardingDietStep dietPreference={vm.dietPreference} onSelect={vm.setDietPreference} />}
+          {vm.step === 1 && (
+            <OnboardingAllergiesStep
+              allergenIds={vm.allergenIds}
+              newTerms={vm.newTerms}
+              onAddNewTerm={vm.addNewTerm}
+              onClearAllergies={vm.clearAllergies}
+              onToggleAllergen={vm.toggleAllergen}
+            />
+          )}
+          {vm.step === 2 && (
+            <OnboardingLevelFrequencyStep
+              cookingFrequency={vm.cookingFrequency}
+              cookingLevel={vm.cookingLevel}
+              onSelectFrequency={vm.setCookingFrequency}
+              onSelectLevel={vm.setCookingLevel}
+            />
+          )}
+        </ScrollView>
 
         {isLastStep && vm.submitStatus === 'error' && (
           <View style={styles.errorGroup}>
@@ -129,8 +138,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'space-between',
+    gap: spacing.md,
     padding: spacing.lg,
+  },
+  // `flex: 1` makes the scroll area absorb the leftover height, which is what keeps the
+  // footer pinned to the bottom now that the container no longer uses space-between.
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    gap: spacing.md,
+    paddingBottom: spacing.md,
   },
   errorGroup: {
     gap: spacing.sm,

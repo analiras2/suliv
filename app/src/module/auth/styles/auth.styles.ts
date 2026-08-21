@@ -5,6 +5,12 @@ import { fontFamilies, radii, semanticColors, spacing, typography } from '@/desi
 export const authStyles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: semanticColors.bg },
   container: { flex: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.lg },
+  // Layout of the onboarding steps (see (onboarding)/steps.tsx): the content block starts
+  // at the top of the screen and the primary action stays pinned to the bottom. Used by
+  // complete-profile so it reads as the first step of that flow rather than a stray
+  // centered screen.
+  stepContainer: { flex: 1, justifyContent: 'space-between', padding: spacing.lg },
+  stepContent: { gap: spacing.lg },
   eyebrow: {
     fontFamily: fontFamilies.sansSemibold,
     ...typography.overline,
