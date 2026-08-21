@@ -86,9 +86,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: semanticColors.bg,
   },
+  // Rendered as the grid's ListHeaderComponent, so it already sits inside the gutter the
+  // grid's contentContainerStyle applies. Setting the gutter again here is what pushed the
+  // title and search field out of alignment with the cards below them.
   header: {
-    paddingHorizontal: spacing.lg - 4,
     paddingTop: spacing.sm + 2,
+    paddingBottom: spacing.md,
     gap: spacing.sm,
   },
   title: {
@@ -105,7 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyState: {
-    marginHorizontal: spacing.lg - 4,
+    // ListEmptyComponent renders inside the grid's gutter too — see `header` above.
     marginTop: spacing.md,
     backgroundColor: semanticColors.surface,
     borderRadius: 22,
