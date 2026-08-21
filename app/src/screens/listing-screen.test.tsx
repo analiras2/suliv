@@ -71,6 +71,26 @@ describe('ListingScreen', () => {
     expect(rendered.getByTestId('recipe-card-conflict-badge-r2')).toBeTruthy();
   });
 
+  it('shows a back control that calls onBack when the route supplies one', async () => {
+    const onBack = jest.fn();
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ title: 'Top da semana' }));
+
+    const rendered = await render(<ListingScreen origin="top_semana" onBack={onBack} />);
+    fireEvent.press(rendered.getByTestId('listing-back-button'));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(rendered.getByTestId('ver-tudo-title').props.children).toBe('Top da semana');
+  });
+
+  it('renders no back control on a tab root, which has nothing behind it', async () => {
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ title: 'Busca' }));
+
+    const rendered = await render(<ListingScreen origin="busca" />);
+
+    expect(rendered.queryByTestId('listing-back-button')).toBeNull();
+    expect(rendered.getByTestId('ver-tudo-title').props.children).toBe('Busca');
+  });
+
   it('calls loadMore when the grid reaches the end', async () => {
     const loadMore = jest.fn();
     mockedUseListingViewModel.mockReturnValue(buildViewModel({ results: [buildResult('r1')], loadMore }));

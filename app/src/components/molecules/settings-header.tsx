@@ -7,9 +7,11 @@ export type SettingsHeaderProps = {
   title: string;
   onBack: () => void;
   testID?: string;
+  /** Screens whose title is already targeted by an e2e flow can keep that id here. */
+  titleTestID?: string;
 };
 
-export function SettingsHeader({ title, onBack, testID }: SettingsHeaderProps) {
+export function SettingsHeader({ title, onBack, testID, titleTestID }: SettingsHeaderProps) {
   return (
     <View style={styles.container}>
       <Pressable
@@ -19,7 +21,9 @@ export function SettingsHeader({ title, onBack, testID }: SettingsHeaderProps) {
         testID={testID ?? 'settings-header-back'}>
         <Icon color={semanticColors.fg} name="back" size={22} />
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} testID={titleTestID}>
+        {title}
+      </Text>
     </View>
   );
 }

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FilterBar } from '@/components/organisms/filter-bar';
 import { RecipeGrid } from '@/components/organisms/recipe-grid';
 import { SearchField } from '@/components/molecules/search-field';
+import { SettingsHeader } from '@/components/molecules/settings-header';
 import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 import { useApprovedAllergensQuery } from '@/module/onboarding/queries/use-approved-allergens-query';
 import type { RecipeCategoryKey } from '@/module/recipes/types';
@@ -14,6 +15,12 @@ import { useListingViewModel } from '@/module/search/viewModels/use-listing-view
 export type ListingScreenProps = {
   origin?: ListingOrigin;
   categoryKey?: RecipeCategoryKey;
+  /**
+   * Supplied by routes that are pushed onto the stack, which need a visible way back —
+   * the swipe gesture alone is invisible to most users and absent on Android. The search
+   * tab is a tab root with nothing behind it and omits this, keeping its scrolling title.
+   */
+  onBack?: () => void;
 };
 
 function getEmptyState(isLoading: boolean, isEmpty: boolean) {
@@ -31,16 +38,18 @@ function getEmptyState(isLoading: boolean, isEmpty: boolean) {
   return null;
 }
 
-export function ListingScreen({ origin, categoryKey }: ListingScreenProps) {
+export function ListingScreen({ origin, categoryKey, onBack }: ListingScreenProps) {
   const listing = useListingViewModel({ origin, categoryKey });
   const { data: allergenOptions } = useApprovedAllergensQuery();
 
   const header = useMemo(
     () => (
-      <View style={styles.header}>
-        <Text style={styles.title} testID="ver-tudo-title">
-          {listing.title}
-        </Text>
+      <View style={onBack ? styles.headerUnderBar : styles.header}>
+        {onBack ? null : (
+          <Text style={styles.title} testID="ver-tudo-title">
+            {listing.title}
+          </Text>
+        )}
         <SearchField
           value={listing.query}
           onChangeText={listing.setQuery}
@@ -50,7 +59,7 @@ export function ListingScreen({ origin, categoryKey }: ListingScreenProps) {
         <FilterBar filters={listing.filters} onChangeFilter={listing.setFilter} allergenOptions={allergenOptions} />
       </View>
     ),
-    [listing.title, listing.query, listing.setQuery, listing.filters, listing.setFilter, allergenOptions],
+    [onBack, listing.title, listing.query, listing.setQuery, listing.filters, listing.setFilter, allergenOptions],
   );
 
   const footer = (
@@ -65,6 +74,14 @@ export function ListingScreen({ origin, categoryKey }: ListingScreenProps) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {onBack ? (
+        <SettingsHeader
+          title={listing.title}
+          onBack={onBack}
+          testID="listing-back-button"
+          titleTestID="ver-tudo-title"
+        />
+      ) : null}
       <RecipeGrid
         recipes={listing.results}
         savedIds={listing.savedIds}
@@ -88,9 +105,15 @@ const styles = StyleSheet.create({
   },
   // Rendered as the grid's ListHeaderComponent, so it already sits inside the gutter the
   // grid's contentContainerStyle applies. Setting the gutter again here is what pushed the
-  // title and search field out of alignment with the cards below them.
+  // title and search field out of alignment with the cards below them. SettingsHeader, by
+  // contrast, sits at screen root and keeps its own gutter.
   header: {
     paddingTop: spacing.sm + 2,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  // SettingsHeader already provides the top spacing when it is rendered above the list.
+  headerUnderBar: {
     paddingBottom: spacing.md,
     gap: spacing.sm,
   },
