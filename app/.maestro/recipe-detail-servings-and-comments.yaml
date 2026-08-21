@@ -17,7 +17,9 @@ name: E2E-001 Open a seeded recipe, real header data, comments placeholder, serv
 - assertVisible: Panqueca de banana vegana
 - assertVisible: até 15 min
 - assertVisible: iniciante
-- assertVisible: vegano
+# The diet is now a vegan-only mark next to the title instead of a pill in the hero.
+- assertVisible:
+    id: recipe-detail-vegan-badge
 - assertVisible: 2 porções
 - assertVisible: Nenhuma avaliação ainda
 - assertVisible: 2 unidades
