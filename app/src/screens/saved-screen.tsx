@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     paddingBottom: layout.tabBarClearance,
   },
   header: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingTop: spacing.sm + 2,
     gap: 4,
   },
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     color: semanticColors.fg,
   },
   emptyState: {
-    marginHorizontal: spacing.lg - 4,
+    marginHorizontal: layout.screenGutter,
     marginTop: spacing.lg,
     backgroundColor: semanticColors.surface,
     borderRadius: 24,

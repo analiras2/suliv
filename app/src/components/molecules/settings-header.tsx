@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/atoms/icon';
-import { fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 
 export type SettingsHeaderProps = {
   title: string;
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingTop: spacing.sm + 2,
     paddingBottom: spacing.sm,
   },

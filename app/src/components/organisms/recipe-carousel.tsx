@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { FlatList, StyleSheet, View, type ListRenderItem } from 'react-native';
 
 import { RecipeCard } from '@/components/molecules/recipe-card';
-import { spacing } from '@/design-system/tokens';
+import { layout, spacing } from '@/design-system/tokens';
 import type { Recipe } from '@/module/recipes/types';
 
 export type RecipeCarouselProps = {
@@ -53,7 +53,7 @@ function ItemSeparator() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
   },
   card: {
     width: CARD_WIDTH,

@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: spacing.md,
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingTop: spacing.sm + 2,
     paddingBottom: layout.tabBarClearance,
   },

@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     paddingBottom: layout.tabBarClearance,
   },
   header: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingTop: spacing.sm + 2,
     gap: 4,
   },
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     color: semanticColors.danger,
   },
   card: {
-    marginHorizontal: spacing.lg - 4,
+    marginHorizontal: layout.screenGutter,
     backgroundColor: semanticColors.surface,
     borderRadius: 20,
     paddingHorizontal: spacing.md - 2,
