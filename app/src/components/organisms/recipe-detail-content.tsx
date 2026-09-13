@@ -38,7 +38,6 @@ export function RecipeDetailContent({ detail }: RecipeDetailContentProps) {
         coverImageUrl={recipe.coverImageUrl}
         timeBucket={recipe.timeBucket}
         difficulty={recipe.difficulty}
-        servings={recipe.servings}
         averageRating={detail.averageRating}
         ratingCount={detail.ratingCount}
         saved={detail.isSaved}
@@ -56,7 +55,7 @@ export function RecipeDetailContent({ detail }: RecipeDetailContentProps) {
               accessibilityRole="image"
               style={styles.veganBadge}
               testID="recipe-detail-vegan-badge">
-              <Icon name="vegan" size={20} color={colors.moss800} strokeWidth={2} />
+              <Icon name="vegan" size={24} color={colors.moss500} strokeWidth={2} />
             </View>
           ) : null}
         </View>
@@ -117,7 +116,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   body: {
-    marginTop: -28,
+    marginTop: -20,
     backgroundColor: semanticColors.bg,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,

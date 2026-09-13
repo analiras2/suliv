@@ -16,7 +16,6 @@ export type RecipeDetailHeroProps = {
   coverImageUrl: string | null;
   timeBucket: TimeBucket;
   difficulty: Difficulty;
-  servings: number;
   averageRating: number | null;
   ratingCount: number;
   saved: boolean;
@@ -49,7 +48,6 @@ export function RecipeDetailHero({
   coverImageUrl,
   timeBucket,
   difficulty,
-  servings,
   averageRating,
   ratingCount,
   saved,
@@ -112,9 +110,8 @@ export function RecipeDetailHero({
           {TIME_LABELS[timeBucket]}
         </Pill>
         <Pill tone="sage">{DIFFICULTY_LABELS[difficulty]}</Pill>
-        <Pill tone="ink">{servings} porções</Pill>
         <Pill tone="clay" icon={<Icon name="star" size={11} color={colors.clay700} strokeWidth={2.2} filled />}>
-          {ratingCount > 0 ? `${averageRating?.toFixed(1)} · ${ratingCount}` : 'Sem avaliações'}
+          {ratingCount > 0 ? `${averageRating?.toFixed(1)} · ${ratingCount}` : 'Novo'}
         </Pill>
       </View>
     </View>
@@ -158,6 +155,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xl - 4,
   },
 });
