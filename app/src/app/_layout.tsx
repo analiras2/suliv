@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -38,15 +39,20 @@ const sulivTheme = {
  * rendering the group the splash resolved to and `router.replace` has no mounted target:
  * a sign-out must bring (auth) back, and a sign-in must leave it — otherwise the user
  * stays on the login/complete-profile screen with the navigation call silently doing
- * nothing. While the profile is still loading (`user` is null) the splash answer stands.
+ * nothing. While the profile is still loading (`user` is null) the splash answer stands —
+ * but only for the session the splash inspected. After a sign-out that answer is stale: a
+ * fresh sign-in becomes `authenticated` before its profile loads, and falling back to a
+ * splash-time `(tabs)` would unmount the login screen mid-bootstrap.
  */
 function resolveActiveRoute(
   sessionStatus: SessionStatus,
   user: UserProfile | null,
   initialRoute: InitialRoute,
+  hasSignedOut: boolean,
 ): InitialRoute {
   if (sessionStatus === 'unauthenticated') return '(auth)';
-  if (sessionStatus !== 'authenticated' || !user) return initialRoute;
+  if (sessionStatus !== 'authenticated') return initialRoute;
+  if (!user) return hasSignedOut ? '(auth)' : initialRoute;
   // complete-profile lives inside (auth), so a nameless profile must stay in that group.
   if (!user.name) return '(auth)';
   return user.onboardingCompletedAt === null ? '(onboarding)' : '(tabs)';
@@ -58,12 +64,19 @@ export default function RootLayout() {
   const splash = useSplashViewModel();
   const sessionStatus = useSessionStore((state) => state.status);
   const user = useSessionStore((state) => state.user);
+  const [hasSignedOut, setHasSignedOut] = useState(false);
+
+  // Derived during render (not in an effect) so the stale splash answer is never used for
+  // even one frame after the session drops.
+  if (sessionStatus === 'unauthenticated' && !hasSignedOut) {
+    setHasSignedOut(true);
+  }
 
   if (!fontsLoaded || splash.status === 'loading') {
     return null;
   }
 
-  const activeRoute = resolveActiveRoute(sessionStatus, user, splash.initialRoute);
+  const activeRoute = resolveActiveRoute(sessionStatus, user, splash.initialRoute, hasSignedOut);
 
   if (splash.status === 'error') {
     return (

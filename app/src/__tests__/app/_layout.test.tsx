@@ -146,6 +146,28 @@ describe('_layout auth guard reacts to live session state', () => {
     expectOnlyGroupVisible(rendered, '(auth)');
   });
 
+  it('stays in (auth) when signing in again after a sign-out, while the new profile loads', async () => {
+    useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
+    mockSplash('ready', '(tabs)');
+    const rendered = await render(<RootLayout />);
+
+    await act(async () => {
+      useSessionStore.getState().setSession(null);
+    });
+    await act(async () => {
+      useSessionStore.getState().setSession({} as Session);
+    });
+
+    // The splash resolved (tabs) for the previous session; it must not apply to this one.
+    expectOnlyGroupVisible(rendered, '(auth)');
+
+    await act(async () => {
+      useSessionStore.getState().setUser(profileWith({ onboardingCompletedAt: null }));
+    });
+
+    expectOnlyGroupVisible(rendered, '(onboarding)');
+  });
+
   it('keeps (auth) mounted while the signed-in profile still has no name', async () => {
     useSessionStore.setState({ status: 'authenticated', session: {} as Session, user: null });
     mockSplash('ready', '(auth)');
