@@ -77,6 +77,8 @@ describe('VerTudoScreen (ADR-003 thin route wrapper)', () => {
     listingProps().onBack();
 
     expect(mockBack).not.toHaveBeenCalled();
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    // '/' also resolves to (onboarding)/index, which Stack.Protected hides from an
+    // onboarded user — the replace is dropped silently unless the group is explicit.
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });
 });
