@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { resolveHomeRoute } from '@/module/auth/navigation';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 
@@ -15,14 +17,14 @@ export function useCompleteProfileViewModel(profiles: ProfileService = profileSe
   const submitName = async () => {
     const normalizedName = name.trim();
     if (!normalizedName) {
-      setError('Enter your name.');
+      setError(AUTH_MESSAGES.missingName);
       setStatus('error');
       return;
     }
 
     const session = useSessionStore.getState().session;
     if (!session) {
-      setError('Your session is no longer available.');
+      setError(AUTH_MESSAGES.sessionUnavailable);
       setStatus('error');
       return;
     }
@@ -32,9 +34,9 @@ export function useCompleteProfileViewModel(profiles: ProfileService = profileSe
     try {
       const user = await profiles.updateName(session, normalizedName);
       useSessionStore.getState().setUser(user);
-      router.replace('/');
+      router.replace(resolveHomeRoute(user));
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : 'Unable to update your profile.');
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.updateProfileFailed);
       setStatus('error');
     }
   };

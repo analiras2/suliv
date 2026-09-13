@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Alert } from 'react-native';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
 import type { ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -62,7 +63,7 @@ describe('useAccountViewModel', () => {
     await act(() => result.current.requestAccountDeletion());
     expect(alert).toHaveBeenCalledTimes(1);
     await act(() => result.current.deleteAccount());
-    await waitFor(() => expect(result.current.error).toBe('Unable to delete your account.'));
+    await waitFor(() => expect(result.current.error).toBe(AUTH_MESSAGES.deleteAccountFailed));
     expect(useSessionStore.getState().session).toBe(session);
   });
 

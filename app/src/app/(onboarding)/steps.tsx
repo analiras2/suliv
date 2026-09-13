@@ -12,7 +12,9 @@ import { analyticsClient } from '@/lib/analytics';
 import { LAST_STEP, type OnboardingStep } from '@/module/onboarding/types';
 import { useOnboardingViewModel } from '@/module/onboarding/viewModels/use-onboarding-view-model';
 
-const TABS_ROUTE = '/' as Href;
+// Named group: '/' also matches (onboarding)/index, which the root guard keeps mounted
+// until the completed profile reaches the session store.
+const TABS_ROUTE = '/(tabs)' as Href;
 const TOTAL_STEPS = 3;
 
 const STEP_LABELS: Record<OnboardingStep, string> = {

@@ -124,7 +124,7 @@ describe('OnboardingScreen full-flow submit (IT-004, IT-005, IT-006)', () => {
 
     await waitFor(() => expect(mockedCache.set).toHaveBeenCalledWith('cache:profile-snapshot', snapshot));
     expect(snapshot.onboardingCompletedAt).not.toBeNull();
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
   });
 
   it('IT-006: a rejected submit keeps the user on the final step with an inline error and retry, no offline-cache call', async () => {
@@ -148,6 +148,6 @@ describe('OnboardingScreen full-flow submit (IT-004, IT-005, IT-006)', () => {
     const [firstCall, secondCall] = mockedService.submitOnboarding.mock.calls.map(([payload]) => payload);
     expect(firstCall).toEqual(secondCall);
     await waitFor(() => expect(mockedCache.set).toHaveBeenCalledWith('cache:profile-snapshot', snapshot));
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
   });
 });
