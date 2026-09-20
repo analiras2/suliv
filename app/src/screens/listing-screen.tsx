@@ -6,10 +6,13 @@ import { FilterBar } from '@/components/organisms/filter-bar';
 import { RecipeGrid } from '@/components/organisms/recipe-grid';
 import { SearchField } from '@/components/molecules/search-field';
 import { SettingsHeader } from '@/components/molecules/settings-header';
+import { StateView } from '@/components/molecules/state-view';
 import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { STATE_COPY } from '@/lib/state-copy';
 import { useApprovedAllergensQuery } from '@/module/onboarding/queries/use-approved-allergens-query';
 import type { RecipeCategoryKey } from '@/module/recipes/types';
 import type { ListingOrigin } from '@/module/search/types';
+import type { ListingViewModel } from '@/module/search/viewModels/use-listing-view-model';
 import { useListingViewModel } from '@/module/search/viewModels/use-listing-view-model';
 
 export type ListingScreenProps = {
@@ -23,15 +26,21 @@ export type ListingScreenProps = {
   onBack?: () => void;
 };
 
-function getEmptyState(isLoading: boolean, isEmpty: boolean) {
+function getEmptyState(isLoading: boolean, isEmpty: boolean, clearFilters: ListingViewModel['clearFilters']) {
   if (isLoading) {
     return <ActivityIndicator style={styles.loading} color={semanticColors.brand} testID="listing-loading" />;
   }
   if (isEmpty) {
+    const copy = STATE_COPY.search_no_results;
     return (
-      <View style={styles.emptyState} testID="listing-empty-state">
-        <Text style={styles.emptyTitle}>Nenhuma receita encontrada</Text>
-        <Text style={styles.emptyBody}>Tente ajustar sua busca ou os filtros para descobrir novas receitas.</Text>
+      <View style={styles.emptyState}>
+        <StateView
+          illustrationIcon={copy.illustrationIcon}
+          title={copy.title}
+          description={copy.description}
+          primaryAction={{ label: copy.primaryActionLabel, onPress: clearFilters }}
+          testID="state-view-search_no_results"
+        />
       </View>
     );
   }
@@ -70,7 +79,7 @@ export function ListingScreen({ origin, categoryKey, onBack }: ListingScreenProp
     </View>
   );
 
-  const empty = getEmptyState(listing.isLoading, listing.isEmpty);
+  const empty = getEmptyState(listing.isLoading, listing.isEmpty, listing.clearFilters);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -138,16 +147,5 @@ const styles = StyleSheet.create({
     padding: spacing.xl - 4,
     alignItems: 'center',
     gap: spacing.xs,
-  },
-  emptyTitle: {
-    ...typography.displayXs,
-    fontFamily: fontFamilies.display,
-    color: semanticColors.fg,
-  },
-  emptyBody: {
-    ...typography.bodySm,
-    fontFamily: fontFamilies.sans,
-    color: semanticColors.fgSecondary,
-    textAlign: 'center',
   },
 });

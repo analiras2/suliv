@@ -11,5 +11,11 @@ name: E2E-004 A query matching no seeded recipe shows the real empty state, not 
     id: listing-search-input
 - inputText: xyzquenaoexisteemnenhumareceita
 - assertVisible:
-    id: listing-empty-state
-- assertVisible: Nenhuma receita encontrada
+    id: state-view-search_no_results
+- assertVisible: Nenhum resultado encontrado
+- tapOn:
+    id: state-view-primary-action
+- assertVisible:
+    id: listing-result-card-0
+- assertNotVisible:
+    id: state-view-search_no_results

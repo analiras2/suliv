@@ -3,9 +3,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/atoms/button';
 import { Overline } from '@/components/atoms/overline';
+import { StateView } from '@/components/molecules/state-view';
 import { RecipeCoverImageField } from '@/components/organisms/recipe-cover-image-field';
 import { RecipeFormFields } from '@/components/organisms/recipe-form-fields';
 import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { STATE_COPY } from '@/lib/state-copy';
 import { useRecipeCategoriesQuery } from '@/module/recipe-authoring/viewModels/use-recipe-categories-query';
 import type { RecipeFormExisting } from '@/module/recipe-authoring/viewModels/use-recipe-form-view-model';
 import { useRecipeFormScreenViewModel } from '@/module/recipe-authoring/viewModels/use-recipe-form-screen-view-model';
@@ -59,25 +61,37 @@ function RecipeFormBody({ existing }: { existing?: RecipeFormExisting }) {
 
         <RecipeFormFields form={form} categories={categoriesQuery.data ?? []} />
 
-        {form.missingCoverImage ? (
-          <Text style={styles.error} testID="recipe-form-missing-image-error">
-            Adicione uma foto de capa antes de enviar.
-          </Text>
-        ) : null}
-        {form.submitError ? (
-          <Text style={styles.error} testID="recipe-form-submit-error">
-            {form.submitError}
-          </Text>
-        ) : null}
+        {form.hasSubmitError ? (
+          <StateView
+            illustrationIcon={STATE_COPY.submit_error.illustrationIcon}
+            title={STATE_COPY.submit_error.title}
+            description={STATE_COPY.submit_error.description}
+            primaryAction={{ label: STATE_COPY.submit_error.primaryActionLabel, onPress: () => void form.submit() }}
+            testID="state-view-submit_error"
+          />
+        ) : (
+          <>
+            {form.missingCoverImage ? (
+              <Text style={styles.error} testID="recipe-form-missing-image-error">
+                Adicione uma foto de capa antes de enviar.
+              </Text>
+            ) : null}
+            {form.submitError ? (
+              <Text style={styles.error} testID="recipe-form-submit-error">
+                {form.submitError}
+              </Text>
+            ) : null}
 
-        <Button
-          tone="primary"
-          size="lg"
-          style={styles.submitButton}
-          onPress={() => void form.submit()}
-          testID="recipe-form-submit">
-          {getSubmitLabel(form.isSubmitting, form.isApprovedEdit)}
-        </Button>
+            <Button
+              tone="primary"
+              size="lg"
+              style={styles.submitButton}
+              onPress={() => void form.submit()}
+              testID="recipe-form-submit">
+              {getSubmitLabel(form.isSubmitting, form.isApprovedEdit)}
+            </Button>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

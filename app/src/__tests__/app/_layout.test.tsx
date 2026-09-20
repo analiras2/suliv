@@ -116,12 +116,12 @@ describe('_layout routing decision (IT-001..IT-006)', () => {
     mockSplash('error', null, retry);
     const rendered = await render(<RootLayout />);
 
-    expect(rendered.getByTestId('splash-error-view')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-splash_offline')).toBeTruthy();
     expect(rendered.queryByTestId('screen-(auth)')).toBeNull();
     expect(rendered.queryByTestId('screen-(onboarding)')).toBeNull();
     expect(rendered.queryByTestId('screen-(tabs)')).toBeNull();
 
-    fireEvent.press(rendered.getByTestId('splash-error-retry-button'));
+    fireEvent.press(rendered.getByTestId('state-view-primary-action'));
     expect(retry).toHaveBeenCalledTimes(1);
   });
 

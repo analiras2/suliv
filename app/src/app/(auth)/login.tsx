@@ -1,14 +1,19 @@
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { StateView } from '@/components/molecules/state-view';
 import { semanticColors } from '@/design-system/tokens';
 import { useNetworkStatus } from '@/lib/network-status';
+import { STATE_COPY } from '@/lib/state-copy';
+import { useSessionStore } from '@/module/auth/store/use-session-store';
 import { authStyles as styles } from '@/module/auth/styles/auth.styles';
 import { useLoginViewModel } from '@/module/auth/view-models/use-login-view-model';
 
 export default function LoginScreen() {
   const viewModel = useLoginViewModel();
   const { isConnected } = useNetworkStatus();
+  const hasSession = useSessionStore((state) => state.session !== null);
+  const isOfflineBlocked = !isConnected && !hasSession;
   const isBusy = viewModel.status === 'submitting' || viewModel.status === 'authenticating';
   const isSubmitDisabled = isBusy || !isConnected;
 
@@ -41,10 +46,13 @@ export default function LoginScreen() {
           testID="login-magic-link-button">
           {isBusy ? <ActivityIndicator color={semanticColors.brandOn} /> : <Text style={styles.buttonText}>Enviar link mágico</Text>}
         </Pressable>
-        {!isConnected && (
-          <Text style={[styles.feedback, styles.error]} testID="login-offline-message">
-            Sem conexão. O login fica disponível assim que a internet voltar.
-          </Text>
+        {isOfflineBlocked && (
+          <StateView
+            illustrationIcon={STATE_COPY.login_offline_no_session.illustrationIcon}
+            title={STATE_COPY.login_offline_no_session.title}
+            description={STATE_COPY.login_offline_no_session.description}
+            testID="state-view-login_offline_no_session"
+          />
         )}
         {isConnected && viewModel.status === 'sent' && <Text style={styles.feedback}>Confira seu e-mail para continuar.</Text>}
         {isConnected && viewModel.error && <Text style={[styles.feedback, styles.error]}>{viewModel.error}</Text>}

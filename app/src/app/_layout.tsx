@@ -2,12 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { SplashErrorView } from '@/components/splash-error-view';
+import { StateView } from '@/components/molecules/state-view';
 import { semanticColors } from '@/design-system/tokens';
 import { useSulivFonts } from '@/design-system/fonts';
+import { STATE_COPY } from '@/lib/state-copy';
 import { useSessionStore, type SessionStatus } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
 import { useSessionViewModel } from '@/module/auth/view-models/use-session-view-model';
@@ -82,7 +84,15 @@ export default function RootLayout() {
     return (
       <SafeAreaProvider>
         <ThemeProvider value={sulivTheme}>
-          <SplashErrorView onRetry={splash.retry} />
+          <SafeAreaView style={styles.splashErrorSafeArea}>
+            <StateView
+              illustrationIcon={STATE_COPY.splash_offline.illustrationIcon}
+              title={STATE_COPY.splash_offline.title}
+              description={STATE_COPY.splash_offline.description}
+              primaryAction={{ label: STATE_COPY.splash_offline.primaryActionLabel, onPress: splash.retry }}
+              testID="state-view-splash_offline"
+            />
+          </SafeAreaView>
         </ThemeProvider>
       </SafeAreaProvider>
     );
@@ -117,3 +127,12 @@ export default function RootLayout() {
     </OfflineModeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  splashErrorSafeArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: semanticColors.bg,
+  },
+});

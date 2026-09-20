@@ -4,11 +4,13 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingProgressHeader } from '@/components/molecules/onboarding-progress-header';
+import { StateView } from '@/components/molecules/state-view';
 import { OnboardingAllergiesStep } from '@/components/organisms/onboarding-allergies-step';
 import { OnboardingDietStep } from '@/components/organisms/onboarding-diet-step';
 import { OnboardingLevelFrequencyStep } from '@/components/organisms/onboarding-level-frequency-step';
-import { semanticColors, spacing, typography } from '@/design-system/tokens';
+import { semanticColors, spacing } from '@/design-system/tokens';
 import { analyticsClient } from '@/lib/analytics';
+import { STATE_COPY } from '@/lib/state-copy';
 import { LAST_STEP, type OnboardingStep } from '@/module/onboarding/types';
 import { useOnboardingViewModel } from '@/module/onboarding/viewModels/use-onboarding-view-model';
 
@@ -88,19 +90,13 @@ export default function OnboardingScreen() {
         </ScrollView>
 
         {isLastStep && vm.submitStatus === 'error' && (
-          <View style={styles.errorGroup}>
-            <Text style={styles.errorMessage} testID="onboarding-error-message">
-              Não foi possível concluir seu cadastro agora. Tente novamente.
-            </Text>
-            <Pressable
-              accessibilityLabel="Tentar novamente"
-              accessibilityRole="button"
-              onPress={handleSubmit}
-              style={styles.secondaryButton}
-              testID="onboarding-retry-button">
-              <Text style={styles.secondaryButtonText}>Tentar novamente</Text>
-            </Pressable>
-          </View>
+          <StateView
+            illustrationIcon={STATE_COPY.onboarding_submit_error.illustrationIcon}
+            title={STATE_COPY.onboarding_submit_error.title}
+            description={STATE_COPY.onboarding_submit_error.description}
+            primaryAction={{ label: STATE_COPY.onboarding_submit_error.primaryActionLabel, onPress: handleSubmit }}
+            testID="state-view-onboarding_submit_error"
+          />
         )}
 
         <View style={styles.footer}>
@@ -151,13 +147,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     gap: spacing.md,
     paddingBottom: spacing.md,
-  },
-  errorGroup: {
-    gap: spacing.sm,
-  },
-  errorMessage: {
-    ...typography.bodyMd,
-    color: semanticColors.danger,
   },
   footer: {
     flexDirection: 'row',

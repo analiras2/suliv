@@ -47,6 +47,7 @@ function buildViewModel(overrides: Partial<ListingViewModel> = {}): ListingViewM
     openRecipe: jest.fn(),
     savedIds: new Set(),
     toggleSaved: jest.fn(),
+    clearFilters: jest.fn(),
     ...overrides,
   };
 }
@@ -101,12 +102,22 @@ describe('ListingScreen', () => {
     expect(loadMore).toHaveBeenCalled();
   });
 
-  it('shows the empty state, not a blank screen, when a search yields no results', async () => {
+  it('shows the search_no_results StateView, not a blank screen, when a search yields no results', async () => {
     mockedUseListingViewModel.mockReturnValue(buildViewModel({ isEmpty: true, results: [] }));
 
     const rendered = await render(<ListingScreen origin="busca" />);
 
-    expect(rendered.getByTestId('listing-empty-state')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-search_no_results')).toBeTruthy();
+  });
+
+  it('clears filters when the empty state primary action is pressed', async () => {
+    const clearFilters = jest.fn();
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ isEmpty: true, results: [], clearFilters }));
+
+    const rendered = await render(<ListingScreen origin="busca" />);
+    fireEvent.press(rendered.getByTestId('state-view-primary-action'));
+
+    expect(clearFilters).toHaveBeenCalledTimes(1);
   });
 
   it('shows a loading indicator instead of the empty state while the first page is loading', async () => {
@@ -115,6 +126,6 @@ describe('ListingScreen', () => {
     const rendered = await render(<ListingScreen origin="busca" />);
 
     expect(rendered.getByTestId('listing-loading')).toBeTruthy();
-    expect(rendered.queryByTestId('listing-empty-state')).toBeNull();
+    expect(rendered.queryByTestId('state-view-search_no_results')).toBeNull();
   });
 });

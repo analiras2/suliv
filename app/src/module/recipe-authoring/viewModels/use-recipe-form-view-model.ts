@@ -31,6 +31,17 @@ export interface RecipeFormExisting {
   coverImageUrl?: string | null;
 }
 
+const HTTP_STATUS_BAD_REQUEST = 400;
+const HTTP_STATUS_UNPROCESSABLE_ENTITY = 422;
+const HTTP_STATUS_RATE_LIMITED = 429;
+
+// ADR-003: only 400/422/429 are validation-gate rejections with their own
+// inline messaging in this screen — everything else (network failure,
+// timeout, 5xx) is the new submit_error state.
+function isValidationGateStatus(status: number): boolean {
+  return status === HTTP_STATUS_BAD_REQUEST || status === HTTP_STATUS_UNPROCESSABLE_ENTITY;
+}
+
 function emptyFields(): RecipeFormFields {
   return {
     title: '',
@@ -97,6 +108,7 @@ export interface RecipeFormViewModel {
   isSubmitting: boolean;
   submitError: string | null;
   isRateLimited: boolean;
+  hasSubmitError: boolean;
 }
 
 export function useRecipeFormViewModel(
@@ -139,6 +151,7 @@ export function useRecipeFormViewModel(
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [hasSubmitError, setHasSubmitError] = useState(false);
 
   const updateField = useCallback(
     (changes: Partial<RecipeFormFields>) => {
@@ -239,6 +252,7 @@ export function useRecipeFormViewModel(
   const submit = useCallback(async () => {
     setSubmitError(null);
     setIsRateLimited(false);
+    setHasSubmitError(false);
 
     // UT-009: blocked client-side with no coverImageUrl, no API call made —
     // mirrors, not replaces, the server-side gate (Task 2's submit()).
@@ -261,11 +275,21 @@ export function useRecipeFormViewModel(
       await authoring.submit(id);
       analytics.track('submitted_recipe_completed', { recipe_id: id });
     } catch (error) {
-      if (error instanceof RecipeAuthoringServiceError && error.status === 429) {
+      if (error instanceof RecipeAuthoringServiceError && error.status === HTTP_STATUS_RATE_LIMITED) {
         setIsRateLimited(true);
         setSubmitError('Limite diário de envios atingido. Tente novamente amanhã.');
+      } else if (error instanceof RecipeAuthoringServiceError && isValidationGateStatus(error.status)) {
+        setSubmitError(error.message);
       } else {
-        setSubmitError(error instanceof Error ? error.message : 'Não foi possível enviar a receita.');
+        // ADR-003: network failure, timeout, or 5xx — a genuinely new failure
+        // path this feature introduces, so it gets a structured log (not a
+        // PRD analytics event) rather than the inline validation messaging above.
+        // eslint-disable-next-line no-console
+        console.error('submit_error', {
+          recipeId: id,
+          status: error instanceof RecipeAuthoringServiceError ? error.status : null,
+        });
+        setHasSubmitError(true);
       }
     } finally {
       setIsSubmitting(false);
@@ -291,5 +315,6 @@ export function useRecipeFormViewModel(
     isSubmitting,
     submitError,
     isRateLimited,
+    hasSubmitError,
   };
 }

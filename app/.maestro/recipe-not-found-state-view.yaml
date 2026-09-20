@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+name: E2E-008 A deep link to a nonexistent recipe slug renders the not-found StateView with a back-to-feed action
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- openLink: suliv://recipe/receita-que-nao-existe-em-nenhum-lugar
+- assertVisible:
+    id: state-view-recipe_not_found
+- assertVisible:
+    id: state-view-primary-action
+- tapOn:
+    id: state-view-primary-action
+- assertVisible: Selecionadas para você
+- assertNotVisible:
+    id: state-view-recipe_not_found

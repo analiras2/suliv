@@ -41,6 +41,7 @@ const feedResponse: FeedResponse = {
     { category: { id: 'cat-1', key: 'cafe_da_manha', label: 'Café' }, recipes: [buildRecipe('r3')] },
   ],
   topOfWeek: [buildRecipe('r4')],
+  catalogEmpty: false,
 };
 
 describe('useFeedViewModel', () => {
@@ -129,5 +130,34 @@ describe('useFeedViewModel', () => {
       ...feedResponse.categories.flatMap((section) => section.recipes),
       ...feedResponse.topOfWeek,
     ]);
+  });
+
+  it('catalogEmpty mirrors GET /feed response, defaulting to false while unloaded', async () => {
+    mockedUseFeedQuery.mockReturnValue({ isLoading: true, data: undefined } as ReturnType<typeof useFeedQuery>);
+    const { result: loadingResult } = await setup();
+    expect(loadingResult.current.catalogEmpty).toBe(false);
+
+    mockedUseFeedQuery.mockReturnValue({
+      isLoading: false,
+      data: { ...feedResponse, catalogEmpty: true },
+    } as ReturnType<typeof useFeedQuery>);
+    const { result } = await setup();
+    expect(result.current.catalogEmpty).toBe(true);
+  });
+
+  it('refetch delegates to the underlying feed query', async () => {
+    const refetch = jest.fn();
+    mockedUseFeedQuery.mockReturnValue({
+      isLoading: false,
+      data: feedResponse,
+      refetch,
+    } as unknown as ReturnType<typeof useFeedQuery>);
+    const { result } = await setup();
+
+    await act(() => {
+      result.current.refetch();
+    });
+
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

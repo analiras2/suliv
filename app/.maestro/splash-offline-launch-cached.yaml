@@ -14,5 +14,5 @@ name: E2E-003 Airplane-mode launch with a cached completed profile
 - assertNotVisible:
     id: login-email-input
 - assertNotVisible:
-    id: splash-error-view
+    id: state-view-splash_offline
 - setAirplaneMode: false

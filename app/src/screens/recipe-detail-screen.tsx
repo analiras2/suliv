@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/atoms/button';
-import { Icon } from '@/components/atoms/icon';
+import { StateView } from '@/components/molecules/state-view';
 import { RecipeDetailContent } from '@/components/organisms/recipe-detail-content';
-import { colors, fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { semanticColors } from '@/design-system/tokens';
+import { STATE_COPY } from '@/lib/state-copy';
 import { useRecipeDetailViewModel } from '@/module/recipes/viewModels/use-recipe-detail-view-model';
+
+const FEED_ROUTE = '/(tabs)' as Href;
 
 export type RecipeDetailScreenProps = {
   recipeId: string;
@@ -13,20 +16,21 @@ export type RecipeDetailScreenProps = {
 };
 
 export function RecipeDetailScreen({ recipeId, origin }: RecipeDetailScreenProps) {
+  const router = useRouter();
   const detail = useRecipeDetailViewModel(recipeId, undefined, origin);
 
   if (detail.notFound) {
+    const copy = STATE_COPY.recipe_not_found;
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.notFound}>
-          <View style={styles.notFoundIcon}>
-            <Icon name="search" size={28} color={colors.ink500} strokeWidth={1.6} />
-          </View>
-          <Text style={styles.notFoundTitle}>Receita não encontrada</Text>
-          <Text style={styles.notFoundBody}>Essa receita não existe ou não está mais disponível.</Text>
-          <Button tone="primary" size="sm" onPress={detail.goBack} style={styles.notFoundButton}>
-            Voltar
-          </Button>
+          <StateView
+            illustrationIcon={copy.illustrationIcon}
+            title={copy.title}
+            description={copy.description}
+            primaryAction={{ label: copy.primaryActionLabel, onPress: () => router.replace(FEED_ROUTE) }}
+            testID="state-view-recipe_not_found"
+          />
         </View>
       </SafeAreaView>
     );
@@ -48,30 +52,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.xs + 2,
-  },
-  notFoundIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: semanticColors.bgSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  notFoundTitle: {
-    ...typography.titleMd,
-    fontFamily: fontFamilies.sansSemibold,
-    color: semanticColors.fg,
-  },
-  notFoundBody: {
-    ...typography.bodyMd,
-    fontFamily: fontFamilies.sans,
-    color: semanticColors.fgSecondary,
-    textAlign: 'center',
-  },
-  notFoundButton: {
-    marginTop: spacing.sm,
   },
 });

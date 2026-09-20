@@ -1,51 +1,52 @@
 appId: host.exp.Exponent
-name: E2E-005 Empty Minhas Receitas shows a create CTA; populated correctly after creating and submitting
+name: E2E-007 Submit network failure shows submit_error state; retry with connectivity restored succeeds and keeps the draft
 ---
-# Requires the dedicated RECIPE_AUTHOR_* token pair (a test-project user with
-# no authored recipes yet), same as my-recipes-offline-create-sync-submit.yaml.
 - launchApp:
     clearState: true
 - openLink: suliv://login#access_token=${RECIPE_AUTHOR_ACCESS_TOKEN}&refresh_token=${RECIPE_AUTHOR_REFRESH_TOKEN}
 - tapOn: Você
 - tapOn:
     id: settings-my-recipes
-- assertVisible:
-    id: state-view-my_recipes_empty
 - tapOn:
-    id: state-view-primary-action
+    id: my-recipes-new-button
 - tapOn:
     id: recipe-form-title
-- inputText: Sopa de abóbora
+- inputText: Torta de limão
 - tapOn:
     id: recipe-form-description
-- inputText: Uma sopa cremosa para dias frios.
+- inputText: Uma torta azeda e cremosa.
 - tapOn:
     id: recipe-form-prep-time
-- inputText: "30"
+- inputText: "45"
 - tapOn:
     id: recipe-form-servings
-- inputText: "4"
+- inputText: "6"
 - tapOn:
     id: ingredient-add
 - tapOn:
     id: ingredient-name-0
-- inputText: Abóbora
+- inputText: Limão
 - tapOn:
     id: ingredient-quantity-0
-- inputText: "1"
+- inputText: "3"
 - tapOn:
     id: step-add
 - tapOn:
     id: step-description-0
-- inputText: Cozinhe a abóbora e bata no liquidificador.
+- inputText: Misture o creme e leve à geladeira.
 - tapOn:
     id: recipe-form-pick-image
 # Assumes the test device/simulator's photo library has at least one fixture
 # image available to pick.
+- setAirplaneMode: true
 - tapOn:
     id: recipe-form-submit
+- assertVisible:
+    id: state-view-submit_error
+- assertVisible:
+    id: state-view-primary-action
+- setAirplaneMode: false
+- tapOn:
+    id: state-view-primary-action
 - assertVisible: Suas criações
-- assertNotVisible:
-    id: state-view-my_recipes_empty
-- assertVisible: Sopa de abóbora
-- assertVisible: Em análise
+- assertVisible: Torta de limão

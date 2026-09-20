@@ -133,15 +133,15 @@ describe('OnboardingScreen full-flow submit (IT-004, IT-005, IT-006)', () => {
 
     await completeFullFlow(rendered);
 
-    expect(rendered.getByTestId('onboarding-error-message')).toBeTruthy();
-    expect(rendered.getByTestId('onboarding-retry-button')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-onboarding_submit_error')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-primary-action')).toBeTruthy();
     expect(rendered.getByTestId('onboarding-submit-button')).toBeTruthy();
     expect(mockedCache.set).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
 
     mockedService.submitOnboarding.mockResolvedValueOnce(snapshot);
     await act(async () => {
-      fireEvent.press(rendered.getByTestId('onboarding-retry-button'));
+      fireEvent.press(rendered.getByTestId('state-view-primary-action'));
     });
 
     expect(mockedService.submitOnboarding).toHaveBeenCalledTimes(2);
