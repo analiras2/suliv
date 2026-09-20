@@ -1,0 +1,5 @@
+node_modules/
+
+# The compiled output is committed so `npm ci` works in api/, app/ and admin/
+# without building this package first (ADR-002). CI checks it stays in sync.
+!dist/
