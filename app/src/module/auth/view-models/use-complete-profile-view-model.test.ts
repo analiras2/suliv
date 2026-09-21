@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import type { ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
@@ -36,13 +37,22 @@ describe('useCompleteProfileViewModel', () => {
     await act(() => result.current.submitName());
     expect(profiles.updateName).toHaveBeenCalledWith(session, 'Ana');
     expect(useSessionStore.getState().user).toBe(user);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
+  });
+
+  it('routes a named profile that has not finished onboarding to the onboarding group', async () => {
+    profiles.updateName.mockResolvedValue({ ...user, onboardingCompletedAt: null });
+    const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
+    await act(() => result.current.setName('Ana'));
+    await act(() => result.current.submitName());
+    expect(mockReplace).toHaveBeenCalledWith('/(onboarding)');
   });
 
   it('requires a name and an active session', async () => {
     const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
     await act(() => result.current.submitName());
     expect(result.current.status).toBe('error');
+    expect(result.current.error).toBe(AUTH_MESSAGES.missingName);
 
     await act(() => result.current.setName('Ana'));
     useSessionStore.setState({ session: null, status: 'unauthenticated' });
@@ -64,6 +74,6 @@ describe('useCompleteProfileViewModel', () => {
     const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
     await act(() => result.current.setName('Ana'));
     await act(() => result.current.submitName());
-    expect(result.current.error).toBe('Unable to update your profile.');
+    expect(result.current.error).toBe(AUTH_MESSAGES.updateProfileFailed);
   });
 });

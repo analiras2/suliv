@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { FlatList, StyleSheet, View, type ListRenderItem } from 'react-native';
 
 import { CategoryChip } from '@/components/molecules/category-chip';
-import { spacing } from '@/design-system/tokens';
+import { layout, spacing } from '@/design-system/tokens';
 import type { Category } from '@/module/recipes/types';
 
 export type CategoryRowProps = {
@@ -35,7 +35,7 @@ function ItemSeparator() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingBottom: 4,
   },
 });

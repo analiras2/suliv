@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
 import { ProfileServiceError, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -45,7 +46,7 @@ describe('useSessionViewModel', () => {
 
   it('restores, bootstraps, hydrates, and routes a persisted session', async () => {
     await renderHook(() => useSessionViewModel(authentication, profiles));
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
     expect(profiles.bootstrap).toHaveBeenCalledWith(session);
     expect(useSessionStore.getState()).toMatchObject({ session, user, status: 'authenticated' });
   });
@@ -77,13 +78,13 @@ describe('useSessionViewModel', () => {
     const { result } = await renderHook(() => useSessionViewModel(authentication, profiles));
     await waitFor(() => expect(result.current.error).toBe('offline'));
     expect(useSessionStore.getState().status).toBe('authenticated');
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });
 
   it('marks restoration failures without a cached session unauthenticated', async () => {
     authentication.getSession.mockRejectedValue('offline');
     const { result } = await renderHook(() => useSessionViewModel(authentication, profiles));
-    await waitFor(() => expect(result.current.error).toBe('Unable to restore your session.'));
+    await waitFor(() => expect(result.current.error).toBe(AUTH_MESSAGES.restoreSessionFailed));
     expect(useSessionStore.getState().status).toBe('unauthenticated');
     expect(mockReplace).not.toHaveBeenCalled();
   });
@@ -99,6 +100,6 @@ describe('useSessionViewModel', () => {
     mockSegments = ['(auth)', 'login'];
     await renderHook(() => useSessionViewModel(authentication, profiles));
     await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });
 });

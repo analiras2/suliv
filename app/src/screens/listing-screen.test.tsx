@@ -47,6 +47,7 @@ function buildViewModel(overrides: Partial<ListingViewModel> = {}): ListingViewM
     openRecipe: jest.fn(),
     savedIds: new Set(),
     toggleSaved: jest.fn(),
+    clearFilters: jest.fn(),
     ...overrides,
   };
 }
@@ -71,6 +72,26 @@ describe('ListingScreen', () => {
     expect(rendered.getByTestId('recipe-card-conflict-badge-r2')).toBeTruthy();
   });
 
+  it('shows a back control that calls onBack when the route supplies one', async () => {
+    const onBack = jest.fn();
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ title: 'Top da semana' }));
+
+    const rendered = await render(<ListingScreen origin="top_semana" onBack={onBack} />);
+    fireEvent.press(rendered.getByTestId('listing-back-button'));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(rendered.getByTestId('ver-tudo-title').props.children).toBe('Top da semana');
+  });
+
+  it('renders no back control on a tab root, which has nothing behind it', async () => {
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ title: 'Busca' }));
+
+    const rendered = await render(<ListingScreen origin="busca" />);
+
+    expect(rendered.queryByTestId('listing-back-button')).toBeNull();
+    expect(rendered.getByTestId('ver-tudo-title').props.children).toBe('Busca');
+  });
+
   it('calls loadMore when the grid reaches the end', async () => {
     const loadMore = jest.fn();
     mockedUseListingViewModel.mockReturnValue(buildViewModel({ results: [buildResult('r1')], loadMore }));
@@ -81,12 +102,22 @@ describe('ListingScreen', () => {
     expect(loadMore).toHaveBeenCalled();
   });
 
-  it('shows the empty state, not a blank screen, when a search yields no results', async () => {
+  it('shows the search_no_results StateView, not a blank screen, when a search yields no results', async () => {
     mockedUseListingViewModel.mockReturnValue(buildViewModel({ isEmpty: true, results: [] }));
 
     const rendered = await render(<ListingScreen origin="busca" />);
 
-    expect(rendered.getByTestId('listing-empty-state')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-search_no_results')).toBeTruthy();
+  });
+
+  it('clears filters when the empty state primary action is pressed', async () => {
+    const clearFilters = jest.fn();
+    mockedUseListingViewModel.mockReturnValue(buildViewModel({ isEmpty: true, results: [], clearFilters }));
+
+    const rendered = await render(<ListingScreen origin="busca" />);
+    fireEvent.press(rendered.getByTestId('state-view-primary-action'));
+
+    expect(clearFilters).toHaveBeenCalledTimes(1);
   });
 
   it('shows a loading indicator instead of the empty state while the first page is loading', async () => {
@@ -95,6 +126,6 @@ describe('ListingScreen', () => {
     const rendered = await render(<ListingScreen origin="busca" />);
 
     expect(rendered.getByTestId('listing-loading')).toBeTruthy();
-    expect(rendered.queryByTestId('listing-empty-state')).toBeNull();
+    expect(rendered.queryByTestId('state-view-search_no_results')).toBeNull();
   });
 });

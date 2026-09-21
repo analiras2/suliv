@@ -6,6 +6,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "app", "run", "web"],
       "port": 8081
+    },
+    {
+      "name": "suliv-metro",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "start", "--", "--dev-client"],
+      "port": 8081
+    },
+    {
+      "name": "suliv-api-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "set -a && . api/.env.local && set +a && CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8081} npm --prefix api run start:test"],
+      "port": 3000
     }
   ]
 }

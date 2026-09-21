@@ -11,6 +11,7 @@
     "test:e2e": "node ../scripts/local-test-env.mjs admin:e2e"
   },
   "dependencies": {
+    "@suliv/error-codes": "file:../packages/error-codes",
     "@tanstack/react-query": "^5.101.2",
     "next": "16.2.12",
     "react": "19.2.4",

@@ -25,6 +25,8 @@ export const environmentValidationSchema = Joi.object({
   // chain (ANTHROPIC_AUTH_TOKEN, then an `ant auth login` profile on disk),
   // so local development needs no key. Production must set it.
   ANTHROPIC_API_KEY: Joi.string().min(1).optional(),
+  // Optional comma-separated browser origins (e.g. the Expo web build). Unset keeps CORS off.
+  CORS_ORIGINS: Joi.string().allow('').optional(),
 });
 
 export function environmentConfiguration() {

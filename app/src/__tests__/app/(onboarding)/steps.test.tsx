@@ -124,7 +124,7 @@ describe('OnboardingScreen full-flow submit (IT-004, IT-005, IT-006)', () => {
 
     await waitFor(() => expect(mockedCache.set).toHaveBeenCalledWith('cache:profile-snapshot', snapshot));
     expect(snapshot.onboardingCompletedAt).not.toBeNull();
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
   });
 
   it('IT-006: a rejected submit keeps the user on the final step with an inline error and retry, no offline-cache call', async () => {
@@ -133,21 +133,21 @@ describe('OnboardingScreen full-flow submit (IT-004, IT-005, IT-006)', () => {
 
     await completeFullFlow(rendered);
 
-    expect(rendered.getByTestId('onboarding-error-message')).toBeTruthy();
-    expect(rendered.getByTestId('onboarding-retry-button')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-onboarding_submit_error')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-primary-action')).toBeTruthy();
     expect(rendered.getByTestId('onboarding-submit-button')).toBeTruthy();
     expect(mockedCache.set).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
 
     mockedService.submitOnboarding.mockResolvedValueOnce(snapshot);
     await act(async () => {
-      fireEvent.press(rendered.getByTestId('onboarding-retry-button'));
+      fireEvent.press(rendered.getByTestId('state-view-primary-action'));
     });
 
     expect(mockedService.submitOnboarding).toHaveBeenCalledTimes(2);
     const [firstCall, secondCall] = mockedService.submitOnboarding.mock.calls.map(([payload]) => payload);
     expect(firstCall).toEqual(secondCall);
     await waitFor(() => expect(mockedCache.set).toHaveBeenCalledWith('cache:profile-snapshot', snapshot));
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
   });
 });

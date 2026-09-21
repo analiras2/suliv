@@ -10,10 +10,9 @@ name: E2E-005 Empty Minhas Receitas shows a create CTA; populated correctly afte
 - tapOn:
     id: settings-my-recipes
 - assertVisible:
-    id: my-recipes-empty-state
-- assertVisible: Nenhuma receita ainda
+    id: state-view-my_recipes_empty
 - tapOn:
-    id: my-recipes-create-cta
+    id: state-view-primary-action
 - tapOn:
     id: recipe-form-title
 - inputText: Sopa de abóbora
@@ -47,6 +46,6 @@ name: E2E-005 Empty Minhas Receitas shows a create CTA; populated correctly afte
     id: recipe-form-submit
 - assertVisible: Suas criações
 - assertNotVisible:
-    id: my-recipes-empty-state
+    id: state-view-my_recipes_empty
 - assertVisible: Sopa de abóbora
 - assertVisible: Em análise

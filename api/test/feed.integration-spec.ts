@@ -31,6 +31,7 @@ interface FeedResponseBody {
     recipes: RecipeSummaryResponseBody[];
   }[];
   topOfWeek: RecipeSummaryResponseBody[];
+  catalogEmpty: boolean;
 }
 
 describe('Feed (integration)', () => {
@@ -92,6 +93,29 @@ describe('Feed (integration)', () => {
       issuer,
       keyid: 'trusted-key',
     });
+  }
+
+  // Runs `fn` against a catalog with zero `aprovada` recipes by temporarily
+  // demoting every currently-approved recipe (from prisma/seed.ts), then
+  // restores them regardless of outcome (estados-erro-empty-states IT-001/IT-002).
+  async function withEmptyCatalog<T>(fn: () => Promise<T>): Promise<T> {
+    const approved = await prisma.recipe.findMany({
+      where: { status: 'aprovada' },
+      select: { id: true },
+    });
+    const approvedIds = approved.map((recipe) => recipe.id);
+    await prisma.recipe.updateMany({
+      where: { id: { in: approvedIds } },
+      data: { status: 'em_analise' },
+    });
+    try {
+      return await fn();
+    } finally {
+      await prisma.recipe.updateMany({
+        where: { id: { in: approvedIds } },
+        data: { status: 'aprovada' },
+      });
+    }
   }
 
   function bootstrap(userId: string) {
@@ -170,5 +194,65 @@ describe('Feed (integration)', () => {
     expect(new Set(body.map((category) => category.key)).size).toBe(
       SEEDED_CATEGORY_COUNT,
     );
+  });
+
+  // estados-erro-empty-states: catalogEmpty signal (ADR-002)
+  it('IT-001 GET /feed against a zero-approved-recipe catalog returns catalogEmpty: true alongside empty blocks', async () => {
+    await onboard('user-4', 'flexitariano');
+
+    await withEmptyCatalog(async () => {
+      const response = await request(app.getHttpServer())
+        .get('/feed')
+        .set('Authorization', `Bearer ${tokenFor('user-4')}`)
+        .expect(200);
+
+      const body = response.body as FeedResponseBody;
+      expect(body.catalogEmpty).toBe(true);
+      expect(body.selectedForYou).toHaveLength(0);
+      expect(body.topOfWeek).toHaveLength(0);
+      for (const block of body.categories) {
+        expect(block.recipes).toHaveLength(0);
+      }
+    });
+  });
+
+  it('IT-002 GET /feed with exactly one approved recipe returns catalogEmpty: false and surfaces it via the cold-start slot', async () => {
+    await onboard('user-5', 'flexitariano');
+
+    await withEmptyCatalog(async () => {
+      const category = await prisma.category.findFirstOrThrow();
+      const recipe = await prisma.recipe.upsert({
+        where: { slug: 'it-002-catalogempty-fixture' },
+        update: { status: 'aprovada', approvedAt: new Date() },
+        create: {
+          slug: 'it-002-catalogempty-fixture',
+          title: 'IT-002 fixture',
+          description: 'Fixture recipe for the catalogEmpty cold-start test',
+          categoryId: category.id,
+          prepTimeMinutes: 10,
+          timeBucket: 'ate_15',
+          servings: 1,
+          difficulty: 'iniciante',
+          dietPreference: 'vegano',
+          status: 'aprovada',
+          approvedAt: new Date(),
+        },
+      });
+
+      try {
+        const response = await request(app.getHttpServer())
+          .get('/feed')
+          .set('Authorization', `Bearer ${tokenFor('user-5')}`)
+          .expect(200);
+
+        const body = response.body as FeedResponseBody;
+        expect(body.catalogEmpty).toBe(false);
+        expect(body.selectedForYou.some((item) => item.id === recipe.id)).toBe(
+          true,
+        );
+      } finally {
+        await prisma.recipe.delete({ where: { id: recipe.id } });
+      }
+    });
   });
 });

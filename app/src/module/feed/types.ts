@@ -11,4 +11,5 @@ export interface FeedResponse {
   selectedForYou: RecipeSummary[];
   categories: CategorySection[];
   topOfWeek: RecipeSummary[];
+  catalogEmpty: boolean;
 }

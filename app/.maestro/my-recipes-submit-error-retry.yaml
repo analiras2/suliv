@@ -1,0 +1,52 @@
+appId: host.exp.Exponent
+name: E2E-007 Submit network failure shows submit_error state; retry with connectivity restored succeeds and keeps the draft
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${RECIPE_AUTHOR_ACCESS_TOKEN}&refresh_token=${RECIPE_AUTHOR_REFRESH_TOKEN}
+- tapOn: Você
+- tapOn:
+    id: settings-my-recipes
+- tapOn:
+    id: my-recipes-new-button
+- tapOn:
+    id: recipe-form-title
+- inputText: Torta de limão
+- tapOn:
+    id: recipe-form-description
+- inputText: Uma torta azeda e cremosa.
+- tapOn:
+    id: recipe-form-prep-time
+- inputText: "45"
+- tapOn:
+    id: recipe-form-servings
+- inputText: "6"
+- tapOn:
+    id: ingredient-add
+- tapOn:
+    id: ingredient-name-0
+- inputText: Limão
+- tapOn:
+    id: ingredient-quantity-0
+- inputText: "3"
+- tapOn:
+    id: step-add
+- tapOn:
+    id: step-description-0
+- inputText: Misture o creme e leve à geladeira.
+- tapOn:
+    id: recipe-form-pick-image
+# Assumes the test device/simulator's photo library has at least one fixture
+# image available to pick.
+- setAirplaneMode: true
+- tapOn:
+    id: recipe-form-submit
+- assertVisible:
+    id: state-view-submit_error
+- assertVisible:
+    id: state-view-primary-action
+- setAirplaneMode: false
+- tapOn:
+    id: state-view-primary-action
+- assertVisible: Suas criações
+- assertVisible: Torta de limão

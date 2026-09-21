@@ -143,6 +143,12 @@ export class RecipesService {
     return this.prisma.category.findMany({ orderBy: { label: 'asc' } });
   }
 
+  countApprovedRecipes(): Promise<number> {
+    return this.prisma.recipe.count({
+      where: { status: RecipeStatus.aprovada },
+    });
+  }
+
   async getBySlug(slug: string, userId?: string): Promise<RecipeDetailDto> {
     const recipe = await this.prisma.recipe.findUnique({
       where: { slug },

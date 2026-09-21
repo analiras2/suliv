@@ -1,0 +1,11 @@
+appId: host.exp.Exponent
+name: E2E-004 Zero approved recipes in the catalog shows the empty-catalog state, not the 3 normal blocks
+---
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${EMPTY_CATALOG_ACCESS_TOKEN}&refresh_token=${EMPTY_CATALOG_REFRESH_TOKEN}
+- assertVisible:
+    id: state-view-feed_no_relevant_recipes
+- assertNotVisible: Selecionadas para você
+- assertNotVisible: Categorias
+- assertNotVisible: Top da semana

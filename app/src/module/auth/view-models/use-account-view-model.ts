@@ -2,6 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -33,7 +34,7 @@ export function useAccountViewModel(
       useSessionStore.getState().setSession(null);
       router.replace(LOGIN_ROUTE);
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : 'Unable to delete your account.');
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.deleteAccountFailed);
     } finally {
       setIsDeleting(false);
     }

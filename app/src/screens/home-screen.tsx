@@ -6,7 +6,9 @@ import { FeedOfflineView } from '@/components/organisms/feed-offline-view';
 import { RecipeCarousel } from '@/components/organisms/recipe-carousel';
 import { TopOfWeekList } from '@/components/organisms/top-of-week-list';
 import { SectionHeader } from '@/components/molecules/section-header';
+import { StateView } from '@/components/molecules/state-view';
 import { layout, semanticColors, spacing } from '@/design-system/tokens';
+import { STATE_COPY } from '@/lib/state-copy';
 import { useFeedAnalytics } from '@/module/feed/viewModels/use-feed-analytics';
 import { useFeedViewModel } from '@/module/feed/viewModels/use-feed-view-model';
 import { useOfflineMode } from '@/module/splash/context/offline-mode-context';
@@ -26,6 +28,21 @@ export function HomeScreen() {
         <View style={styles.loading} testID="home-screen-loading">
           <ActivityIndicator color={semanticColors.brand} />
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (feed.catalogEmpty) {
+    const copy = STATE_COPY.feed_no_relevant_recipes;
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <StateView
+          illustrationIcon={copy.illustrationIcon}
+          title={copy.title}
+          description={copy.description}
+          primaryAction={{ label: copy.primaryActionLabel, onPress: feed.refetch }}
+          testID="state-view-feed_no_relevant_recipes"
+        />
       </SafeAreaView>
     );
   }

@@ -53,11 +53,11 @@ export function useRecipeFormScreenViewModel(existing?: RecipeFormExisting): Rec
   // so completion is detected via the fresh state on the next render instead.
   const wasSubmittingRef = useRef(false);
   useEffect(() => {
-    if (wasSubmittingRef.current && !form.isSubmitting && !form.submitError) {
+    if (wasSubmittingRef.current && !form.isSubmitting && !form.submitError && !form.hasSubmitError) {
       router.replace(MY_RECIPES_ROUTE);
     }
     wasSubmittingRef.current = form.isSubmitting;
-  }, [form.isSubmitting, form.submitError, router]);
+  }, [form.isSubmitting, form.submitError, form.hasSubmitError, router]);
 
   return {
     ...form,

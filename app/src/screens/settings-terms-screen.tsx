@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingBottom: layout.tabBarClearance,
   },
   version: {

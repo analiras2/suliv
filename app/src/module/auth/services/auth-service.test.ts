@@ -157,4 +157,33 @@ describe('AuthService', () => {
     expect(SecureStore.getItemAsync).toHaveBeenCalledWith('key');
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('key');
   });
+
+  it('falls back to localStorage on web, including the sign-out cleanup', async () => {
+    const { Platform } = require('react-native') as typeof import('react-native');
+    const originalOS = Platform.OS;
+    const values = new Map<string, string>();
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => void values.set(key, value),
+        removeItem: (key: string) => void values.delete(key),
+      },
+    });
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
+
+    try {
+      await supabaseOptions?.auth?.storage?.setItem?.(AUTH_STORAGE_KEY, 'value');
+      await expect(supabaseOptions?.auth?.storage?.getItem?.(AUTH_STORAGE_KEY)).resolves.toBe('value');
+
+      await authService.signOut();
+
+      expect(values.has(AUTH_STORAGE_KEY)).toBe(false);
+      expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+      expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, 'OS', { configurable: true, value: originalOS });
+      Reflect.deleteProperty(globalThis, 'localStorage');
+    }
+  });
 });
