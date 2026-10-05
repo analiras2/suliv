@@ -34,6 +34,13 @@ const PAGES_PER_REFILL = 4;
 // up only when it drops below several runs' worth of recipes. This keeps a
 // second run on the same day from spending quota it doesn't have.
 const MIN_POOL_SIZE = 100;
+// Promotion writes the recipe with its nested ingredients and steps, syncs
+// allergens, and marks the candidate — several roundtrips against a hosted
+// database, where Prisma's 5s interactive-transaction default is not enough.
+const PROMOTION_TRANSACTION_OPTIONS = {
+  maxWait: 10_000,
+  timeout: 30_000,
+};
 
 function slugify(title: string): string {
   const slug = title
@@ -235,7 +242,7 @@ export class RecipeImportService {
         where: { id: candidate.id },
         data: { promotedAt: new Date() },
       });
-    });
+    }, PROMOTION_TRANSACTION_OPTIONS);
 
     return true;
   }
