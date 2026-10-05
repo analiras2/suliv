@@ -7,6 +7,23 @@ import { ConfigService } from '@nestjs/config';
 const MAX_TOKENS = 16000;
 const TRANSLATION_MODEL = 'claude-sonnet-5';
 
+// The app has no partnership with any food brand, so upstream recipes must
+// not carry commercial names into it. The model is asked to generalize them
+// because no maintainable blocklist would cover the brands a third-party
+// recipe catalog contains.
+const BRAND_INSTRUCTION = [
+  'The app has no commercial partnerships, so never carry a brand, trademark,',
+  'store or manufacturer name into the output — not in the title, the',
+  'description, or an ingredient. Replace it with the generic ingredient it',
+  'refers to: "Trader Joe\'s spicy peanut vinaigrette" becomes "molho',
+  'vinagrete picante de amendoim", and a title like "Trader Joe\'s Copycat',
+  'Gnocchi" becomes "Nhoque de couve-flor". Never drop the ingredient itself',
+  'just because its name was a brand — describe what it is.',
+  'Designations that name a type or origin rather than a maker are not brands',
+  'and must be kept: mostarda Dijon, arroz basmati, queijo parmesão,',
+  'vinagre balsâmico.',
+].join(' ');
+
 const SYSTEM_PROMPT = [
   'You translate recipes from English into Brazilian Portuguese (pt-BR) for a',
   'cooking app. Translate cooking terms, ingredient names, and units the way a',
@@ -14,6 +31,7 @@ const SYSTEM_PROMPT = [
   'temperatures, and times exactly as given — never convert or restate them.',
   'Do not add, merge, drop, or reorder ingredients or steps: return exactly as',
   'many items as you received, in the same order.',
+  BRAND_INSTRUCTION,
 ].join(' ');
 
 const TRANSLATION_SCHEMA = {

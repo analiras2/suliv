@@ -11,6 +11,7 @@ jest.mock('@anthropic-ai/sdk');
 interface TranslationRequest {
   model: string;
   max_tokens: number;
+  system: string;
   output_config: { effort: string; format: { type: string } };
 }
 
@@ -79,6 +80,26 @@ describe('RecipeTranslationService', () => {
     const request = create.mock.calls[0][0];
     expect(request.model).toBe('claude-sonnet-5');
     expect(request.output_config.format.type).toBe('json_schema');
+  });
+
+  // The app has no brand partnerships, so imported recipes must not carry
+  // commercial names. Only the model can generalize them, so the guarantee
+  // lives in the prompt — this keeps it from being dropped unnoticed.
+  it('instructs the model to strip brand names and keep type designations', async () => {
+    create.mockResolvedValue(
+      messageFixture({
+        title: 'x',
+        description: 'y',
+        ingredientNames: ['a', 'b'],
+        stepDescriptions: ['c', 'd'],
+      }),
+    );
+
+    await service.translateToPortuguese(recipeFixture());
+
+    const { system } = create.mock.calls[0][0];
+    expect(system).toContain('never carry a brand');
+    expect(system).toContain('not brands');
   });
 
   it('throws when the model refuses the request', async () => {
