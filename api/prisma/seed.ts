@@ -7,46 +7,11 @@ import {
   TimeBucket,
 } from '@prisma/client';
 import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
-
-const APPROVED_ALLERGENS = [
-  'Leite',
-  'Ovos',
-  'Trigo (Glúten)',
-  'Amendoim',
-  'Castanhas e Nozes',
-  'Soja',
-  'Gergelim',
-];
-
-/**
- * Reviewed initial ingredient-term catalog (ADR-001/ADR-002): only exact
- * full-ingredient names an operator has curated, no substrings such as
- * "leite" ⊂ "leite de coco". Recipe-allergen projections are derived from
- * this catalog by the shared classifier, not written as manual fixtures.
- */
-const ALLERGEN_INGREDIENT_TERMS: Record<string, string[]> = {
-  Leite: [
-    'Leite',
-    'Leite integral',
-    'Leite condensado',
-    'Manteiga',
-    'Queijo ralado',
-    'Parmesão ralado',
-  ],
-  Ovos: ['Ovos'],
-  'Trigo (Glúten)': ['Farinha de trigo', 'Pão integral'],
-  Amendoim: ['Amendoim', 'Pasta de amendoim'],
-  'Castanhas e Nozes': [
-    'Castanhas',
-    'Castanhas picadas',
-    'Creme de castanha',
-    'Castanha-do-pará',
-    'Amêndoas',
-    'Nozes',
-  ],
-  Soja: ['Leite de soja', 'Molho de soja', 'Tofu'],
-  Gergelim: ['Gergelim', 'Óleo de gergelim', 'Tahine'],
-};
+// Single source of truth, shared with `npm run allergens:seed-catalog`.
+import {
+  ALLERGEN_INGREDIENT_TERMS,
+  APPROVED_ALLERGENS,
+} from '../src/allergen-classification/allergen-catalog';
 
 const CATEGORIES: { key: RecipeCategory; label: string }[] = [
   { key: 'cafe_da_manha', label: 'Café da manhã' },

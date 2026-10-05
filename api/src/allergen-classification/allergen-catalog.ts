@@ -1,0 +1,228 @@
+/**
+ * The reviewed allergen catalog, shared by the Prisma seed and the
+ * `allergens:seed-catalog` command so both populate the same data.
+ *
+ * Terms are exact full-ingredient names (ADR-001/ADR-002) — never substrings.
+ * The classifier matches a recipe ingredient only when its normalized name
+ * *equals* a term, which is what makes this list safe: "Farinha" cannot
+ * accidentally match "farinha de arroz", and "Leite" cannot match
+ * "leite de coco".
+ *
+ * ## What is deliberately NOT here
+ *
+ * These look like allergens but are not, and adding them would mark vegan
+ * recipes with allergens they do not contain:
+ *
+ * - Leite/creme **de coco**, de aveia, de arroz, de cânhamo — plant milks.
+ * - Farinha **de arroz, de amêndoas, de grão-de-bico, de aveia** — the
+ *   almond one belongs to nuts, not wheat; the others are gluten-free.
+ * - Berinjela — "eggplant" carries no egg.
+ * - Abóbora/abobrinha — "butternut squash" carries neither milk nor nut.
+ * - Manteiga/queijo/iogurte **vegetal, vegano, de castanha** — plant-based.
+ * - "Cuscuz" on its own — in Brazil it is usually corn (gluten-free); only
+ *   "Cuscuz marroquino" is wheat.
+ * - Aveia — pure oats carry no gluten, though they are often cross-contaminated.
+ *   Whether to treat it as gluten is a nutrition call, not a technical one.
+ *
+ * ## Adding coverage
+ *
+ * Add the full ingredient names recipes actually use — including the plural
+ * and the spellings produced when imported recipes are translated, since the
+ * translator renders names literally ("sesame seeds" → "sementes de gergelim",
+ * not "gergelim"). Variants are cheap; a missed variant is a false negative.
+ */
+export const APPROVED_ALLERGENS = [
+  'Leite',
+  'Ovos',
+  'Trigo (Glúten)',
+  'Amendoim',
+  'Castanhas e Nozes',
+  'Soja',
+  'Gergelim',
+] as const;
+
+export const ALLERGEN_INGREDIENT_TERMS: Record<string, string[]> = {
+  Leite: [
+    'Leite',
+    'Leite de vaca',
+    'Leite integral',
+    'Leite desnatado',
+    'Leite semidesnatado',
+    'Leite condensado',
+    'Leite em pó',
+    'Creme de leite',
+    'Nata',
+    'Manteiga',
+    'Manteiga sem sal',
+    'Manteiga com sal',
+    'Queijo',
+    'Queijo ralado',
+    'Parmesão',
+    'Parmesão ralado',
+    'Muçarela',
+    'Mussarela',
+    'Ricota',
+    'Requeijão',
+    'Cream cheese',
+    'Iogurte',
+    'Iogurte natural',
+    'Soro de leite',
+  ],
+  Ovos: [
+    'Ovo',
+    'Ovos',
+    'Ovo inteiro',
+    'Ovos inteiros',
+    'Ovos batidos',
+    'Gema',
+    'Gemas',
+    'Gema de ovo',
+    'Gemas de ovo',
+    'Clara',
+    'Claras',
+    'Clara de ovo',
+    'Claras de ovo',
+    'Maionese',
+  ],
+  'Trigo (Glúten)': [
+    'Trigo',
+    'Trigo integral',
+    'Glúten de trigo',
+    'Farinha',
+    'Farinha de trigo',
+    'Farinha de trigo integral',
+    'Farinha branca',
+    'Farinha comum',
+    'Farinha multiuso',
+    'Farinha para pão',
+    'Farinha para bolo',
+    'Farinha de rosca',
+    'Sêmola',
+    'Sêmola de trigo',
+    'Bulgur',
+    'Cevada',
+    'Centeio',
+    'Seitan',
+    'Panko',
+    'Pão',
+    'Pães',
+    'Pão integral',
+    'Pão francês',
+    'Pão rústico',
+    'Pão de forma',
+    'Migalhas de pão',
+    'Torradas',
+    'Massa',
+    'Massas',
+    'Massa folhada',
+    'Massa de pizza',
+    'Macarrão',
+    'Espaguete',
+    'Talharim',
+    'Penne',
+    'Lasanha',
+    'Tortilhas de trigo',
+    'Tortilha de trigo',
+    'Cuscuz marroquino',
+  ],
+  Amendoim: [
+    'Amendoim',
+    'Amendoins',
+    'Amendoim torrado',
+    'Amendoins torrados',
+    'Amendoim salgado',
+    'Amendoim picado',
+    'Amendoins picados',
+    'Pasta de amendoim',
+    'Pasta de amendoim cremosa',
+    'Manteiga de amendoim',
+    'Creme de amendoim',
+    'Molho de amendoim',
+    'Vinagrete de amendoim',
+    'Óleo de amendoim',
+    'Farinha de amendoim',
+  ],
+  'Castanhas e Nozes': [
+    'Castanha',
+    'Castanhas',
+    'Castanhas picadas',
+    'Castanha de caju',
+    'Castanhas de caju',
+    'Castanha-do-pará',
+    'Castanhas-do-pará',
+    'Creme de castanha',
+    'Pasta de castanha',
+    'Leite de castanha',
+    'Mix de castanhas',
+    'Amêndoa',
+    'Amêndoas',
+    'Amêndoas laminadas',
+    'Amêndoas fatiadas',
+    'Amêndoas em lâminas',
+    'Farinha de amêndoas',
+    'Leite de amêndoas',
+    'Manteiga de amêndoas',
+    'Pasta de amêndoas',
+    'Noz',
+    'Nozes',
+    'Nozes picadas',
+    'Nozes moídas',
+    'Noz-pecã',
+    'Nozes-pecã',
+    'Pecã',
+    'Pecãs',
+    'Avelã',
+    'Avelãs',
+    'Pistache',
+    'Pistaches',
+    'Macadâmia',
+    'Macadâmias',
+    'Pinoli',
+    'Pinolis',
+    'Pinhões',
+  ],
+  Soja: [
+    'Soja',
+    'Grão de soja',
+    'Grãos de soja',
+    'Molho de soja',
+    'Shoyu',
+    'Molho shoyu',
+    'Tamari',
+    'Molho tamari',
+    'Leite de soja',
+    'Creme de soja',
+    'Iogurte de soja',
+    'Tofu',
+    'Tofu firme',
+    'Tofu extrafirme',
+    'Tofu macio',
+    'Tofu defumado',
+    'Tempeh',
+    'Edamame',
+    'Missô',
+    'Miso',
+    'Pasta de missô',
+    'Proteína de soja',
+    'Proteína texturizada de soja',
+    'Farinha de soja',
+    'Lecitina de soja',
+    'Óleo de soja',
+  ],
+  Gergelim: [
+    'Gergelim',
+    'Semente de gergelim',
+    'Sementes de gergelim',
+    'Gergelim torrado',
+    'Gergelim branco',
+    'Gergelim preto',
+    'Óleo de gergelim',
+    'Óleo de gergelim torrado',
+    'Pasta de gergelim',
+    'Tahine',
+    'Tahini',
+    'Pasta de tahine',
+    'Molho tahine',
+    'Halva',
+  ],
+};
