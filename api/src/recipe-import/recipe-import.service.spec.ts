@@ -169,7 +169,8 @@ describe('RecipeImportService', () => {
     translateToPortuguese.mockResolvedValue({
       title: 'Sopa de Lentilha Vegana',
       description: 'Uma sopa vegana reconfortante.',
-      ingredientNames: ['lentilhas'],
+      ingredientNames: ['lentilhas cozidas'],
+      canonicalIngredientNames: ['lentilha'],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
   });
@@ -299,7 +300,7 @@ describe('RecipeImportService', () => {
       expect(data.ingredients).toEqual({
         create: [
           {
-            name: 'lentilhas',
+            name: 'lentilhas cozidas',
             quantity: 200,
             unit: 'g',
             scalesWithServings: true,
@@ -341,13 +342,15 @@ describe('RecipeImportService', () => {
       expect(syncRecipeAllergens).not.toHaveBeenCalled();
     });
 
-    it('UT-009 classifies the translated Portuguese ingredient names using the same transaction client used to promote the recipe', async () => {
+    it('UT-009 classifies the canonical Portuguese ingredient names using the same transaction client used to promote the recipe', async () => {
       findManyCandidate.mockResolvedValue([candidateFixture()]);
 
       await service.runImport();
 
+      // The canonical name, not the descriptive one the recipe displays:
+      // exact matching against the catalog would miss "lentilhas cozidas".
       expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
-        'lentilhas',
+        'lentilha',
       ]);
       const syncOrder = syncRecipeAllergens.mock.invocationCallOrder[0];
       const updateOrder = updateCandidate.mock.invocationCallOrder[0];
@@ -375,6 +378,7 @@ describe('RecipeImportService', () => {
         title: 'Sopa desconhecida',
         description: 'Sem alergenos conhecidos.',
         ingredientNames: ['ingrediente nao catalogado'],
+        canonicalIngredientNames: ['ingrediente nao catalogado'],
         stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
       });
 
@@ -407,6 +411,7 @@ describe('RecipeImportService', () => {
         title: 'Sopa de Lentilha Vegana',
         description: 'Uma sopa vegana reconfortante.',
         ingredientNames: manyTranslatedNames,
+        canonicalIngredientNames: manyTranslatedNames,
         stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
       });
 

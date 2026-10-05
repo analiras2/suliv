@@ -232,10 +232,13 @@ export class RecipeImportService {
         },
       });
 
+      // Classification matches names exactly against the curated catalog, so
+      // it gets the canonical names rather than the descriptive ones the app
+      // displays ("tofu", not "tofu light em bloco").
       await this.allergenClassification.syncRecipeAllergens(
         tx,
         recipe.id,
-        translated.ingredientNames,
+        translated.canonicalIngredientNames,
       );
 
       await tx.recipeImportCandidate.update({

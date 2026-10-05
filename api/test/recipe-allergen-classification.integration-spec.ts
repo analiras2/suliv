@@ -483,6 +483,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
       title: `Sopa de lentilha com ${milkTerm}`,
       description: 'Uma sopa vegana reconfortante.',
       ingredientNames: [milkTerm],
+      canonicalIngredientNames: [milkTerm],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
 

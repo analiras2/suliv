@@ -24,6 +24,23 @@ const BRAND_INSTRUCTION = [
   'vinagre balsâmico.',
 ].join(' ');
 
+// Allergen classification matches an ingredient name exactly against a curated
+// catalog (ADR-001), so a descriptive name like "tofu light em bloco" never
+// matches "tofu". The model therefore returns a second, pantry-style name per
+// ingredient for matching, while the displayed name keeps its preparation.
+const CANONICAL_NAME_INSTRUCTION = [
+  'For every ingredient also return a canonical name in',
+  '`canonicalIngredientNames`: the bare pantry name of the ingredient, with no',
+  'quantity, no preparation, no state, no parenthetical and no qualifier.',
+  '"castanha de caju deixada de molho durante a noite" becomes "castanha de',
+  'caju", "tofu light em bloco" becomes "tofu", "farinha de rosca temperada"',
+  'becomes "farinha de rosca", and "molho de aminoácidos líquidos (tipo shoyu)"',
+  'becomes "molho de soja". Keep a compound name when the extra words are part',
+  'of the ingredient rather than a description of it: "leite de coco", "farinha',
+  'de amêndoas" and "molho de soja" are already canonical. Use the singular',
+  'form, and return one canonical name per ingredient in the same order.',
+].join(' ');
+
 const SYSTEM_PROMPT = [
   'You translate recipes from English into Brazilian Portuguese (pt-BR) for a',
   'cooking app. Translate cooking terms, ingredient names, and units the way a',
@@ -32,6 +49,7 @@ const SYSTEM_PROMPT = [
   'Do not add, merge, drop, or reorder ingredients or steps: return exactly as',
   'many items as you received, in the same order.',
   BRAND_INSTRUCTION,
+  CANONICAL_NAME_INSTRUCTION,
 ].join(' ');
 
 const TRANSLATION_SCHEMA = {
@@ -40,9 +58,16 @@ const TRANSLATION_SCHEMA = {
     title: { type: 'string' },
     description: { type: 'string' },
     ingredientNames: { type: 'array', items: { type: 'string' } },
+    canonicalIngredientNames: { type: 'array', items: { type: 'string' } },
     stepDescriptions: { type: 'array', items: { type: 'string' } },
   },
-  required: ['title', 'description', 'ingredientNames', 'stepDescriptions'],
+  required: [
+    'title',
+    'description',
+    'ingredientNames',
+    'canonicalIngredientNames',
+    'stepDescriptions',
+  ],
   additionalProperties: false,
 } as const;
 
@@ -53,7 +78,11 @@ export interface TranslatableRecipe {
   stepDescriptions: string[];
 }
 
-export type TranslatedRecipe = TranslatableRecipe;
+export interface TranslatedRecipe extends TranslatableRecipe {
+  // One per ingredient, aligned by index with `ingredientNames`. Used for
+  // allergen matching only; `ingredientNames` is what the app displays.
+  canonicalIngredientNames: string[];
+}
 
 export class RecipeTranslationError extends Error {}
 
@@ -67,6 +96,10 @@ function isTranslatedRecipe(value: unknown): value is TranslatedRecipe {
     typeof candidate.description === 'string' &&
     Array.isArray(candidate.ingredientNames) &&
     candidate.ingredientNames.every((name) => typeof name === 'string') &&
+    Array.isArray(candidate.canonicalIngredientNames) &&
+    candidate.canonicalIngredientNames.every(
+      (name) => typeof name === 'string',
+    ) &&
     Array.isArray(candidate.stepDescriptions) &&
     candidate.stepDescriptions.every((step) => typeof step === 'string')
   );
@@ -141,6 +174,8 @@ export class RecipeTranslationService {
   ): void {
     if (
       translated.ingredientNames.length !== original.ingredientNames.length ||
+      translated.canonicalIngredientNames.length !==
+        original.ingredientNames.length ||
       translated.stepDescriptions.length !== original.stepDescriptions.length
     ) {
       throw new RecipeTranslationError(

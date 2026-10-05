@@ -111,6 +111,7 @@ describe('Recipe import classification integration (task_02)', () => {
       title: `Sopa de lentilha com ${milkTerm}`,
       description: 'Uma sopa vegana reconfortante.',
       ingredientNames: [milkTerm],
+      canonicalIngredientNames: [milkTerm],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
 
@@ -139,6 +140,7 @@ describe('Recipe import classification integration (task_02)', () => {
       title: 'Sopa de lentilha',
       description: 'Uma sopa vegana reconfortante.',
       ingredientNames: ['lentilhas'],
+      canonicalIngredientNames: ['lentilhas'],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
     // Pre-occupy the unique externalSourceId on Recipe so the transaction's
