@@ -56,6 +56,9 @@ describe('allergen catalog', () => {
       ['farinha', 'Trigo (Glúten)'],
       ['farinha de rosca', 'Trigo (Glúten)'],
       ['macarrão', 'Trigo (Glúten)'],
+      ['macarrão penne', 'Trigo (Glúten)'],
+      ['cuscuz', 'Trigo (Glúten)'],
+      ['cuscuz marroquino', 'Trigo (Glúten)'],
       ['seitan', 'Trigo (Glúten)'],
     ])('flags "%s" as %s', (ingredient, expectedAllergen) => {
       expect(allergensFor(ingredient)).toEqual([expectedAllergen]);
@@ -86,7 +89,6 @@ describe('allergen catalog', () => {
       'queijo vegano',
       'iogurte de coco',
       'maionese vegana',
-      'cuscuz',
       'aveia',
       'macarrão de arroz',
       'óleo de coco',

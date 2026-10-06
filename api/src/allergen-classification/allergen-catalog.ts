@@ -19,8 +19,6 @@
  * - Berinjela — "eggplant" carries no egg.
  * - Abóbora/abobrinha — "butternut squash" carries neither milk nor nut.
  * - Manteiga/queijo/iogurte **vegetal, vegano, de castanha** — plant-based.
- * - "Cuscuz" on its own — in Brazil it is usually corn (gluten-free); only
- *   "Cuscuz marroquino" is wheat.
  * - Aveia — pure oats carry no gluten, though they are often cross-contaminated.
  *   Whether to treat it as gluten is a nutrition call, not a technical one.
  *
@@ -120,9 +118,13 @@ export const ALLERGEN_INGREDIENT_TERMS: Record<string, string[]> = {
     'Espaguete',
     'Talharim',
     'Penne',
+    'Macarrão penne',
     'Lasanha',
     'Tortilhas de trigo',
     'Tortilha de trigo',
+    // Brazilian cuscuz is corn, but imported recipes use the wheat kind and the
+    // bare name is ambiguous. Over-flagging is the safe error for an allergen.
+    'Cuscuz',
     'Cuscuz marroquino',
   ],
   Amendoim: [
