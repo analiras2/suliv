@@ -16,7 +16,7 @@ import { termsService } from '@/module/profile/services/terms-service';
 import { SettingsTermsScreen } from './settings-terms-screen';
 
 async function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 

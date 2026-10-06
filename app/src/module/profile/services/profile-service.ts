@@ -11,6 +11,7 @@ export interface UpdateProfilePayload {
 export interface ProfileService {
   updateProfile(payload: UpdateProfilePayload): Promise<UserProfile>;
   updateAllergies(allergenIds: string[], newTerm?: string): Promise<UserProfile>;
+  updateUsername(username: string): Promise<UserProfile>;
 }
 
 function toUpdateProfileBody(payload: UpdateProfilePayload): Record<string, string> {
@@ -22,6 +23,7 @@ function toUpdateProfileBody(payload: UpdateProfilePayload): Record<string, stri
 }
 
 export const profileService: ProfileService = {
+  updateUsername: (username) => apiRequestJson<UserProfile>('/me', { method: 'PATCH', body: { username } }),
   updateProfile: (payload) =>
     apiRequestJson<UserProfile>('/me', { method: 'PATCH', body: toUpdateProfileBody(payload) }),
   updateAllergies: (allergenIds, newTerm) =>

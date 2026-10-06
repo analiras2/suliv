@@ -91,4 +91,29 @@ describe('profileService', () => {
       });
     });
   });
+
+  describe('updateUsername', () => {
+    it('PATCHes /me with only the username', async () => {
+      const user = { id: 'user-1', username: 'ana_nova' };
+      fetchMock.mockResolvedValue(jsonResponse(user));
+
+      const result = await profileService.updateUsername('ana_nova');
+
+      expect(result).toBe(user);
+      const request = lastRequest(fetchMock);
+      expect(request.url).toBe(`${API_TEST_BASE_URL}/me`);
+      expect(request.init.method).toBe('PATCH');
+      expect(JSON.parse(request.body as string)).toEqual({ username: 'ana_nova' });
+    });
+
+    it('rejects with USERNAME_TAKEN when another user owns the username', async () => {
+      fetchMock.mockResolvedValue(apiErrorResponse(409, 'USERNAME_TAKEN'));
+
+      await expect(profileService.updateUsername('existing_user')).rejects.toMatchObject({
+        code: 'USERNAME_TAKEN',
+        status: 409,
+      });
+    });
+  });
 });
+

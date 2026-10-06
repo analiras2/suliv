@@ -31,7 +31,7 @@ const approvedAllergens = [
 ];
 
 async function renderStep(props?: Partial<React.ComponentProps<typeof OnboardingAllergiesStep>>) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const onToggleAllergen = jest.fn();
   const onAddNewTerm = jest.fn();
   const onClearAllergies = jest.fn();
@@ -142,7 +142,7 @@ describe('OnboardingAllergiesStep', () => {
 
     await act(async () => {
       await rendered.rerender(
-        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
           <OnboardingAllergiesStep
             allergenIds={['id-1']}
             newTerms={[]}
@@ -189,7 +189,7 @@ describe('OnboardingAllergiesStep wired to a real useOnboardingViewModel instanc
   }
 
   it('IT-001: selecting allergens then pressing "none" clears both selections', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
     const rendered = await render(
       <QueryClientProvider client={queryClient}>
         <Harness />

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FilterBar } from '@/components/organisms/filter-bar';
 import { RecipeGrid } from '@/components/organisms/recipe-grid';
+import { InlineErrorNotice } from '@/components/molecules/inline-error-notice';
 import { SearchField } from '@/components/molecules/search-field';
 import { SettingsHeader } from '@/components/molecules/settings-header';
 import { StateView } from '@/components/molecules/state-view';
@@ -91,6 +92,7 @@ export function ListingScreen({ origin, categoryKey, onBack }: ListingScreenProp
           titleTestID="ver-tudo-title"
         />
       ) : null}
+      <InlineErrorNotice message={listing.favoriteError} testID="favorite-error-message" />
       <RecipeGrid
         recipes={listing.results}
         savedIds={listing.savedIds}

@@ -49,7 +49,7 @@ describe('useFeedViewModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedUseFavoriteToggle.mockReturnValue({ savedIds: new Set(['r1']), toggleSaved: mockToggleSaved });
+    mockedUseFavoriteToggle.mockReturnValue({ savedIds: new Set(['r1']), toggleSaved: mockToggleSaved, favoriteError: null });
     analytics = { track: jest.fn() };
     mockedUseFeedQuery.mockReturnValue({ isLoading: false, data: feedResponse } as ReturnType<typeof useFeedQuery>);
   });

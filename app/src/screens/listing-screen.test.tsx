@@ -47,6 +47,7 @@ function buildViewModel(overrides: Partial<ListingViewModel> = {}): ListingViewM
     openRecipe: jest.fn(),
     savedIds: new Set(),
     toggleSaved: jest.fn(),
+    favoriteError: null,
     clearFilters: jest.fn(),
     ...overrides,
   };

@@ -137,7 +137,10 @@ expired-link notice, then that sending a new link clears it (E2E-003).
 pair plus `REVOKED_USER_ID`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: it deletes the user through
 the local Supabase admin API (`session-revoked-returns-to-login.js`), pulls to refresh and asserts the
 login screen shows "Sua sessão expirou. Entre novamente." (E2E-004).
-Not written: E2E-002 (offline favorite shows a connection message) and E2E-005 (username taken in profile
-settings). The favorite toggle is local-first and shows no inline error, and the app has no username-edit
-screen, so there is no UI surface to assert; the copy is covered by unit and integration tests instead.
-
+`favorite-offline-uncached-shows-connection-message.yaml` goes offline on the feed, taps a card's heart
+(`recipe-card-save-button`, whose detail was never opened and so is not cached), asserts the
+`favorite-error-message` shows the Portuguese connection copy, then reconnects and asserts it clears
+(E2E-002). It depends on `setAirplaneMode` (Android only at time of writing) and the seed.
+`settings-username-taken.yaml` opens "Nome de usuário" from the profile settings, saves a username owned
+by another seeded user (`existing_user`) and asserts the Portuguese `USERNAME_TAKEN` copy next to the form
+(E2E-005); the `PERSISTED_*` user must not be inside the 30-day username change window.

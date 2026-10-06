@@ -21,6 +21,7 @@ export interface ProfileSettingItem {
 }
 
 const SETTINGS: ProfileSettingItem[] = [
+  { id: 'username', icon: 'user', label: 'Nome de usuário' },
   { id: 'diet-preference', icon: 'vegan', label: 'Estilo alimentar' },
   { id: 'allergies', icon: 'warning', label: 'Alergias e restrições' },
   { id: 'level-frequency', icon: 'leaf', label: 'Nível e frequência' },
@@ -33,6 +34,7 @@ const SETTINGS: ProfileSettingItem[] = [
 ];
 
 const SETTINGS_ROUTES: Partial<Record<string, Href>> = {
+  username: '/profile/settings/username' as Href,
   'diet-preference': '/profile/settings/diet' as Href,
   allergies: '/profile/settings/allergies' as Href,
   'level-frequency': '/profile/settings/level-frequency' as Href,

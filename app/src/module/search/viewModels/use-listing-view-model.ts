@@ -40,6 +40,7 @@ export interface ListingViewModel {
   openRecipe: (slug: string) => void;
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
+  favoriteError: string | null;
   clearFilters: () => void;
 }
 
@@ -146,7 +147,7 @@ export function useListingViewModel(
 
   const title = useMemo(() => deriveTitle(origin, params.categoryKey), [origin, params.categoryKey]);
 
-  const { savedIds, toggleSaved } = useFavoriteToggle(results);
+  const { savedIds, toggleSaved, favoriteError } = useFavoriteToggle(results);
 
   const clearFilters = useCallback(() => {
     setQueryState('');
@@ -168,6 +169,7 @@ export function useListingViewModel(
     openRecipe,
     savedIds,
     toggleSaved,
+    favoriteError,
     clearFilters,
   };
 }

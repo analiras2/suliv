@@ -60,9 +60,12 @@ function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen, conflictsWit
         </View>
       </Pressable>
       <Pressable
+        accessibilityLabel={saved ? 'Remover dos salvos' : 'Salvar receita'}
+        accessibilityRole="button"
         onPress={onToggleSave}
         style={[styles.saveButton, saved && styles.saveButtonActive]}
-        hitSlop={8}>
+        hitSlop={8}
+        testID="recipe-card-save-button">
         <Icon name="heart" size={15} color={saved ? colors.white : colors.clay600} filled={saved} strokeWidth={1.8} />
       </Pressable>
     </View>
