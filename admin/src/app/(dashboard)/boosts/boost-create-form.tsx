@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ApiError, createBoost, fetchRecipes } from '@/lib/api-client';
+import { createBoost, fetchRecipes } from '@/lib/api-client';
+import { ERROR_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 
 const DEFAULT_WEIGHT = 1;
 
@@ -32,14 +33,14 @@ export function BoostCreateForm() {
       queryClient.invalidateQueries({ queryKey: ['admin-boosts'] });
     },
     onError: (error: unknown) => {
-      setValidationError(error instanceof ApiError ? error.message : 'Failed to create boost.');
+      setValidationError(getErrorMessage(error));
     },
   });
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (new Date(endsAt) <= new Date(startsAt)) {
-      setValidationError('End date must be after the start date.');
+      setValidationError(ERROR_MESSAGES.BOOST_INVALID_PERIOD);
       return;
     }
     setValidationError(null);
