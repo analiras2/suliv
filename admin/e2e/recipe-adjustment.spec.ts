@@ -21,8 +21,8 @@ test('requests adjustment on a pending recipe with a reason and note', async ({ 
 
     await expect(page.getByRole('heading', { name: recipe.title })).toBeVisible();
 
-    await page.getByLabel('Adjustment reason').selectOption('falta_foto');
-    await page.getByLabel('Note (optional)').fill('Adicione uma foto do prato finalizado.');
+    await page.getByLabel('Motivo do ajuste').selectOption('falta_foto');
+    await page.getByLabel('Observação (opcional)').fill('Adicione uma foto do prato finalizado.');
     await page.getByRole('button', { name: 'Solicitar ajuste' }).click();
     await page.waitForURL(/\/recipes$/);
 

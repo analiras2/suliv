@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchRecipeDetail, resolveReport } from '@/lib/api-client';
-import type { Report } from '@/lib/types';
+import { REPORT_REASON_LABELS, REPORT_TARGET_LABELS, type Report } from '@/lib/types';
 
 interface ReportRowProps {
   report: Report;
@@ -23,39 +23,49 @@ export function ReportRow({ report }: ReportRowProps) {
   });
 
   return (
-    <li>
-      <p>
-        Report on {report.targetType} ({report.targetId}) — reason: {report.reason}
-      </p>
-      {report.freeText && <p>{report.freeText}</p>}
-      {report.targetType === 'recipe' && recipe && <p>Target recipe: {recipe.title}</p>}
-      {report.targetType === 'comment' && <p>Target comment id: {report.targetId}</p>}
+    <li className="card">
+      <div className="card-header">
+        <strong>{REPORT_REASON_LABELS[report.reason]}</strong>
+        <span className="badge badge-warning">{REPORT_TARGET_LABELS[report.targetType]}</span>
+      </div>
 
-      <button
-        type="button"
-        onClick={() => resolveMutation.mutate('dismiss')}
-        disabled={resolveMutation.isPending}
-      >
-        Descartar
-      </button>
-      {report.targetType === 'comment' && (
+      <div className="card-body">
+        {report.freeText && <p>{report.freeText}</p>}
+        {report.targetType === 'recipe' && recipe && <p>Receita denunciada: {recipe.title}</p>}
+        {report.targetType === 'comment' && <p>Comentário denunciado</p>}
+        <p className="muted">ID: {report.targetId}</p>
+      </div>
+
+      <div className="row-actions">
         <button
           type="button"
-          onClick={() => resolveMutation.mutate('hide_content')}
+          className="btn-secondary btn-sm"
+          onClick={() => resolveMutation.mutate('dismiss')}
           disabled={resolveMutation.isPending}
         >
-          Ocultar conteúdo
+          Descartar
         </button>
-      )}
-      {report.targetType === 'recipe' && (
-        <button
-          type="button"
-          onClick={() => resolveMutation.mutate('reopen_recipe')}
-          disabled={resolveMutation.isPending}
-        >
-          Reabrir receita
-        </button>
-      )}
+        {report.targetType === 'comment' && (
+          <button
+            type="button"
+            className="btn-danger btn-sm"
+            onClick={() => resolveMutation.mutate('hide_content')}
+            disabled={resolveMutation.isPending}
+          >
+            Ocultar conteúdo
+          </button>
+        )}
+        {report.targetType === 'recipe' && (
+          <button
+            type="button"
+            className="btn-sm"
+            onClick={() => resolveMutation.mutate('reopen_recipe')}
+            disabled={resolveMutation.isPending}
+          >
+            Reabrir receita
+          </button>
+        )}
+      </div>
     </li>
   );
 }

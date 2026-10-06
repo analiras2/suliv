@@ -34,32 +34,38 @@ function PendingAllergensQueue() {
     onSuccess: invalidate,
   });
 
-  if (isLoading) return <p>Loading…</p>;
-  if (isError) return <p role="alert">Failed to load allergens.</p>;
+  if (isLoading) return <p>Carregando…</p>;
+  if (isError) return <p role="alert">Não foi possível carregar os alérgenos.</p>;
 
   return (
-    <ul>
-      {data?.map((allergen) => (
-        <li key={allergen.id}>
-          {allergen.name}
-          <button
-            type="button"
-            onClick={() => approveMutation.mutate(allergen.id)}
-            disabled={approveMutation.isPending}
-          >
-            Aprovar
-          </button>
-          <button
-            type="button"
-            onClick={() => rejectMutation.mutate(allergen.id)}
-            disabled={rejectMutation.isPending}
-          >
-            Rejeitar
-          </button>
-        </li>
-      ))}
-      {data && data.length === 0 && <p>No pending allergen terms.</p>}
-    </ul>
+    <>
+      <ul className="card-list">
+        {data?.map((allergen) => (
+          <li key={allergen.id} className="card card-header">
+            <strong>{allergen.name}</strong>
+            <div className="row-actions">
+              <button
+                type="button"
+                className="btn-sm"
+                onClick={() => approveMutation.mutate(allergen.id)}
+                disabled={approveMutation.isPending}
+              >
+                Aprovar
+              </button>
+              <button
+                type="button"
+                className="btn-danger btn-sm"
+                onClick={() => rejectMutation.mutate(allergen.id)}
+                disabled={rejectMutation.isPending}
+              >
+                Rejeitar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {data && data.length === 0 && <p className="empty-state">Nenhum termo pendente.</p>}
+    </>
   );
 }
 
@@ -122,56 +128,61 @@ function TermEditor({ allergen }: { allergen: Allergen }) {
   }
 
   return (
-    <li>
+    <li className="card">
       <h3>{allergen.name}</h3>
-      <ul>
+      <ul className="term-list">
         {allergen.ingredientTerms?.map((term) =>
           editingTermId === term.id ? (
             <li key={term.id}>
-              <form onSubmit={(event) => handleUpdate(event, term.id)}>
-                <label htmlFor={`edit-term-${term.id}`}>Edit term</label>
+              <form className="inline-form" onSubmit={(event) => handleUpdate(event, term.id)}>
+                <label htmlFor={`edit-term-${term.id}`}>Editar termo</label>
                 <input
                   id={`edit-term-${term.id}`}
                   value={editingValue}
                   onChange={(event) => setEditingValue(event.target.value)}
                   required
                 />
-                <button type="submit" disabled={updateMutation.isPending}>
+                <button type="submit" className="btn-sm" disabled={updateMutation.isPending}>
                   Salvar
                 </button>
-                <button type="button" onClick={() => setEditingTermId(null)}>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => setEditingTermId(null)}>
                   Cancelar
                 </button>
               </form>
             </li>
           ) : (
             <li key={term.id}>
-              {term.term}
-              <button type="button" onClick={() => startEditing(term)}>
-                Editar
-              </button>
-              <button
-                type="button"
-                onClick={() => deleteMutation.mutate(term.id)}
-                disabled={deleteMutation.isPending}
-              >
-                Remover
-              </button>
+              <span>{term.term}</span>
+              <div className="row-actions">
+                <button type="button" className="btn-secondary btn-sm" onClick={() => startEditing(term)}>
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  className="btn-danger btn-sm"
+                  onClick={() => deleteMutation.mutate(term.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  Remover
+                </button>
+              </div>
             </li>
           ),
         )}
-        {allergen.ingredientTerms && allergen.ingredientTerms.length === 0 && <p>No ingredient terms yet.</p>}
       </ul>
+      {allergen.ingredientTerms && allergen.ingredientTerms.length === 0 && (
+        <p className="empty-state">Nenhum termo de ingrediente ainda.</p>
+      )}
 
-      <form onSubmit={handleCreate}>
-        <label htmlFor={`new-term-${allergen.id}`}>New ingredient term</label>
+      <form className="inline-form" onSubmit={handleCreate}>
+        <label htmlFor={`new-term-${allergen.id}`}>Novo termo de ingrediente</label>
         <input
           id={`new-term-${allergen.id}`}
           value={newTerm}
           onChange={(event) => setNewTerm(event.target.value)}
           required
         />
-        <button type="submit" disabled={createMutation.isPending}>
+        <button type="submit" className="btn-sm" disabled={createMutation.isPending}>
           Adicionar termo
         </button>
       </form>
@@ -187,8 +198,8 @@ function ApprovedAllergensEditor() {
     queryFn: fetchApprovedAllergens,
   });
 
-  if (isLoading) return <p>Loading…</p>;
-  if (isError) return <p role="alert">Failed to load approved allergens.</p>;
+  if (isLoading) return <p>Carregando…</p>;
+  if (isError) return <p role="alert">Não foi possível carregar os alérgenos aprovados.</p>;
 
   return (
     <section>
@@ -198,12 +209,12 @@ function ApprovedAllergensEditor() {
         editar o catálogo, rode <code>npm run allergens:backfill</code> para recalcular as receitas
         existentes.
       </p>
-      <ul>
+      <ul className="card-list">
         {data?.map((allergen) => (
           <TermEditor key={allergen.id} allergen={allergen} />
         ))}
-        {data && data.length === 0 && <p>No approved allergens yet.</p>}
       </ul>
+      {data && data.length === 0 && <p className="empty-state">Nenhum alérgeno aprovado ainda.</p>}
     </section>
   );
 }
