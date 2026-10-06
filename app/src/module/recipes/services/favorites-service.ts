@@ -1,7 +1,5 @@
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { apiRequestJson } from '@/lib/api-client';
 import type { RecipeSummary } from '@/module/feed/types';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export interface PaginatedFavorites {
   items: RecipeSummary[];
@@ -14,36 +12,12 @@ export interface FavoritesService {
   list(cursor?: string): Promise<PaginatedFavorites>;
 }
 
-export class FavoritesServiceError extends Error {
-  constructor(readonly status: number) {
-    super(`Favorites request failed with status ${status}.`);
-  }
-}
-
-export function createFavoritesService(authentication: AuthService = authService): FavoritesService {
-  return {
-    async list(cursor) {
-      const session = await authentication.getSession();
-      if (!session) {
-        throw new FavoritesServiceError(401);
-      }
-
-      const params = new URLSearchParams();
-      if (cursor) params.set('cursor', cursor);
-      const query = params.toString();
-
-      const queryString = query ? `?${query}` : '';
-      const response = await fetch(`${API_BASE_URL}/favorites${queryString}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (!response.ok) {
-        throw new FavoritesServiceError(response.status);
-      }
-
-      return response.json() as Promise<PaginatedFavorites>;
-    },
-  };
-}
-
-export const favoritesService: FavoritesService = createFavoritesService();
+export const favoritesService: FavoritesService = {
+  list(cursor) {
+    const params = new URLSearchParams();
+    if (cursor) params.set('cursor', cursor);
+    const query = params.toString();
+    const queryString = query ? `?${query}` : '';
+    return apiRequestJson<PaginatedFavorites>(`/favorites${queryString}`);
+  },
+};

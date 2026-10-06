@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyticsClient, type AnalyticsClient } from '@/lib/analytics';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import { useRecipeDetailQuery } from '@/module/recipes/queries/use-recipe-detail-query';
-import { RecipeDetailServiceError } from '@/module/recipes/services/recipe-detail-service';
+import { ApiError } from '@/lib/api-error';
 import { useFavoritesStore } from '@/module/recipes/store/use-favorites-store';
 import type { RecipeDetail } from '@/module/recipes/types';
 import { scaleIngredients, type ScaledIngredient } from '@/module/recipes/utils/scale-ingredients';
@@ -111,8 +111,7 @@ export function useRecipeDetailViewModel(
     router.push(`/recipe/${slug}/cook` as Href);
   }, [isAuthenticated, router, slug]);
 
-  const notFound =
-    detailQuery.error instanceof RecipeDetailServiceError && detailQuery.error.status === 404;
+  const notFound = detailQuery.error instanceof ApiError && detailQuery.error.code === 'RECIPE_NOT_FOUND';
 
   return {
     recipe,

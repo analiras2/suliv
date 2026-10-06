@@ -1,10 +1,8 @@
 import NetInfo from '@react-native-community/netinfo';
 
 import { analyticsClient } from '@/lib/analytics';
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { apiRequest } from '@/lib/api-client';
 import { syncQueue, type QueuedAction } from '@/lib/sync-queue';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 interface FavoriteActionPayload {
   recipeId: string;
@@ -28,15 +26,11 @@ function createIdempotencyKey(): string {
 // action enqueued and flushed while already online.
 const offlineOriginatedKeys = new Set<string>();
 
-async function sendSyncAction(action: QueuedAction, authentication: AuthService): Promise<void> {
-  const session = await authentication.getSession();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (session) headers.Authorization = `Bearer ${session.access_token}`;
-
-  const response = await fetch(`${API_BASE_URL}/sync`, {
+// A failure of any kind (including network codes) rejects here, which leaves the action queued (sync-queue).
+async function sendSyncAction(action: QueuedAction): Promise<void> {
+  await apiRequest('/sync', {
     method: 'POST',
-    headers,
-    body: JSON.stringify({
+    body: {
       actions: [
         {
           type: action.actionType,
@@ -44,12 +38,8 @@ async function sendSyncAction(action: QueuedAction, authentication: AuthService)
           idempotency_key: action.idempotencyKey,
         },
       ],
-    }),
+    },
   });
-
-  if (!response.ok) {
-    throw new Error(`Sync request failed with status ${response.status}.`);
-  }
 
   if (action.actionType === 'favorite_add' && offlineOriginatedKeys.has(action.idempotencyKey)) {
     offlineOriginatedKeys.delete(action.idempotencyKey);
@@ -62,7 +52,7 @@ async function sendSyncAction(action: QueuedAction, authentication: AuthService)
 }
 
 async function flush(): Promise<void> {
-  await syncQueue.flush((action) => sendSyncAction(action, authService));
+  await syncQueue.flush(sendSyncAction);
 }
 
 // NetInfo delivers the current connectivity to the listener immediately on

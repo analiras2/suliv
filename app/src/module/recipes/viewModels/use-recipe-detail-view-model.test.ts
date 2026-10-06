@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import type { AnalyticsClient } from '@/lib/analytics';
+import { ApiError } from '@/lib/api-error';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { RecipeDetail } from '@/module/recipes/types';
 
@@ -10,15 +11,6 @@ const mockPush = jest.fn();
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, back: mockBack }) }));
 jest.mock('@/module/recipes/queries/use-recipe-detail-query', () => ({ useRecipeDetailQuery: jest.fn() }));
-jest.mock('@/module/recipes/services/recipe-detail-service', () => ({
-  RecipeDetailServiceError: class RecipeDetailServiceError extends Error {
-    status: number;
-    constructor(status: number) {
-      super(`Recipe detail request failed with status ${status}.`);
-      this.status = status;
-    }
-  },
-}));
 
 // use-favorites-store hydrates from MMKV and subscribes to NetInfo as a
 // module-load side effect, so its real dependencies are stubbed here rather
@@ -91,6 +83,30 @@ describe('useRecipeDetailViewModel', () => {
   async function setup(slug = 'receita-1', origin?: string) {
     return renderHook(() => useRecipeDetailViewModel(slug, analytics, origin));
   }
+
+  it('UT-059 reports not found when the detail query fails with RECIPE_NOT_FOUND', async () => {
+    mockedUseRecipeDetailQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new ApiError('RECIPE_NOT_FOUND', 404),
+    } as unknown as ReturnType<typeof useRecipeDetailQuery>);
+
+    const { result } = await setup();
+
+    expect(result.current.notFound).toBe(true);
+  });
+
+  it('does not report not found for other failures', async () => {
+    mockedUseRecipeDetailQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new ApiError('NETWORK_OFFLINE', null),
+    } as unknown as ReturnType<typeof useRecipeDetailQuery>);
+
+    const { result } = await setup();
+
+    expect(result.current.notFound).toBe(false);
+  });
 
   it('UT-012: toggleSave() while unauthenticated navigates to login and does not toggle the favorite', async () => {
     useSessionStore.setState({ session: null, user: null, status: 'unauthenticated' });
