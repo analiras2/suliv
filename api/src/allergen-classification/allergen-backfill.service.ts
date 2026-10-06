@@ -48,12 +48,16 @@ export class AllergenBackfillService {
           await this.prisma.$transaction(async (tx) => {
             const ingredients = await tx.recipeIngredient.findMany({
               where: { recipeId: recipe.id },
-              select: { name: true },
+              select: { name: true, canonicalName: true },
             });
             await this.allergenClassification.syncRecipeAllergens(
               tx,
               recipe.id,
-              ingredients.map((ingredient) => ingredient.name),
+              // The canonical name is what promotion classified on; using the
+              // displayed one here would undo it on every imported recipe.
+              ingredients.map(
+                (ingredient) => ingredient.canonicalName ?? ingredient.name,
+              ),
             );
           });
           processed += 1;

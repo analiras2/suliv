@@ -74,6 +74,8 @@ A tradução devolve **dois nomes por ingrediente**:
 
 A razão é o match exato do ADR-001/ADR-002 de classificação de alérgenos: o catálogo guarda `castanha de caju`, e um nome descritivo nunca bate com ele. Sem o nome canônico, `tofu light em bloco` e `farinha de rosca temperada` passavam como se não tivessem alérgeno — foi o que aconteceu no primeiro lote importado. A alternativa seria match por substring, que foi rejeitada no ADR porque `leite` casaria com `leite de coco`.
 
+O nome canônico fica gravado em `recipe_ingredients.canonical_name` (nulo = usar `name`). Assim o `allergens:backfill` classifica pelo mesmo nome que a promoção usou; sem isso ele reclassificaria pelos nomes exibidos e apagaria os vínculos das receitas importadas. Limite: se um moderador reescrever os ingredientes de uma receita importada, as linhas novas nascem sem nome canônico e voltam a ser classificadas pelo nome digitado.
+
 As duas listas também precisam ter o mesmo tamanho da lista original, pela mesma razão de índice da tabela acima.
 
 Depois de validada, a lista **canônica** alimenta a classificação automática de alérgenos. A promoção compara cada nome normalizado com o catálogo administrativo `allergen_ingredient_terms`, grava a projeção `recipe_allergens` e marca o candidato como promovido na **mesma transação**.

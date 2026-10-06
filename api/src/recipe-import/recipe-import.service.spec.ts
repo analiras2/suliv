@@ -301,6 +301,7 @@ describe('RecipeImportService', () => {
         create: [
           {
             name: 'lentilhas cozidas',
+            canonicalName: 'lentilha',
             quantity: 200,
             unit: 'g',
             scalesWithServings: true,

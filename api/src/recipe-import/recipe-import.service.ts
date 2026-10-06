@@ -221,6 +221,7 @@ export class RecipeImportService {
             create: ingredients.map((ingredient, index) => ({
               ...ingredient,
               name: translated.ingredientNames[index],
+              canonicalName: translated.canonicalIngredientNames[index],
             })),
           },
           steps: {
