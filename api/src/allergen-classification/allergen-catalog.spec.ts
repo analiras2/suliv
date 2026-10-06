@@ -59,6 +59,8 @@ describe('allergen catalog', () => {
       ['macarrão penne', 'Trigo (Glúten)'],
       ['cuscuz', 'Trigo (Glúten)'],
       ['cuscuz marroquino', 'Trigo (Glúten)'],
+      ['cuscuz de pérola', 'Trigo (Glúten)'],
+      ['cuscuz israelense', 'Trigo (Glúten)'],
       ['seitan', 'Trigo (Glúten)'],
     ])('flags "%s" as %s', (ingredient, expectedAllergen) => {
       expect(allergensFor(ingredient)).toEqual([expectedAllergen]);

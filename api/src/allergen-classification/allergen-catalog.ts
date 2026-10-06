@@ -126,6 +126,8 @@ export const ALLERGEN_INGREDIENT_TERMS: Record<string, string[]> = {
     // bare name is ambiguous. Over-flagging is the safe error for an allergen.
     'Cuscuz',
     'Cuscuz marroquino',
+    'Cuscuz de pérola',
+    'Cuscuz israelense',
   ],
   Amendoim: [
     'Amendoim',
