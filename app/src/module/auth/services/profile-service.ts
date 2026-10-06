@@ -1,8 +1,5 @@
-import type { Session } from '@supabase/supabase-js';
-
+import { apiRequest, apiRequestJson } from '@/lib/api-client';
 import type { UserProfile } from '@/module/auth/types';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export interface BootstrapResponse {
   user: UserProfile;
@@ -10,56 +7,17 @@ export interface BootstrapResponse {
 }
 
 export interface ProfileService {
-  bootstrap(session: Session): Promise<BootstrapResponse>;
-  getMe(session: Session, signal?: AbortSignal): Promise<UserProfile>;
-  updateName(session: Session, name: string): Promise<UserProfile>;
-  deleteMe(session: Session): Promise<void>;
-}
-
-export class ProfileServiceError extends Error {
-  constructor(readonly status: number) {
-    super(`Profile request failed with status ${status}.`);
-  }
-}
-
-async function request(
-  session: Session,
-  path: string,
-  method: 'DELETE' | 'GET' | 'PATCH' | 'POST',
-  body?: Record<string, string>,
-  signal?: AbortSignal,
-) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-    ...(signal ? { signal } : {}),
-  });
-
-  if (!response.ok) {
-    throw new ProfileServiceError(response.status);
-  }
-
-  return response;
-}
-
-async function requestJson<T>(
-  session: Session,
-  path: string,
-  method: 'GET' | 'PATCH' | 'POST',
-  body?: Record<string, string>,
-  signal?: AbortSignal,
-) {
-  const response = await request(session, path, method, body, signal);
-  return response.json() as Promise<T>;
+  bootstrap(): Promise<BootstrapResponse>;
+  getMe(signal?: AbortSignal): Promise<UserProfile>;
+  updateName(name: string): Promise<UserProfile>;
+  deleteMe(): Promise<void>;
 }
 
 export const profileService: ProfileService = {
-  bootstrap: (session) => requestJson<BootstrapResponse>(session, '/me/bootstrap', 'POST', {}),
-  getMe: (session, signal) => requestJson<UserProfile>(session, '/me', 'GET', undefined, signal),
-  updateName: (session, name) => requestJson<UserProfile>(session, '/me', 'PATCH', { name }),
-  deleteMe: async (session) => { await request(session, '/me', 'DELETE'); },
+  bootstrap: () => apiRequestJson<BootstrapResponse>('/me/bootstrap', { method: 'POST', body: {} }),
+  getMe: (signal) => apiRequestJson<UserProfile>('/me', { signal }),
+  updateName: (name) => apiRequestJson<UserProfile>('/me', { method: 'PATCH', body: { name } }),
+  deleteMe: async () => {
+    await apiRequest('/me', { method: 'DELETE' });
+  },
 };

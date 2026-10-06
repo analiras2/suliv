@@ -3,7 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 
 import type { IconName } from '@/components/atoms/icon';
-import { AUTH_MESSAGES } from '@/lib/error-messages';
+import { AUTH_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 import { authService } from '@/module/auth/services/auth-service';
 import { profileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -52,7 +52,7 @@ export function useProfileViewModel() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const profile = useQuery({
     queryKey: ['profile', session?.user.id],
-    queryFn: () => profileService.getMe(session!),
+    queryFn: () => profileService.getMe(),
     enabled: Boolean(session),
     initialData: cachedUser ?? undefined,
   });
@@ -63,7 +63,7 @@ export function useProfileViewModel() {
     try {
       await authService.signOut();
     } catch (caught: unknown) {
-      setActionError(caught instanceof Error ? caught.message : AUTH_MESSAGES.signOutFailed);
+      setActionError(getErrorMessage(caught, AUTH_MESSAGES.signOutFailed));
     } finally {
       useSessionStore.getState().setSession(null);
       router.replace(LOGIN_ROUTE);
@@ -86,7 +86,7 @@ export function useProfileViewModel() {
   const user = profile.data ?? cachedUser;
 
   return {
-    error: account.error ?? actionError ?? (profile.error instanceof Error ? profile.error.message : null),
+    error: account.error ?? actionError ?? (profile.error ? getErrorMessage(profile.error) : null),
     isLoading: status === 'loading' || profile.isPending,
     isWorking: isSigningOut || account.isDeleting,
     name: user?.name ?? user?.username ?? '',

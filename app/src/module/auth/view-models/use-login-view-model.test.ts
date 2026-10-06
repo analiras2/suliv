@@ -32,11 +32,11 @@ describe('useLoginViewModel', () => {
       signOut: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
     profiles = {
-      bootstrap: jest.fn<(currentSession: Session) => Promise<{ missingName: boolean; user: UserProfile }>>()
+      bootstrap: jest.fn<() => Promise<{ missingName: boolean; user: UserProfile }>>()
         .mockResolvedValue({ missingName: false, user }),
       deleteMe: jest.fn(),
       getMe: jest.fn(),
-      updateName: jest.fn<(currentSession: Session, name: string) => Promise<UserProfile>>(),
+      updateName: jest.fn<(name: string) => Promise<UserProfile>>(),
     };
   });
 

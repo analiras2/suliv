@@ -1,10 +1,6 @@
-import type { Session } from '@supabase/supabase-js';
-
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { apiRequestJson } from '@/lib/api-client';
 import type { UserProfile } from '@/module/auth/types';
 import type { ProfileSnapshot } from '@/module/splash/services/critical-data-service';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export type DietPreference = 'vegano' | 'vegetariano' | 'flexitariano';
 export type CookingLevel = 'iniciante' | 'intermediario' | 'avancado';
@@ -28,42 +24,6 @@ export interface OnboardingService {
   submitOnboarding(payload: OnboardingSubmitPayload): Promise<ProfileSnapshot>;
 }
 
-export class OnboardingServiceError extends Error {
-  constructor(readonly status: number) {
-    super(`Onboarding request failed with status ${status}.`);
-  }
-}
-
-async function requireSession(authentication: AuthService): Promise<Session> {
-  const session = await authentication.getSession();
-  if (!session) {
-    throw new OnboardingServiceError(401);
-  }
-  return session;
-}
-
-async function request(
-  session: Session,
-  path: string,
-  method: 'GET' | 'POST',
-  body?: Record<string, unknown>,
-) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-
-  if (!response.ok) {
-    throw new OnboardingServiceError(response.status);
-  }
-
-  return response;
-}
-
 function toProfileSnapshot(user: UserProfile): ProfileSnapshot {
   return {
     id: user.id,
@@ -85,20 +45,13 @@ function toOnboardingRequestBody(payload: OnboardingSubmitPayload) {
   };
 }
 
-export function createOnboardingService(authentication: AuthService = authService): OnboardingService {
-  return {
-    async fetchApprovedAllergens() {
-      const session = await requireSession(authentication);
-      const response = await request(session, '/allergens?status=approved', 'GET');
-      return response.json() as Promise<ApprovedAllergen[]>;
-    },
-    async submitOnboarding(payload) {
-      const session = await requireSession(authentication);
-      const response = await request(session, '/me/onboarding', 'POST', toOnboardingRequestBody(payload));
-      const user = (await response.json()) as UserProfile;
-      return toProfileSnapshot(user);
-    },
-  };
-}
-
-export const onboardingService: OnboardingService = createOnboardingService();
+export const onboardingService: OnboardingService = {
+  fetchApprovedAllergens: () => apiRequestJson<ApprovedAllergen[]>('/allergens?status=approved'),
+  async submitOnboarding(payload) {
+    const user = await apiRequestJson<UserProfile>('/me/onboarding', {
+      method: 'POST',
+      body: toOnboardingRequestBody(payload),
+    });
+    return toProfileSnapshot(user);
+  },
+};

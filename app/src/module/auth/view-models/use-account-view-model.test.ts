@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Alert } from 'react-native';
 
-import { AUTH_MESSAGES } from '@/lib/error-messages';
+import { ApiError } from '@/lib/api-error';
+import { AUTH_MESSAGES, ERROR_MESSAGES } from '@/lib/error-messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
 import type { ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -36,7 +37,7 @@ describe('useAccountViewModel', () => {
       signInWithOAuth: jest.fn(), signOut: jest.fn<() => Promise<void>>().mockResolvedValue(),
     };
     profiles = {
-      bootstrap: jest.fn(), deleteMe: jest.fn<(value: Session) => Promise<void>>().mockResolvedValue(),
+      bootstrap: jest.fn(), deleteMe: jest.fn<() => Promise<void>>().mockResolvedValue(),
       getMe: jest.fn(), updateName: jest.fn(),
     };
   });
@@ -50,7 +51,7 @@ describe('useAccountViewModel', () => {
     expect(buttons?.[1]).toMatchObject({ style: 'destructive', text: 'Excluir conta' });
     await act(() => result.current.deleteAccount());
 
-    await waitFor(() => expect(profiles.deleteMe).toHaveBeenCalledWith(session));
+    await waitFor(() => expect(profiles.deleteMe).toHaveBeenCalledWith());
     expect(authentication.signOut).toHaveBeenCalledTimes(1);
     expect(useSessionStore.getState()).toMatchObject({ session: null, user: null, status: 'unauthenticated' });
     expect(mockReplace).toHaveBeenCalledWith('/login');
@@ -68,10 +69,10 @@ describe('useAccountViewModel', () => {
   });
 
   it('exposes a service error without clearing the session', async () => {
-    profiles.deleteMe.mockRejectedValue(new Error('API unavailable'));
+    profiles.deleteMe.mockRejectedValue(new ApiError('NETWORK_OFFLINE', null));
     const { result } = await renderHook(() => useAccountViewModel(authentication, profiles));
     await act(() => result.current.deleteAccount());
-    expect(result.current.error).toBe('API unavailable');
+    expect(result.current.error).toBe(ERROR_MESSAGES.NETWORK_OFFLINE);
     expect(useSessionStore.getState().session).toBe(session);
   });
 

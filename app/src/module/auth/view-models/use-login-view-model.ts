@@ -41,7 +41,7 @@ export function useLoginViewModel(
 
     try {
       useSessionStore.getState().setSession(session);
-      const result = await profiles.bootstrap(session);
+      const result = await profiles.bootstrap();
       useSessionStore.getState().setUser(result.user);
       router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : resolveHomeRoute(result.user));
     } catch (caught: unknown) {
