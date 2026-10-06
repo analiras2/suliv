@@ -2,10 +2,8 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
-import { authService } from '@/module/auth/services/auth-service';
+import { apiRequest } from '@/lib/api-client';
 import { syncQueue, type QueuedAction } from '@/lib/sync-queue';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 // Non-cryptographic use: only needs to be unique per session for analytics
 // grouping, not unguessable, so Math.random is fine here.
@@ -74,19 +72,13 @@ function createIdempotencyKey(): string {
 async function sendAnalyticsBatch(action: QueuedAction): Promise<void> {
   const { events } = action.payload as { events: AnalyticsEventDto[] };
 
-  const session = await authService.getSession();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (session) headers.Authorization = `Bearer ${session.access_token}`;
-
-  const response = await fetch(`${API_BASE_URL}/events`, {
+  // Anonymous sessions may send events, so the token is optional. A failure of any kind
+  // rejects here, which leaves the batch queued (sync-queue).
+  await apiRequest('/events', {
     method: 'POST',
-    headers,
-    body: JSON.stringify({ events, idempotencyKey: action.idempotencyKey }),
+    auth: 'optional',
+    body: { events, idempotencyKey: action.idempotencyKey },
   });
-
-  if (!response.ok) {
-    throw new Error(`Events request failed with status ${response.status}.`);
-  }
 }
 
 async function flush(): Promise<void> {
