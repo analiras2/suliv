@@ -450,3 +450,15 @@ model FeatureFlag {
 
   @@map("feature_flags")
 }
+
+// Generic per-user action log backing the shared @RateLimit decorator. No
+// unique constraint: several events per user/action/day are the normal case.
+model RateLimitEvent {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  @@index([userId, action, occurredAt])
+  @@map("rate_limit_events")
+}

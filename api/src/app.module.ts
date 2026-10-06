@@ -20,6 +20,7 @@ import {
 import { ApiExceptionFilter } from './errors/api-exception.filter';
 import { EventsModule } from './events/events.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { FeedModule } from './feed/feed.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RankingModule } from './ranking/ranking.module';
@@ -64,6 +65,7 @@ import { UsersModule } from './users/users.module';
     ReportsModule,
     FavoritesModule,
     SyncModule,
+    FeatureFlagsModule,
     TermsModule,
     UploadsModule,
     AdminAuthModule,
