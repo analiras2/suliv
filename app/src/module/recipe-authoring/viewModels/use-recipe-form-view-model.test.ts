@@ -2,7 +2,9 @@ import { act, renderHook } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import type { AnalyticsClient } from '@/lib/analytics';
-import { RecipeAuthoringServiceError, type RecipeAuthoringService } from '@/module/recipe-authoring/services/recipe-authoring-service';
+import { ApiError } from '@/lib/api-error';
+import { ERROR_MESSAGES } from '@/lib/error-messages';
+import type { RecipeAuthoringService } from '@/module/recipe-authoring/services/recipe-authoring-service';
 
 // use-recipe-drafts-store hydrates from MMKV and depends on drafts-sync-service
 // as a module-load side effect — those are stubbed, but the real store is used
@@ -135,10 +137,10 @@ describe('useRecipeFormViewModel', () => {
   });
 
   // derived from coverage matrix (US-006.EC-1): submission rate-limit UX
-  it('a 429 from submit() surfaces a rate-limited state instead of throwing', async () => {
+  it('UT-058 a RECIPE_SUBMISSION_RATE_LIMITED from submit() surfaces a rate-limited state with the registry copy', async () => {
     const authoring = buildAuthoring({
       submit: jest.fn(async () => {
-        throw new RecipeAuthoringServiceError(429);
+        throw new ApiError('RECIPE_SUBMISSION_RATE_LIMITED', 429);
       }),
     });
     const { result } = await renderHook(() => useRecipeFormViewModel(undefined, analytics, authoring));
@@ -164,7 +166,7 @@ describe('useRecipeFormViewModel', () => {
     });
 
     expect(result.current.isRateLimited).toBe(true);
-    expect(result.current.submitError).toEqual(expect.any(String));
+    expect(result.current.submitError).toBe(ERROR_MESSAGES.RECIPE_SUBMISSION_RATE_LIMITED);
   });
 
   // UT-005: submit_error retry preserves draft content and reissues the same payload

@@ -1,6 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 
+import { getErrorMessage } from '@/lib/error-messages';
 import { useMyRecipesViewModel } from '@/module/recipe-authoring/viewModels/use-my-recipes-view-model';
 
 const MY_RECIPES_ROUTE = '/profile/my-recipes' as Href;
@@ -33,7 +34,7 @@ export function useDeleteRecipeScreenViewModel(recipeId: string): DeleteRecipeSc
         if (!cancelled) setFavoritesCount(preview?.favoritesCount ?? 0);
       })
       .catch((caught: unknown) => {
-        if (!cancelled) setError(caught instanceof Error ? caught.message : 'Não foi possível carregar o impacto da exclusão.');
+        if (!cancelled) setError(getErrorMessage(caught, 'Não foi possível carregar o impacto da exclusão.'));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingPreview(false);
@@ -51,7 +52,7 @@ export function useDeleteRecipeScreenViewModel(recipeId: string): DeleteRecipeSc
       await confirmDelete(recipeId);
       router.replace(MY_RECIPES_ROUTE);
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : 'Não foi possível excluir a receita.');
+      setError(getErrorMessage(caught, 'Não foi possível excluir a receita.'));
     } finally {
       setIsDeleting(false);
     }
