@@ -38,7 +38,7 @@ function renderTitle(title: string, emphasis?: string) {
 
 export function HeroCard({ tag, title, emphasis, subtitle, onOpen }: HeroCardProps) {
   return (
-    <Pressable onPress={onOpen}>
+    <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onOpen}>
       <LinearGradient
         colors={recipeGradients.heroMoss}
         style={styles.card}
