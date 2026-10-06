@@ -19,6 +19,7 @@ const BRAND_INSTRUCTION = [
   'vinagrete picante de amendoim", and a title like "Trader Joe\'s Copycat',
   'Gnocchi" becomes "Nhoque de couve-flor". Never drop the ingredient itself',
   'just because its name was a brand — describe what it is.',
+  'Sriracha is a brand: always write "molho de pimenta" instead.',
   'Designations that name a type or origin rather than a maker are not brands',
   'and must be kept: mostarda Dijon, arroz basmati, queijo parmesão,',
   'vinagre balsâmico.',

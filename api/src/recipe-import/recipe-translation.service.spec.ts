@@ -103,6 +103,7 @@ describe('RecipeTranslationService', () => {
     const { system } = create.mock.calls[0][0];
     expect(system).toContain('never carry a brand');
     expect(system).toContain('not brands');
+    expect(system).toContain('Sriracha is a brand');
   });
 
   // Allergen matching is exact against a curated catalog, so a descriptive
