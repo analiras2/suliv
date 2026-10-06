@@ -48,10 +48,10 @@ export function BoostCreateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="boost-recipe">Recipe</label>
+    <form onSubmit={handleSubmit} className="form-stack">
+      <label htmlFor="boost-recipe">Receita</label>
       <select id="boost-recipe" value={recipeId} onChange={(event) => setRecipeId(event.target.value)} required>
-        <option value="">Select a recipe</option>
+        <option value="">Selecione uma receita</option>
         {recipes?.items.map((recipe) => (
           <option key={recipe.id} value={recipe.id}>
             {recipe.title}
@@ -59,7 +59,7 @@ export function BoostCreateForm() {
         ))}
       </select>
 
-      <label htmlFor="boost-weight">Weight</label>
+      <label htmlFor="boost-weight">Peso</label>
       <input
         id="boost-weight"
         type="number"
@@ -69,7 +69,7 @@ export function BoostCreateForm() {
         required
       />
 
-      <label htmlFor="boost-starts-at">Starts at</label>
+      <label htmlFor="boost-starts-at">Início</label>
       <input
         id="boost-starts-at"
         type="datetime-local"
@@ -78,7 +78,7 @@ export function BoostCreateForm() {
         required
       />
 
-      <label htmlFor="boost-ends-at">Ends at</label>
+      <label htmlFor="boost-ends-at">Término</label>
       <input
         id="boost-ends-at"
         type="datetime-local"
@@ -90,7 +90,7 @@ export function BoostCreateForm() {
       {validationError && <p role="alert">{validationError}</p>}
 
       <button type="submit" disabled={createMutation.isPending}>
-        Create boost
+        Criar destaque
       </button>
     </form>
   );

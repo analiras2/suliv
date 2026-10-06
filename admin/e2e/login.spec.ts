@@ -11,20 +11,20 @@ test('logs in with correct credentials and reaches the recipe review queue', asy
   };
 
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill(password);
+  await page.getByRole('button', { name: /entrar/i }).click();
 
   await expect(page).toHaveURL(/\/recipes$/);
-  await expect(page.getByRole('heading', { name: 'Recipe review queue' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Fila de revisão de receitas' })).toBeVisible();
 });
 
 // mensageria E2E-006: invalid credentials format shows Portuguese field messages for both
 // fields (API VALIDATION_FAILED details), never the API's English text.
 test('shows Portuguese field messages for an invalid e-mail and an empty password', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill('x');
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByLabel('E-mail').fill('x');
+  await page.getByRole('button', { name: /entrar/i }).click();
 
   await expect(page.getByTestId('email-error')).toHaveText('Informe um e-mail válido.');
   await expect(page.getByTestId('password-error')).toHaveText('Preencha este campo.');
@@ -36,9 +36,9 @@ test('shows the Portuguese invalid-credentials copy for a wrong password', async
   const { email } = JSON.parse(await readFile(CREDENTIALS_FILE, 'utf-8')) as { email: string };
 
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill('definitely-the-wrong-password');
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill('definitely-the-wrong-password');
+  await page.getByRole('button', { name: /entrar/i }).click();
 
   await expect(page.locator('p[role="alert"]')).toHaveText('E-mail ou senha inválidos.');
 });

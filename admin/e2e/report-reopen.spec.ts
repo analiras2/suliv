@@ -26,9 +26,9 @@ test('resolves a report by reopening its target recipe', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/reports');
 
-    await expect(page.getByText(`Target recipe: ${recipe.title}`)).toBeVisible();
+    await expect(page.getByText(`Receita denunciada: ${recipe.title}`)).toBeVisible();
     await page.getByRole('button', { name: 'Reabrir receita' }).click();
-    await expect(page.getByText(`Target recipe: ${recipe.title}`)).not.toBeVisible();
+    await expect(page.getByText(`Receita denunciada: ${recipe.title}`)).not.toBeVisible();
 
     const status = await fetchRecipeStatus(client, recipe.id);
     expect(status).toBe('em_analise');

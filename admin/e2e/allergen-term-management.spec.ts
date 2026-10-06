@@ -33,7 +33,7 @@ test('manages an approved allergen term while the pending queue stays available'
     ).toBeVisible();
     await expect(pendingAllergenRow).toBeVisible({ timeout: 15_000 });
 
-    await approvedAllergenEditor.getByLabel('New ingredient term').fill('leite integral');
+    await approvedAllergenEditor.getByLabel('Novo termo de ingrediente').fill('leite integral');
     await approvedAllergenEditor.getByRole('button', { name: 'Adicionar termo' }).click();
 
     const termRow = approvedAllergenEditor
@@ -41,7 +41,7 @@ test('manages an approved allergen term while the pending queue stays available'
       .filter({ hasText: 'leite integral' });
     await expect(termRow).toBeVisible();
     await termRow.getByRole('button', { name: 'Editar' }).click();
-    const editInput = approvedAllergenEditor.getByLabel('Edit term');
+    const editInput = approvedAllergenEditor.getByLabel('Editar termo');
     await editInput.fill('leite de vaca');
     await approvedAllergenEditor.getByRole('button', { name: 'Salvar' }).click();
 
@@ -52,7 +52,7 @@ test('manages an approved allergen term while the pending queue stays available'
     await expect(termRow).not.toBeVisible();
     await updatedTermRow.getByRole('button', { name: 'Remover' }).click();
     await expect(updatedTermRow).not.toBeVisible();
-    await expect(approvedAllergenEditor.getByText('No ingredient terms yet.')).toBeVisible();
+    await expect(approvedAllergenEditor.getByText('Nenhum termo de ingrediente ainda.')).toBeVisible();
 
     await pendingAllergenRow.getByRole('button', { name: 'Aprovar' }).click();
     await expect(pendingAllergenRow).not.toBeVisible();
@@ -75,11 +75,11 @@ test('shows the Portuguese duplicate-term copy when the term already exists', as
     const editor = page.getByRole('heading', { name: allergen.name }).locator('..');
     await expect(editor).toBeVisible();
 
-    await editor.getByLabel('New ingredient term').fill('leite integral');
+    await editor.getByLabel('Novo termo de ingrediente').fill('leite integral');
     await editor.getByRole('button', { name: 'Adicionar termo' }).click();
     await expect(editor.getByText('leite integral')).toBeVisible();
 
-    await editor.getByLabel('New ingredient term').fill('leite integral');
+    await editor.getByLabel('Novo termo de ingrediente').fill('leite integral');
     await editor.getByRole('button', { name: 'Adicionar termo' }).click();
 
     await expect(editor.getByRole('alert')).toHaveText('Este termo já existe para este alérgeno.');

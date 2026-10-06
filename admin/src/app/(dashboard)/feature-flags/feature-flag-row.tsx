@@ -28,23 +28,34 @@ export function FeatureFlagRow({ flag }: FeatureFlagRowProps) {
   }
 
   return (
-    <li>
-      <span>{flag.key}</span>
-      <label>
-        <input type="checkbox" checked={flag.enabled} onChange={handleToggle} disabled={updateMutation.isPending} />
-        Enabled
-      </label>
-      <label htmlFor={`rollout-${flag.key}`}>Rollout %</label>
-      <input
-        id={`rollout-${flag.key}`}
-        type="number"
-        min={0}
-        max={100}
-        value={rolloutPercentage}
-        onChange={(event) => setRolloutPercentage(Number(event.target.value))}
-        onBlur={handleRolloutCommit}
-        disabled={updateMutation.isPending}
-      />
-    </li>
+    <tr>
+      <td>
+        <strong>{flag.key}</strong>
+      </td>
+      <td>
+        <label className="inline-field">
+          <input
+            type="checkbox"
+            checked={flag.enabled}
+            onChange={handleToggle}
+            disabled={updateMutation.isPending}
+          />
+          {flag.enabled ? 'Ativa' : 'Inativa'}
+        </label>
+      </td>
+      <td>
+        <input
+          id={`rollout-${flag.key}`}
+          aria-label={`Rollout de ${flag.key}`}
+          type="number"
+          min={0}
+          max={100}
+          value={rolloutPercentage}
+          onChange={(event) => setRolloutPercentage(Number(event.target.value))}
+          onBlur={handleRolloutCommit}
+          disabled={updateMutation.isPending}
+        />
+      </td>
+    </tr>
   );
 }

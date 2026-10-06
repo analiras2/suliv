@@ -47,7 +47,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div>
-        <label htmlFor="email">Email</label>
+        <label htmlFor="email">E-mail</label>
         <input
           id="email"
           name="email"
@@ -61,7 +61,7 @@ export function LoginForm() {
         {fieldErrors.email && <p data-testid="email-error">{fieldErrors.email}</p>}
       </div>
       <div>
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">Senha</label>
         <input
           id="password"
           name="password"
@@ -76,7 +76,7 @@ export function LoginForm() {
       </div>
       {error && <p role="alert">{error}</p>}
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Signing in…' : 'Sign in'}
+        {isSubmitting ? 'Entrando…' : 'Entrar'}
       </button>
     </form>
   );

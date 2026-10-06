@@ -9,8 +9,8 @@ export async function loginAsAdmin(page: Page): Promise<void> {
   };
 
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill(password);
+  await page.getByRole('button', { name: /entrar/i }).click();
   await page.waitForURL(/\/recipes$/);
 }

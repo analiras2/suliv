@@ -38,7 +38,7 @@ describe('AllergensQueue term errors', () => {
       </QueryClientProvider>,
     );
 
-    fireEvent.change(await screen.findByLabelText('New ingredient term'), { target: { value: 'leite integral' } });
+    fireEvent.change(await screen.findByLabelText('Novo termo de ingrediente'), { target: { value: 'leite integral' } });
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar termo' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(ERROR_MESSAGES.ALLERGEN_TERM_DUPLICATE));
