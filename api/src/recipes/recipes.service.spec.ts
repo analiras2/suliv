@@ -1,9 +1,3 @@
-import {
-  ForbiddenException,
-  HttpStatus,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { Category, Prisma, Recipe } from '@prisma/client';
 import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -290,9 +284,9 @@ describe('RecipesService', () => {
     it('UT-008 a slug matching no recipe throws not-found', async () => {
       findUniqueRecipe.mockResolvedValue(null);
 
-      await expect(service.getBySlug('does-not-exist')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getBySlug('does-not-exist')).rejects.toMatchObject({
+        code: 'RECIPE_NOT_FOUND',
+      });
     });
 
     it("UT-009 a recipe with status: 'removida' throws not-found", async () => {
@@ -302,7 +296,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.getBySlug('panqueca-de-banana-vegana'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('UT-010 unapproved recipe, userId different from authorId, throws not-found', async () => {
@@ -315,7 +309,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.getBySlug('panqueca-de-banana-vegana', 'someone-else'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('UT-011 unapproved recipe, userId === authorId, resolves successfully', async () => {
@@ -437,7 +431,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.create('author-1', createRecipePayloadFixture()),
-      ).rejects.toThrow('categoryId does not reference an existing category');
+      ).rejects.toMatchObject({ code: 'CATEGORY_NOT_FOUND' });
       expect(syncRecipeAllergens).not.toHaveBeenCalled();
     });
   });
@@ -448,7 +442,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.update('author-1', 'recipe-1', { title: 'Novo titulo' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('throws forbidden when the caller does not own the recipe', async () => {
@@ -458,7 +452,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.update('someone-else', 'recipe-1', { title: 'Novo titulo' }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_OWNED' });
     });
 
     it('UT-012 editing a rascunho updates fields in place without touching recipe_versions', async () => {
@@ -586,9 +580,9 @@ describe('RecipesService', () => {
         recipeWithDetailsFixture({ coverImageUrl: null }),
       );
 
-      await expect(service.submit('author-1', 'recipe-1')).rejects.toThrow(
-        UnprocessableEntityException,
-      );
+      await expect(
+        service.submit('author-1', 'recipe-1'),
+      ).rejects.toMatchObject({ code: 'RECIPE_COVER_REQUIRED' });
     });
 
     it('rejects when the user has not accepted the terms of service', async () => {
@@ -597,9 +591,9 @@ describe('RecipesService', () => {
       );
       findUniqueUser.mockResolvedValue({ termsVersionAccepted: null });
 
-      await expect(service.submit('author-1', 'recipe-1')).rejects.toThrow(
-        UnprocessableEntityException,
-      );
+      await expect(
+        service.submit('author-1', 'recipe-1'),
+      ).rejects.toMatchObject({ code: 'RECIPE_TERMS_NOT_ACCEPTED' });
     });
 
     it('UT-010 rejects with 429 once the daily submission limit is reached', async () => {
@@ -612,7 +606,7 @@ describe('RecipesService', () => {
       await expect(
         service.submit('author-1', 'recipe-1'),
       ).rejects.toMatchObject({
-        status: HttpStatus.TOO_MANY_REQUESTS,
+        code: 'RECIPE_SUBMISSION_RATE_LIMITED',
       });
     });
 

@@ -1,10 +1,5 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../../errors/api-exception';
 import { Allergen, Prisma } from '@prisma/client';
 import { AllergenClassificationService } from '../../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -42,7 +37,7 @@ export class AdminAllergensService {
       where: { id: allergenId },
     });
     if (!allergen) {
-      throw new NotFoundException('Allergen not found');
+      throw new ApiException('ALLERGEN_NOT_FOUND', 'Allergen not found');
     }
 
     await this.prisma.allergen.update({
@@ -62,10 +57,13 @@ export class AdminAllergensService {
       where: { id: allergenId },
     });
     if (!allergen) {
-      throw new NotFoundException('Allergen not found');
+      throw new ApiException('ALLERGEN_NOT_FOUND', 'Allergen not found');
     }
     if (allergen.status !== 'pending') {
-      throw new ConflictException('Allergen is not pending review');
+      throw new ApiException(
+        'ALLERGEN_NOT_PENDING',
+        'Allergen is not pending review',
+      );
     }
 
     await this.prisma.allergen.delete({ where: { id: allergenId } });
@@ -97,7 +95,8 @@ export class AdminAllergensService {
       return AdminAllergenIngredientTermDto.fromTerm(term);
     } catch (error) {
       if (this.isDuplicateTerm(error)) {
-        throw new ConflictException(
+        throw new ApiException(
+          'ALLERGEN_TERM_DUPLICATE',
           'A term with this value already exists for this allergen',
         );
       }
@@ -128,7 +127,8 @@ export class AdminAllergensService {
       return AdminAllergenIngredientTermDto.fromTerm(term);
     } catch (error) {
       if (this.isDuplicateTerm(error)) {
-        throw new ConflictException(
+        throw new ApiException(
+          'ALLERGEN_TERM_DUPLICATE',
           'A term with this value already exists for this allergen',
         );
       }
@@ -159,10 +159,11 @@ export class AdminAllergensService {
       where: { id: allergenId },
     });
     if (!allergen) {
-      throw new NotFoundException('Allergen not found');
+      throw new ApiException('ALLERGEN_NOT_FOUND', 'Allergen not found');
     }
     if (allergen.status !== 'approved') {
-      throw new UnprocessableEntityException(
+      throw new ApiException(
+        'ALLERGEN_NOT_APPROVED',
         'Allergen must be approved before managing ingredient terms',
       );
     }
@@ -174,7 +175,10 @@ export class AdminAllergensService {
       where: { id: termId, allergenId },
     });
     if (!term) {
-      throw new NotFoundException('Ingredient term not found');
+      throw new ApiException(
+        'ALLERGEN_TERM_NOT_FOUND',
+        'Ingredient term not found',
+      );
     }
     return term;
   }
@@ -183,7 +187,8 @@ export class AdminAllergensService {
     const normalizedTerm =
       this.classificationService.normalizeIngredientName(rawTerm);
     if (!MEANINGFUL_CONTENT_PATTERN.test(normalizedTerm)) {
-      throw new BadRequestException(
+      throw new ApiException(
+        'ALLERGEN_TERM_INVALID',
         'Term must contain at least one letter or number',
       );
     }

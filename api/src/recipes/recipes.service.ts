@@ -1,12 +1,5 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import {
   Category,
   CommentStatus,
@@ -160,10 +153,10 @@ export class RecipesService {
     });
 
     if (!recipe || recipe.status === 'removida') {
-      throw new NotFoundException('Recipe not found');
+      throw new ApiException('RECIPE_NOT_FOUND', 'Recipe not found');
     }
     if (recipe.status !== 'aprovada' && recipe.authorId !== userId) {
-      throw new NotFoundException('Recipe not found');
+      throw new ApiException('RECIPE_NOT_FOUND', 'Recipe not found');
     }
 
     const aggregate = await this.getRatingAggregate(recipe.id);
@@ -234,7 +227,8 @@ export class RecipesService {
       });
     } catch (error: unknown) {
       if (this.isForeignKeyViolation(error)) {
-        throw new BadRequestException(
+        throw new ApiException(
+          'CATEGORY_NOT_FOUND',
           'categoryId does not reference an existing category',
         );
       }
@@ -344,14 +338,16 @@ export class RecipesService {
   async submit(userId: string, recipeId: string): Promise<Recipe> {
     const recipe = await this.findOwnedRecipe(userId, recipeId);
     if (!recipe.coverImageUrl) {
-      throw new UnprocessableEntityException(
+      throw new ApiException(
+        'RECIPE_COVER_REQUIRED',
         'A cover image is required before submitting for moderation',
       );
     }
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.termsVersionAccepted) {
-      throw new UnprocessableEntityException(
+      throw new ApiException(
+        'RECIPE_TERMS_NOT_ACCEPTED',
         'The current terms of service must be accepted before submitting',
       );
     }
@@ -360,9 +356,9 @@ export class RecipesService {
       where: { authorId: userId, submittedAt: { gte: todayUtc() } },
     });
     if (submittedToday >= SUBMIT_DAILY_LIMIT) {
-      throw new HttpException(
+      throw new ApiException(
+        'RECIPE_SUBMISSION_RATE_LIMITED',
         'Daily submission limit reached',
-        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
@@ -431,7 +427,10 @@ export class RecipesService {
     );
     const errors = validateSync(dto, { whitelist: true });
     if (errors.length > 0) {
-      throw new BadRequestException('Invalid draft_upsert payload');
+      throw new ApiException(
+        'SYNC_PAYLOAD_INVALID',
+        'Invalid draft_upsert payload',
+      );
     }
     return dto;
   }
@@ -549,10 +548,10 @@ export class RecipesService {
       where: { id: recipeId },
     });
     if (!recipe || recipe.status === RecipeStatus.removida) {
-      throw new NotFoundException('Recipe not found');
+      throw new ApiException('RECIPE_NOT_FOUND', 'Recipe not found');
     }
     if (recipe.authorId !== userId) {
-      throw new ForbiddenException('You do not own this recipe');
+      throw new ApiException('RECIPE_NOT_OWNED', 'You do not own this recipe');
     }
     return recipe;
   }

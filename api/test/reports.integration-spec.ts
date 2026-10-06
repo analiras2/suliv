@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { generateKeyPairSync } from 'node:crypto';
@@ -7,6 +7,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -43,9 +44,7 @@ describe('POST /reports (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
   });
 
@@ -187,6 +186,7 @@ describe('POST /reports (integration)', () => {
     });
 
     expect(second.status).toBe(409);
+    expect((second.body as { code: string }).code).toBe('REPORT_DUPLICATE');
   });
 
   it('IT-008 an 11th report within the same day returns 429', async () => {

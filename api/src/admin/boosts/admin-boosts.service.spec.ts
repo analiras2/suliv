@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { EditorialBoost } from '@prisma/client';
 import { AuditLogService } from '../audit-log.service';
 import { AdminBoostsService } from './admin-boosts.service';
@@ -76,7 +75,7 @@ describe('AdminBoostsService', () => {
 
     await expect(
       service.create('admin-1', 'recipe-1', 10, startsAt, endsAt),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'BOOST_INVALID_PERIOD' });
     expect(create).not.toHaveBeenCalled();
     expect(auditLog).not.toHaveBeenCalled();
   });
@@ -86,7 +85,7 @@ describe('AdminBoostsService', () => {
 
     await expect(
       service.create('admin-1', 'recipe-1', 10, sameDate, sameDate),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'BOOST_INVALID_PERIOD' });
     expect(create).not.toHaveBeenCalled();
   });
 });

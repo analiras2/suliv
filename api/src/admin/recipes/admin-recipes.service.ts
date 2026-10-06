@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../../errors/api-exception';
 import { AdjustmentReason, Prisma, RecipeStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RecipeSummaryDto } from '../../recipes/recipe-summary.dto';
@@ -64,7 +65,7 @@ export class AdminRecipesService {
       include: { category: true, ingredients: true, steps: true },
     });
     if (!recipe) {
-      throw new NotFoundException('Recipe not found');
+      throw new ApiException('RECIPE_NOT_FOUND', 'Recipe not found');
     }
 
     const aggregate = await this.getRatingAggregate(recipe.id);
@@ -137,7 +138,7 @@ export class AdminRecipesService {
       });
     } catch (error: unknown) {
       if (this.isRecordNotFound(error)) {
-        throw new NotFoundException('Recipe not found');
+        throw new ApiException('RECIPE_NOT_FOUND', 'Recipe not found');
       }
       throw error;
     }

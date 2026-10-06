@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DevicePlatform, PrismaClient } from '@prisma/client';
 import { generateKeyPairSync } from 'node:crypto';
@@ -7,6 +7,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -63,9 +64,7 @@ describe('UsersController (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
   });
 
@@ -198,11 +197,12 @@ describe('UsersController (integration)', () => {
       where: { id: 'user-2' },
       data: { username: 'existing_user' },
     });
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .patch('/me')
       .set('Authorization', `Bearer ${tokenFor('user-1')}`)
       .send({ username: 'existing_user' })
       .expect(409);
+    expect((response.body as { code: string }).code).toBe('USERNAME_TAKEN');
   });
 
   it('IT-007 returns 422 while the username cooldown is active', async () => {
@@ -211,11 +211,14 @@ describe('UsersController (integration)', () => {
       where: { id: 'user-1' },
       data: { usernameUpdatedAt: new Date(Date.now() - 5 * DAY_MS) },
     });
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .patch('/me')
       .set('Authorization', `Bearer ${tokenFor('user-1')}`)
       .send({ username: 'new_username' })
       .expect(422);
+    expect((response.body as { code: string }).code).toBe(
+      'USERNAME_CHANGE_TOO_SOON',
+    );
   });
 
   it('IT-008 reflects accepted terms in a subsequent profile read', async () => {

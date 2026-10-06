@@ -1,11 +1,5 @@
-import {
-  ConflictException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { Prisma, Report, ReportReason, ReportTargetType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -46,7 +40,10 @@ export class ReportsService {
       });
     } catch (error: unknown) {
       if (this.isDuplicateReport(error)) {
-        throw new ConflictException('You have already reported this content');
+        throw new ApiException(
+          'REPORT_DUPLICATE',
+          'You have already reported this content',
+        );
       }
       throw error;
     }
@@ -64,7 +61,10 @@ export class ReportsService {
           });
 
     if (!exists) {
-      throw new NotFoundException('Report target not found');
+      throw new ApiException(
+        'REPORT_TARGET_NOT_FOUND',
+        'Report target not found',
+      );
     }
   }
 
@@ -77,9 +77,9 @@ export class ReportsService {
       this.logger.warn(
         `Rate limit exceeded for user ${reporterId} on reports (${reportsToday} reports today)`,
       );
-      throw new HttpException(
+      throw new ApiException(
+        'REPORT_RATE_LIMITED',
         'Rate limit exceeded: maximum 10 reports per day',
-        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
   }
