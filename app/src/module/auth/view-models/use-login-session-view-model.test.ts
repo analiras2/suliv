@@ -42,14 +42,15 @@ describe('useLoginViewModel session orchestration', () => {
   });
 
   it.each([
-    { missingName: false, route: '/' },
-    { missingName: true, route: '/complete-profile' },
-  ])('routes a bootstrapped session to $route', async ({ missingName, route }) => {
-    profiles.bootstrap.mockResolvedValue({ missingName, user });
+    { missingName: false, profile: user, route: '/(tabs)' },
+    { missingName: false, profile: { ...user, onboardingCompletedAt: null }, route: '/(onboarding)' },
+    { missingName: true, profile: user, route: '/complete-profile' },
+  ])('routes a bootstrapped session to $route', async ({ missingName, profile, route }) => {
+    profiles.bootstrap.mockResolvedValue({ missingName, user: profile });
     await renderHook(() => useLoginViewModel(authentication, profiles));
     await act(() => authListener(session));
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(route));
-    expect(useSessionStore.getState().user).toBe(user);
+    expect(useSessionStore.getState().user).toBe(profile);
   });
 
   it('ignores null and duplicate auth events', async () => {

@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     backgroundColor: semanticColors.bg,
   },
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingBottom: layout.tabBarClearance,
   },
   header: {

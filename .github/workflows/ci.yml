@@ -10,6 +10,35 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  error-codes:
+    name: error-codes — build, test, committed dist check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/error-codes
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: packages/error-codes/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test -- --ci
+
+      - name: Build
+        run: npm run build
+
+      # The compiled output is committed so api/, app/ and admin/ can `npm ci`
+      # without building this package first (ADR-002). Fail when it is stale.
+      - name: Check committed dist matches a fresh build
+        run: git diff --exit-code -- dist
+
   app:
     name: app — lint, typecheck, test
     runs-on: ubuntu-latest

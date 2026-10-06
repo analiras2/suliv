@@ -148,6 +148,25 @@ describe('useListingViewModel', () => {
     expect(result.current.results.map((item) => item.id)).toEqual(['r1', 'r2', 'r3']);
   });
 
+  it('clearFilters resets query and filters back to the origin-derived initial state', async () => {
+    const { result } = await setup({ origin: 'categoria', categoryKey: 'cafe_da_manha' });
+
+    await act(() => {
+      result.current.setQuery('bolo');
+      result.current.setFilter('diet', 'vegano');
+      jest.advanceTimersByTime(400);
+    });
+    expect(lastCallFilters()).toEqual(expect.objectContaining({ q: 'bolo', diet: 'vegano' }));
+
+    await act(() => {
+      result.current.clearFilters();
+    });
+
+    expect(result.current.query).toBe('');
+    expect(result.current.filters).toEqual({ category: 'cafe_da_manha' });
+    expect(lastCallFilters()).toEqual({ category: 'cafe_da_manha', q: undefined });
+  });
+
   it('openRecipe tracks the recipe id (not the slug) when they differ, but navigates by slug', async () => {
     const page1 = {
       items: [{ ...buildResult('r1'), id: 'uuid-r1', slug: 'bolo-de-cenoura' }],

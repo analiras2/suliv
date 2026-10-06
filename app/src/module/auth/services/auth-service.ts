@@ -7,13 +7,38 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
 
 export const AUTH_STORAGE_KEY = 'suliv.auth.session';
 
-const secureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+const authStorageAdapter = {
+  getItem: async (key: string) => {
+    if (Platform.OS !== 'web') {
+      return SecureStore.getItemAsync(key);
+    }
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem(key);
+  },
+  setItem: async (key: string, value: string) => {
+    if (Platform.OS !== 'web') {
+      await SecureStore.setItemAsync(key, value);
+      return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  },
+  removeItem: async (key: string) => {
+    if (Platform.OS !== 'web') {
+      await SecureStore.deleteItemAsync(key);
+      return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  },
 };
 
 const supabaseClient = createClient(
@@ -24,7 +49,7 @@ const supabaseClient = createClient(
       autoRefreshToken: true,
       detectSessionInUrl: false,
       persistSession: true,
-      storage: secureStoreAdapter,
+      storage: authStorageAdapter,
       storageKey: AUTH_STORAGE_KEY,
     },
   },
@@ -81,7 +106,7 @@ export class SupabaseAuthService implements AuthService {
       const { error } = await this.client.auth.signOut({ scope: 'local' });
       throwAuthError(error);
     } finally {
-      await SecureStore.deleteItemAsync(AUTH_STORAGE_KEY);
+      await authStorageAdapter.removeItem(AUTH_STORAGE_KEY);
     }
   }
 

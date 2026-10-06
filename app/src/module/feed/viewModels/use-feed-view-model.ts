@@ -12,6 +12,7 @@ export type VerTudoOrigin = 'categoria' | 'top_semana';
 
 export interface FeedViewModel {
   isLoading: boolean;
+  catalogEmpty: boolean;
   selectedForYou: RecipeSummary[];
   categorySections: CategorySection[];
   topOfWeek: RecipeSummary[];
@@ -19,6 +20,7 @@ export interface FeedViewModel {
   toggleSaved: (id: string) => void;
   openRecipe: (slug: string, origin: string) => void;
   openVerTudo: (origin: VerTudoOrigin, categoryKey?: string) => void;
+  refetch: () => void;
 }
 
 export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): FeedViewModel {
@@ -56,6 +58,7 @@ export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): 
 
   return {
     isLoading: feedQuery.isLoading,
+    catalogEmpty: feedQuery.data?.catalogEmpty ?? false,
     selectedForYou: feedQuery.data?.selectedForYou ?? [],
     categorySections: feedQuery.data?.categories ?? [],
     topOfWeek: feedQuery.data?.topOfWeek ?? [],
@@ -63,5 +66,6 @@ export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): 
     toggleSaved,
     openRecipe,
     openVerTudo,
+    refetch: () => void feedQuery.refetch(),
   };
 }

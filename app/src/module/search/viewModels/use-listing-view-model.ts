@@ -40,6 +40,7 @@ export interface ListingViewModel {
   openRecipe: (slug: string) => void;
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
+  clearFilters: () => void;
 }
 
 function deriveTitle(origin: ListingOrigin, categoryKey?: RecipeCategoryKey): string {
@@ -72,11 +73,14 @@ export function useListingViewModel(
   const router = useRouter();
   const origin = params.origin ?? 'busca';
 
+  const initialFilters = useMemo<ListingFilters>(
+    () => (origin === 'categoria' && params.categoryKey ? { category: params.categoryKey } : {}),
+    [origin, params.categoryKey],
+  );
+
   const [query, setQueryState] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [filters, setFiltersState] = useState<ListingFilters>(() =>
-    origin === 'categoria' && params.categoryKey ? { category: params.categoryKey } : {},
-  );
+  const [filters, setFiltersState] = useState<ListingFilters>(initialFilters);
 
   const debouncedSetQuery = useMemo(() => debounce(setDebouncedQuery, QUERY_DEBOUNCE_MS), []);
 
@@ -144,6 +148,12 @@ export function useListingViewModel(
 
   const { savedIds, toggleSaved } = useFavoriteToggle(results);
 
+  const clearFilters = useCallback(() => {
+    setQueryState('');
+    setDebouncedQuery('');
+    setFiltersState(initialFilters);
+  }, [initialFilters]);
+
   return {
     title,
     query,
@@ -158,5 +168,6 @@ export function useListingViewModel(
     openRecipe,
     savedIds,
     toggleSaved,
+    clearFilters,
   };
 }

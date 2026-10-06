@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
 import type { ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -66,6 +67,7 @@ describe('useLoginViewModel', () => {
     await act(() => result.current.submitEmail());
     expect(authentication.signInWithMagicLink).not.toHaveBeenCalled();
     expect(result.current.status).toBe('error');
+    expect(result.current.error).toBe(AUTH_MESSAGES.invalidEmail);
   });
 
   it('starts OAuth and returns to idle when no session is established', async () => {
@@ -80,6 +82,6 @@ describe('useLoginViewModel', () => {
     const { result } = await renderHook(() => useLoginViewModel(authentication, profiles));
     await act(() => result.current.setEmail('user@example.com'));
     await act(() => result.current.submitEmail());
-    expect(result.current.error).toBe('Unable to send the magic link.');
+    expect(result.current.error).toBe(AUTH_MESSAGES.magicLinkFailed);
   });
 });

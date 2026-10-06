@@ -2,6 +2,8 @@ import type { Session } from '@supabase/supabase-js';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { resolveHomeRoute } from '@/module/auth/navigation';
 import { authService, type AuthService, type OAuthProvider } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -38,10 +40,10 @@ export function useLoginViewModel(
       useSessionStore.getState().setSession(session);
       const result = await profiles.bootstrap(session);
       useSessionStore.getState().setUser(result.user);
-      router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : '/');
+      router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : resolveHomeRoute(result.user));
     } catch (caught: unknown) {
       handledToken.current = null;
-      setError(caught instanceof Error ? caught.message : 'Unable to finish sign in.');
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.finishSignInFailed);
       setStatus('error');
     }
   };
@@ -54,7 +56,7 @@ export function useLoginViewModel(
 
   const submitEmail = async () => {
     if (!EMAIL_PATTERN.test(email.trim())) {
-      setError('Enter a valid email address.');
+      setError(AUTH_MESSAGES.invalidEmail);
       setStatus('error');
       return;
     }
@@ -64,7 +66,7 @@ export function useLoginViewModel(
       await authentication.signInWithMagicLink(email.trim());
       setStatus('sent');
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : 'Unable to send the magic link.');
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.magicLinkFailed);
       setStatus('error');
     }
   };
@@ -78,7 +80,7 @@ export function useLoginViewModel(
       if (session) await processSession(session);
       else setStatus('idle');
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : 'Unable to sign in.');
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.signInFailed);
       setStatus('error');
     }
   };

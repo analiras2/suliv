@@ -195,6 +195,11 @@ export const motion = {
 
 export const layout = {
   tabBarClearance: 110,
+  // Horizontal gutter every screen aligns its content to. It sits between spacing.md and
+  // spacing.lg on purpose, which is why it used to be written as the literal `spacing.lg - 4`
+  // in each screen. Apply it at exactly one level per screen: nesting two containers that
+  // both set it silently doubles the inset.
+  screenGutter: 20,
 } as const;
 
 export const recipeGradients = {

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Overline } from '@/components/atoms/overline';
-import { fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 
 export type SectionHeaderProps = {
   overline?: string;
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     gap: spacing.sm,
   },
   titleGroup: {

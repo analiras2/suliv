@@ -5,8 +5,10 @@ name: E2E-004 Empty favorites list shows the explore CTA; favoriting a recipe ma
     clearState: true
 - openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
 - tapOn: Salvos
-- assertVisible: Ainda nada salvo
-- tapOn: Explorar receitas
+- assertVisible:
+    id: state-view-favorites_empty
+- tapOn:
+    id: state-view-primary-action
 - assertVisible:
     id: selected-for-you-card-0
 - openLink: suliv://r/panqueca-de-banana-vegana

@@ -17,6 +17,7 @@ export interface FeedResponseDto {
   selectedForYou: RecipeSummaryDto[];
   categories: CategoryBlockDto[];
   topOfWeek: RecipeSummaryDto[];
+  catalogEmpty: boolean;
 }
 
 @Injectable()
@@ -30,18 +31,25 @@ export class FeedService {
 
   async getFeed(userId: string): Promise<FeedResponseDto> {
     const startedAt = Date.now();
-    const [selectedForYou, categories, topOfWeek] = await Promise.all([
-      this.rankingService.getSelectedForYou(userId, SELECTED_FOR_YOU_LIMIT),
-      this.getCategoryBlocks(),
-      this.recipesService.listTopOfWeek(TOP_OF_WEEK_LIMIT, userId),
-    ]);
+    const [selectedForYou, categories, topOfWeek, approvedRecipeCount] =
+      await Promise.all([
+        this.rankingService.getSelectedForYou(userId, SELECTED_FOR_YOU_LIMIT),
+        this.getCategoryBlocks(),
+        this.recipesService.listTopOfWeek(TOP_OF_WEEK_LIMIT, userId),
+        this.recipesService.countApprovedRecipes(),
+      ]);
 
     this.logger.log(
       { userId, latencyMs: Date.now() - startedAt },
       'FeedAssembled',
     );
 
-    return { selectedForYou, categories, topOfWeek };
+    return {
+      selectedForYou,
+      categories,
+      topOfWeek,
+      catalogEmpty: approvedRecipeCount === 0,
+    };
   }
 
   getCategories(): Promise<Category[]> {

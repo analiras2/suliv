@@ -36,6 +36,7 @@ describe('FeedService', () => {
     [number, string | undefined]
   >();
   const listCategories = jest.fn<Promise<Category[]>, []>();
+  const countApprovedRecipes = jest.fn<Promise<number>, []>();
 
   let service: FeedService;
 
@@ -45,6 +46,7 @@ describe('FeedService', () => {
       listByCategory,
       listTopOfWeek,
       listCategories,
+      countApprovedRecipes,
     } as unknown as RecipesService;
     const rankingService = {
       getSelectedForYou,
@@ -56,6 +58,7 @@ describe('FeedService', () => {
     let selectedForYouStarted = false;
     let categoriesStarted = false;
     let topOfWeekStarted = false;
+    let countApprovedRecipesStarted = false;
 
     getSelectedForYou.mockImplementation(() => {
       selectedForYouStarted = true;
@@ -70,12 +73,17 @@ describe('FeedService', () => {
       topOfWeekStarted = true;
       return Promise.resolve([recipeSummaryFixture('top-1')]);
     });
+    countApprovedRecipes.mockImplementation(() => {
+      countApprovedRecipesStarted = true;
+      return Promise.resolve(1);
+    });
 
     const result = await service.getFeed('user-1');
 
     expect(selectedForYouStarted).toBe(true);
     expect(categoriesStarted).toBe(true);
     expect(topOfWeekStarted).toBe(true);
+    expect(countApprovedRecipesStarted).toBe(true);
     expect(getSelectedForYou).toHaveBeenCalledWith('user-1', 5);
     expect(listTopOfWeek).toHaveBeenCalledWith(5, 'user-1');
     expect(result.selectedForYou).toHaveLength(1);
@@ -90,6 +98,26 @@ describe('FeedService', () => {
       },
     ]);
     expect(result.topOfWeek).toHaveLength(1);
+    expect(result.catalogEmpty).toBe(false);
+  });
+
+  it('UT-004 sets catalogEmpty true only when zero approved recipes exist, independent of block contents', async () => {
+    getSelectedForYou.mockResolvedValue([]);
+    listCategories.mockResolvedValue([]);
+    listTopOfWeek.mockResolvedValue([]);
+    countApprovedRecipes.mockResolvedValue(0);
+
+    const zeroResult = await service.getFeed('user-1');
+    expect(zeroResult.catalogEmpty).toBe(true);
+
+    getSelectedForYou.mockResolvedValue([recipeSummaryFixture('selected-1')]);
+    listCategories.mockResolvedValue(categories);
+    listByCategory.mockResolvedValue([]);
+    listTopOfWeek.mockResolvedValue([]);
+    countApprovedRecipes.mockResolvedValue(1);
+
+    const oneResult = await service.getFeed('user-1');
+    expect(oneResult.catalogEmpty).toBe(false);
   });
 
   it('does not call ranking or recipe queries when only listing categories', async () => {

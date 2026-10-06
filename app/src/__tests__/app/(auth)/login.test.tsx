@@ -33,11 +33,11 @@ describe('LoginScreen offline blocked-state (UT-013, UT-014)', () => {
     mockViewModel();
   });
 
-  it('UT-013: shows the offline message and disables submit controls when disconnected', async () => {
+  it('UT-013: shows the blocked state view and disables submit controls when disconnected with no session', async () => {
     mockUseNetworkStatus.mockReturnValue({ isConnected: false });
     const rendered = await render(<LoginScreen />);
 
-    expect(rendered.getByTestId('login-offline-message')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-login_offline_no_session')).toBeTruthy();
     expect(rendered.getByTestId('login-magic-link-button').props.accessibilityState.disabled).toBe(true);
     expect(rendered.getByTestId('login-google-button').props.accessibilityState.disabled).toBe(true);
     expect(rendered.getByTestId('login-apple-button').props.accessibilityState.disabled).toBe(true);
@@ -52,24 +52,24 @@ describe('LoginScreen offline blocked-state (UT-013, UT-014)', () => {
     });
 
     const rendered = await render(<LoginScreen />);
-    expect(rendered.getByTestId('login-offline-message')).toBeTruthy();
+    expect(rendered.getByTestId('state-view-login_offline_no_session')).toBeTruthy();
     expect(rendered.getByTestId('login-magic-link-button').props.accessibilityState.disabled).toBe(true);
 
     await act(async () => {
       listener?.(true);
     });
 
-    expect(rendered.queryByTestId('login-offline-message')).toBeNull();
+    expect(rendered.queryByTestId('state-view-login_offline_no_session')).toBeNull();
     expect(rendered.getByTestId('login-magic-link-button').props.accessibilityState.disabled).toBe(false);
     expect(rendered.getByTestId('login-google-button').props.accessibilityState.disabled).toBe(false);
     expect(rendered.getByTestId('login-apple-button').props.accessibilityState.disabled).toBe(false);
   });
 
-  it('does not show the offline message or disable submit controls while connected', async () => {
+  it('does not show the blocked state view or disable submit controls while connected', async () => {
     mockUseNetworkStatus.mockReturnValue({ isConnected: true });
     const rendered = await render(<LoginScreen />);
 
-    expect(rendered.queryByTestId('login-offline-message')).toBeNull();
+    expect(rendered.queryByTestId('state-view-login_offline_no_session')).toBeNull();
     expect(rendered.getByTestId('login-magic-link-button').props.accessibilityState.disabled).toBe(false);
   });
 });

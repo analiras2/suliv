@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Overline } from '@/components/atoms/overline';
-import { fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 
 export type GreetingProps = {
   name: string;
@@ -20,7 +20,7 @@ export function Greeting({ name }: GreetingProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingTop: spacing.sm + 2,
     gap: 4,
   },

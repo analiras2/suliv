@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SettingsHeader } from '@/components/molecules/settings-header';
-import { layout, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { layout, semanticColors, typography } from '@/design-system/tokens';
 
 export function SettingsPrivacyScreen() {
   const router = useRouter();
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     backgroundColor: semanticColors.bg,
   },
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     paddingBottom: layout.tabBarClearance,
   },
   body: {

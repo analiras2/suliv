@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { analyticsClient, type AnalyticsClient } from '@/lib/analytics';
 import { offlineCache, type OfflineCache } from '@/lib/offline-cache';
+import { useSessionStore } from '@/module/auth/store/use-session-store';
 import { onboardingService, type OnboardingService } from '@/module/onboarding/services/onboarding-service';
 import {
   INITIAL_ONBOARDING_STATE,
@@ -103,6 +104,15 @@ export function useOnboardingViewModel(
         cookingFrequency,
       });
       cache.set(PROFILE_SNAPSHOT_CACHE_KEY, snapshot);
+      // The root layout picks the active route group from the session profile, so the
+      // completed onboarding has to reach the store — otherwise (tabs) is never mounted
+      // and the `router.replace('/')` that follows this submit lands nowhere.
+      const currentUser = useSessionStore.getState().user;
+      if (currentUser) {
+        useSessionStore
+          .getState()
+          .setUser({ ...currentUser, onboardingCompletedAt: snapshot.onboardingCompletedAt });
+      }
       analytics.track('onboarding_completed', {
         diet_preference: dietPreference,
         cooking_level: cookingLevel,

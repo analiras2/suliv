@@ -3,6 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 
 import type { IconName } from '@/components/atoms/icon';
+import { AUTH_MESSAGES } from '@/module/auth/messages';
 import { authService } from '@/module/auth/services/auth-service';
 import { profileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -62,7 +63,7 @@ export function useProfileViewModel() {
     try {
       await authService.signOut();
     } catch (caught: unknown) {
-      setActionError(caught instanceof Error ? caught.message : 'Unable to sign out.');
+      setActionError(caught instanceof Error ? caught.message : AUTH_MESSAGES.signOutFailed);
     } finally {
       useSessionStore.getState().setSession(null);
       router.replace(LOGIN_ROUTE);

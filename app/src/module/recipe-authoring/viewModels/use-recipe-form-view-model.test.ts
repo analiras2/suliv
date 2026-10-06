@@ -167,6 +167,51 @@ describe('useRecipeFormViewModel', () => {
     expect(result.current.submitError).toEqual(expect.any(String));
   });
 
+  // UT-005: submit_error retry preserves draft content and reissues the same payload
+  it('UT-005: a network failure on submit() leaves the draft untouched and retry reissues the identical payload', async () => {
+    const submit: jest.Mock<RecipeAuthoringService['submit']> = jest.fn(async () => {
+      throw new TypeError('Network request failed');
+    });
+    const authoring = buildAuthoring({ submit });
+    const { result } = await renderHook(() => useRecipeFormViewModel(undefined, analytics, authoring));
+    const id = result.current.id;
+    const draftFields = {
+      title: 'Bolo',
+      description: 'Desc',
+      categoryId: 'cat-1',
+      prepTimeMinutes: 30,
+      servings: 4,
+      difficulty: 'iniciante' as const,
+      dietPreference: 'vegano' as const,
+      ingredients: [{ name: 'Farinha', quantity: 1, unit: 'kg' as const, scalesWithServings: true, order: 0 }],
+      steps: [{ order: 0, description: 'Misture', stepTimeSeconds: null }],
+    };
+
+    await act(() => {
+      useRecipeDraftsStore.getState().updateDraft(id, draftFields);
+      useRecipeDraftsStore.getState().setCoverImageUrl(id, 'https://cdn/img.jpg');
+    });
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(result.current.hasSubmitError).toBe(true);
+    expect(result.current.isRateLimited).toBe(false);
+    expect(result.current.fields).toEqual(expect.objectContaining(draftFields));
+
+    submit.mockImplementationOnce(async () => ({ id, slug: id, status: 'em_analise' as const, coverImageUrl: null }));
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(submit).toHaveBeenNthCalledWith(1, id);
+    expect(submit).toHaveBeenNthCalledWith(2, id);
+    expect(result.current.hasSubmitError).toBe(false);
+    expect(result.current.fields).toEqual(expect.objectContaining(draftFields));
+  });
+
   it('addIngredient/addStep append entries with the correct order', async () => {
     const { result } = await renderHook(() => useRecipeFormViewModel(undefined, analytics, buildAuthoring()));
 

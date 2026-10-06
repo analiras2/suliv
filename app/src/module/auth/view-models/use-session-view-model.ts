@@ -1,6 +1,8 @@
 import { useRouter, useSegments, type Href } from 'expo-router';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
+import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { resolveHomeRoute } from '@/module/auth/navigation';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import {
   profileService,
@@ -32,7 +34,7 @@ export function useSessionViewModel(
 
       const result = await profiles.bootstrap(session);
       useSessionStore.getState().setUser(result.user);
-      router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : '/');
+      router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : resolveHomeRoute(result.user));
     } catch (caught: unknown) {
       if (caught instanceof ProfileServiceError && caught.status === UNAUTHORIZED_STATUS) {
         await authentication.signOut().catch(() => undefined);
@@ -43,8 +45,8 @@ export function useSessionViewModel(
 
       const hasSession = Boolean(useSessionStore.getState().session);
       if (!hasSession) useSessionStore.getState().setSession(null);
-      else router.replace('/');
-      setError(caught instanceof Error ? caught.message : 'Unable to restore your session.');
+      else router.replace(resolveHomeRoute(useSessionStore.getState().user));
+      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.restoreSessionFailed);
     }
   };
 
@@ -68,9 +70,9 @@ export function useSessionViewModel(
 
   useEffect(() => {
     if (status === 'authenticated' && user?.name && String(segments[0]) === '(auth)') {
-      router.replace('/');
+      router.replace(resolveHomeRoute(user));
     }
-  }, [router, segments, status, user?.name]);
+  }, [router, segments, status, user]);
 
   return { error, status };
 }

@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/atoms/button';
-import { fontFamilies, semanticColors, spacing, typography } from '@/design-system/tokens';
+import { fontFamilies, layout, semanticColors, spacing, typography } from '@/design-system/tokens';
 import { useDeleteRecipeScreenViewModel } from '@/module/recipe-authoring/viewModels/use-delete-recipe-screen-view-model';
 
 export type DeleteRecipeScreenProps = {
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    margin: spacing.lg - 4,
+    margin: layout.screenGutter,
     backgroundColor: semanticColors.surfaceRaised,
     borderRadius: 20,
     padding: spacing.lg,

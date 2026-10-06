@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { FlatList, StyleSheet, View, type ListRenderItem } from 'react-native';
 
 import { RecipeCard } from '@/components/molecules/recipe-card';
-import { spacing } from '@/design-system/tokens';
+import { layout, spacing } from '@/design-system/tokens';
 import type { Recipe } from '@/module/recipes/types';
 
 export type GridRecipe = Recipe & { conflictsWithUser?: boolean };
@@ -43,7 +43,7 @@ export function RecipeGrid({
 }: RecipeGridProps) {
   const renderItem = useCallback<ListRenderItem<GridRecipe>>(
     ({ item, index }) => (
-      <View testID={testIDPrefix ? `${testIDPrefix}-${index}` : undefined}>
+      <View style={styles.cell} testID={testIDPrefix ? `${testIDPrefix}-${index}` : undefined}>
         <RecipeCard
           recipe={item}
           saved={savedIds.has(item.id)}
@@ -82,9 +82,17 @@ function ItemSeparator() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
   },
   row: {
     gap: spacing.sm,
+  },
+  // RecipeCard is `flex: 1`, but flex only distributes through a parent that takes part in
+  // the row layout. Without this the wrapper falls back to its intrinsic content width, so
+  // every card is sized by its own title and the wider ones overflow the row on the right.
+  // maxWidth keeps a lone card on an odd last row at column width instead of full bleed.
+  cell: {
+    flex: 1,
+    maxWidth: '50%',
   },
 });

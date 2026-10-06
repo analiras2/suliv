@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Pill, type PillTone } from '@/components/atoms/pill';
-import { spacing } from '@/design-system/tokens';
+import { layout, spacing } from '@/design-system/tokens';
 import type { Difficulty, DietPreference, RecipeCategoryKey, TimeBucket } from '@/module/recipes/types';
 import { CATEGORY_LABELS, type ListingFilters } from '@/module/search/types';
 
@@ -78,7 +78,11 @@ export function FilterBar({ filters, onChangeFilter, allergenOptions = [] }: Fil
   );
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.content}
+      style={styles.bar}>
       <View style={styles.group}>
         {(Object.keys(CATEGORY_LABELS) as RecipeCategoryKey[]).map((key) => (
           <FilterChip
@@ -126,8 +130,14 @@ export function FilterBar({ filters, onChangeFilter, allergenOptions = [] }: Fil
 }
 
 const styles = StyleSheet.create({
+  // The bar is meant to scroll edge to edge, so it cancels the screen gutter its host
+  // applies and re-adds it as content padding instead. Without this the chips are clipped
+  // by the host's inset and the row visually dead-ends before the edge of the screen.
+  bar: {
+    marginHorizontal: -layout.screenGutter,
+  },
   content: {
-    paddingHorizontal: spacing.lg - 4,
+    paddingHorizontal: layout.screenGutter,
     gap: spacing.md,
   },
   group: {

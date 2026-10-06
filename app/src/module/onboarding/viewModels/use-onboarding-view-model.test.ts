@@ -16,7 +16,29 @@ jest.mock('@/module/splash/services/critical-data-service', () => ({
 }));
 
 // eslint-disable-next-line import/first
+import { useSessionStore } from '@/module/auth/store/use-session-store';
+// eslint-disable-next-line import/first
+import type { UserProfile } from '@/module/auth/types';
+// eslint-disable-next-line import/first
 import { useOnboardingViewModel } from './use-onboarding-view-model';
+
+const userProfile: UserProfile = {
+  id: 'user-1',
+  email: 'ana@example.com',
+  name: 'Ana',
+  username: 'ana',
+  usernameUpdatedAt: null,
+  avatarUrl: null,
+  dietPreference: null,
+  cookingLevel: null,
+  cookingFrequency: null,
+  onboardingCompletedAt: null,
+  termsVersionAccepted: null,
+  termsAcceptedAt: null,
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
 
 const snapshot: ProfileSnapshot = {
   id: 'user-1',
@@ -205,6 +227,35 @@ describe('useOnboardingViewModel', () => {
       allergy_count: 2,
     });
     expect(result.current.submitStatus).toBe('idle');
+  });
+
+  it('submit() success publishes onboardingCompletedAt to the session store', async () => {
+    // The root layout mounts (tabs) only once the session profile reports a completed
+    // onboarding, so a submit that skips the store leaves the user stuck on this screen.
+    useSessionStore.getState().setUser(userProfile);
+    const { result } = await setup();
+    await fillValidState(result);
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(useSessionStore.getState().user).toEqual({
+      ...userProfile,
+      onboardingCompletedAt: snapshot.onboardingCompletedAt,
+    });
+  });
+
+  it('submit() leaves the session store untouched when there is no signed-in profile', async () => {
+    useSessionStore.getState().setUser(null);
+    const { result } = await setup();
+    await fillValidState(result);
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(useSessionStore.getState().user).toBeNull();
   });
 
   it('UT-013: submit() failure sets submitStatus to error, preserves state, and does not call offline-cache', async () => {

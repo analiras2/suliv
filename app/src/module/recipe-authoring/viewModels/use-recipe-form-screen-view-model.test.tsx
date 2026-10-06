@@ -19,6 +19,7 @@ jest.mock('expo-image-picker', () => ({
 let mockFormState: {
   isSubmitting: boolean;
   submitError: string | null;
+  hasSubmitError?: boolean;
   setCoverImage: jest.Mock;
 };
 jest.mock('@/module/recipe-authoring/viewModels/use-recipe-form-view-model', () => ({
@@ -51,6 +52,17 @@ describe('useRecipeFormScreenViewModel', () => {
     mockFormState = { ...mockFormState, isSubmitting: true };
     await rerender({});
     mockFormState = { ...mockFormState, isSubmitting: false, submitError: 'Falhou' };
+    await rerender({});
+
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('does not navigate when a submit attempt finishes with a submit_error', async () => {
+    const { rerender } = await renderHook(() => useRecipeFormScreenViewModel(undefined));
+
+    mockFormState = { ...mockFormState, isSubmitting: true };
+    await rerender({});
+    mockFormState = { ...mockFormState, isSubmitting: false, submitError: null, hasSubmitError: true };
     await rerender({});
 
     expect(mockReplace).not.toHaveBeenCalled();

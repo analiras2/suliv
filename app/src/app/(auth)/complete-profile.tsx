@@ -11,23 +11,25 @@ export default function CompleteProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.eyebrow}>Só falta um detalhe</Text>
-        <Text style={styles.title}>Como você quer ser chamada?</Text>
-        <Text style={styles.description}>Seu nome deixa a experiência mais pessoal e pode ser alterado depois.</Text>
-        <TextInput
-          accessibilityLabel="Nome"
-          autoCapitalize="words"
-          editable={!isSubmitting}
-          onChangeText={viewModel.setName}
-          onSubmitEditing={viewModel.submitName}
-          placeholder="Seu nome"
-          placeholderTextColor={semanticColors.fgTertiary}
-          style={styles.field}
-          testID="complete-profile-name-input"
-          value={viewModel.name}
-        />
-        {viewModel.error && <Text style={[styles.feedback, styles.error]}>{viewModel.error}</Text>}
+      <View style={styles.stepContainer}>
+        <View style={styles.stepContent}>
+          <Text style={styles.eyebrow}>Só falta um detalhe</Text>
+          <Text style={styles.title}>Como você quer ser chamada?</Text>
+          <Text style={styles.description}>Seu nome deixa a experiência mais pessoal e pode ser alterado depois.</Text>
+          <TextInput
+            accessibilityLabel="Nome"
+            autoCapitalize="words"
+            editable={!isSubmitting}
+            onChangeText={viewModel.setName}
+            onSubmitEditing={viewModel.submitName}
+            placeholder="Seu nome"
+            placeholderTextColor={semanticColors.fgTertiary}
+            style={styles.field}
+            testID="complete-profile-name-input"
+            value={viewModel.name}
+          />
+          {viewModel.error && <Text style={[styles.feedback, styles.error]}>{viewModel.error}</Text>}
+        </View>
         <Pressable
           accessibilityLabel="Salvar nome"
           accessibilityRole="button"

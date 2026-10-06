@@ -40,6 +40,7 @@ const feedResponse = {
     },
   ],
   topOfWeek: [buildRecipe('r3', 'Wrap de grão-de-bico', 'lanche')],
+  catalogEmpty: false,
 };
 
 async function renderHomeScreen() {
@@ -91,5 +92,21 @@ describe('HomeScreen (IT-005, IT-006)', () => {
       pathname: '/ver-tudo',
       params: { origin: 'categoria', categoryKey: 'cafe_da_manha' },
     });
+  });
+
+  it('E2E-004: renders state-view-feed_no_relevant_recipes instead of the 3 normal blocks when catalogEmpty is true', async () => {
+    global.fetch = jest
+      .fn<() => Promise<{ ok: boolean; json: () => Promise<typeof feedResponse> }>>()
+      .mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ...feedResponse, selectedForYou: [], categories: [], topOfWeek: [], catalogEmpty: true }),
+      }) as unknown as typeof fetch;
+
+    const screen = await renderHomeScreen();
+
+    await waitFor(() => expect(screen.getByTestId('state-view-feed_no_relevant_recipes')).toBeTruthy());
+    expect(screen.queryByText('Selecionadas para você')).toBeNull();
+    expect(screen.queryByText('Categorias')).toBeNull();
+    expect(screen.queryByText('Top da semana')).toBeNull();
   });
 });
