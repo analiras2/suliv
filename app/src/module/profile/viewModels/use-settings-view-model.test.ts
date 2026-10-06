@@ -47,6 +47,7 @@ function createProfileServiceMock(): jest.Mocked<ProfileService> {
   return {
     updateProfile: jest.fn(),
     updateAllergies: jest.fn(),
+    updateUsername: jest.fn(),
   };
 }
 

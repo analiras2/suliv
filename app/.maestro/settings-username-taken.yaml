@@ -1,0 +1,24 @@
+appId: host.exp.Exponent
+name: mensageria E2E-005 A username owned by another user shows the Portuguese USERNAME_TAKEN copy and keeps the previous one
+---
+# Needs a seeded user that already owns the username `existing_user`, and the PERSISTED_* user
+# must not be that user nor within the 30-day username change window.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible: Início
+- tapOn: Você
+- tapOn:
+    id: settings-username
+- tapOn:
+    id: settings-username-input
+- eraseText: 40
+- inputText: existing_user
+- tapOn:
+    id: settings-username-save
+- assertVisible:
+    id: settings-username-error
+- assertVisible: Esse nome de usuário já está em uso. Escolha outro.
+- tapOn:
+    id: settings-header-back
+- assertVisible: Você

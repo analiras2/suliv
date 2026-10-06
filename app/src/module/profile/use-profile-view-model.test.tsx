@@ -70,6 +70,7 @@ describe('useProfileViewModel', () => {
     const { result } = await renderHook(() => useProfileViewModel(), { wrapper });
     const ids = result.current.settings.map((item) => item.id);
     expect(ids).toEqual([
+      'username',
       'diet-preference',
       'allergies',
       'level-frequency',
