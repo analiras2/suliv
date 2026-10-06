@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+name: mensageria E2E-004 A revoked session returns to login with the session-expired message
+---
+# Needs a dedicated REVOKED_ACCESS_TOKEN/REVOKED_REFRESH_TOKEN pair for a throwaway test user, plus
+# REVOKED_USER_ID, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY for the local Supabase stack.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${REVOKED_ACCESS_TOKEN}&refresh_token=${REVOKED_REFRESH_TOKEN}
+- assertVisible: Início
+- runScript: session-revoked-returns-to-login.js
+# The next authenticated request answers 401; the client ends the session once and routes to login.
+- swipe:
+    direction: DOWN
+- assertVisible:
+    id: login-email-input
+- assertVisible: Sua sessão expirou. Entre novamente.

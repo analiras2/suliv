@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { Category, Recipe, RecipeStatus, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecipeSummaryDto } from '../recipes/recipe-summary.dto';
@@ -49,7 +50,7 @@ export class RankingService {
   ): Promise<RecipeSummaryDto[]> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new ApiException('USER_NOT_FOUND', 'User not found');
     }
 
     const scored = await this.computeScoredCandidates(user);
@@ -109,7 +110,7 @@ export class RankingService {
   ): Promise<PaginatedRecipes> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new ApiException('USER_NOT_FOUND', 'User not found');
     }
 
     const scored = await this.computeScoredCandidates(user);

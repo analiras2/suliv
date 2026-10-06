@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../../errors/api-exception';
 import { Prisma, ReportStatus, ReportTargetType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../audit-log.service';
@@ -65,14 +62,15 @@ export class AdminReportsService {
       where: { id: reportId },
     });
     if (!report) {
-      throw new NotFoundException('Report not found');
+      throw new ApiException('REPORT_NOT_FOUND', 'Report not found');
     }
 
     if (
       action === 'hide_content' &&
       report.targetType !== ReportTargetType.comment
     ) {
-      throw new BadRequestException(
+      throw new ApiException(
+        'REPORT_ACTION_NOT_APPLICABLE',
         'hide_content only applies to a comment-targeted report',
       );
     }
@@ -80,7 +78,8 @@ export class AdminReportsService {
       action === 'reopen_recipe' &&
       report.targetType !== ReportTargetType.recipe
     ) {
-      throw new BadRequestException(
+      throw new ApiException(
+        'REPORT_ACTION_NOT_APPLICABLE',
         'reopen_recipe only applies to a recipe-targeted report',
       );
     }

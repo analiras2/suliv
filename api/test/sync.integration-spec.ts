@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { generateKeyPairSync } from 'node:crypto';
@@ -7,6 +7,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -48,9 +49,7 @@ describe('POST /sync (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
   });
 
@@ -121,6 +120,20 @@ describe('POST /sync (integration)', () => {
       idempotency_key: idempotencyKey,
     };
   }
+
+  it('IT-015 a draft_upsert without a valid payload is rejected with SYNC_PAYLOAD_INVALID', async () => {
+    const response = await postSync('it-015-sync-user', [
+      {
+        type: 'draft_upsert',
+        payload: {},
+        idempotency_key: 'it-015-key',
+      },
+    ]).expect(400);
+
+    expect((response.body as { code: string }).code).toBe(
+      'SYNC_PAYLOAD_INVALID',
+    );
+  });
 
   it('IT-001 a favorite_add action creates the Favorite row and increments stats', async () => {
     const category = await upsertCategory(RecipeCategory.lanche, 'Lanche');

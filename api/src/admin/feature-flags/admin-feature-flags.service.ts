@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../../errors/api-exception';
 import { FeatureFlag, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../audit-log.service';
@@ -26,7 +27,10 @@ export class AdminFeatureFlagsService {
   ): Promise<FeatureFlag> {
     const flag = await this.prisma.featureFlag.findUnique({ where: { key } });
     if (!flag) {
-      throw new NotFoundException('Feature flag not found');
+      throw new ApiException(
+        'FEATURE_FLAG_NOT_FOUND',
+        'Feature flag not found',
+      );
     }
 
     const data: Prisma.FeatureFlagUpdateInput = {};

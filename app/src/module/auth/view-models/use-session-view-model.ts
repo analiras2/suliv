@@ -1,19 +1,14 @@
 import { useRouter, useSegments, type Href } from 'expo-router';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { ApiError } from '@/lib/api-error';
+import { AUTH_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 import { resolveHomeRoute } from '@/module/auth/navigation';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
-import {
-  profileService,
-  ProfileServiceError,
-  type ProfileService,
-} from '@/module/auth/services/profile-service';
+import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 
-const UNAUTHORIZED_STATUS = 401;
 const COMPLETE_PROFILE_ROUTE = '/complete-profile' as Href;
-const LOGIN_ROUTE = '/login' as Href;
 
 export function useSessionViewModel(
   authentication: AuthService = authService,
@@ -32,21 +27,17 @@ export function useSessionViewModel(
       useSessionStore.getState().setSession(session);
       if (!session) return;
 
-      const result = await profiles.bootstrap(session);
+      const result = await profiles.bootstrap();
       useSessionStore.getState().setUser(result.user);
       router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : resolveHomeRoute(result.user));
     } catch (caught: unknown) {
-      if (caught instanceof ProfileServiceError && caught.status === UNAUTHORIZED_STATUS) {
-        await authentication.signOut().catch(() => undefined);
-        useSessionStore.getState().setSession(null);
-        router.replace(LOGIN_ROUTE);
-        return;
-      }
+      // A 401 already ended the session centrally (ADR-008); the login screen shows its notice.
+      if (caught instanceof ApiError && caught.code === 'UNAUTHORIZED') return;
 
       const hasSession = Boolean(useSessionStore.getState().session);
       if (!hasSession) useSessionStore.getState().setSession(null);
       else router.replace(resolveHomeRoute(useSessionStore.getState().user));
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.restoreSessionFailed);
+      setError(getErrorMessage(caught, AUTH_MESSAGES.restoreSessionFailed));
     }
   };
 

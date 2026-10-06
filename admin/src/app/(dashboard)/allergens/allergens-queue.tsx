@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
-  ApiError,
   approveAllergen,
   createAllergenTerm,
   deleteAllergenTerm,
@@ -12,6 +11,7 @@ import {
   rejectAllergen,
   updateAllergenTerm,
 } from '@/lib/api-client';
+import { getErrorMessage } from '@/lib/error-messages';
 import type { Allergen, AllergenIngredientTerm } from '@/lib/types';
 
 function PendingAllergensQueue() {
@@ -73,7 +73,7 @@ function TermEditor({ allergen }: { allergen: Allergen }) {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-allergens', 'approved'] });
 
   const handleError = (error: unknown) => {
-    setFormError(error instanceof ApiError ? error.message : 'Request failed.');
+    setFormError(getErrorMessage(error));
   };
 
   const createMutation = useMutation({

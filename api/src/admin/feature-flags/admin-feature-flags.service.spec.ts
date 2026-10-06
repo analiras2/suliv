@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { FeatureFlag } from '@prisma/client';
 import { AuditLogService } from '../audit-log.service';
 import { AdminFeatureFlagsService } from './admin-feature-flags.service';
@@ -73,7 +72,7 @@ describe('AdminFeatureFlagsService', () => {
 
     await expect(
       service.update('admin-1', 'missing_flag', { enabled: false }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toMatchObject({ code: 'FEATURE_FLAG_NOT_FOUND' });
     expect(update).not.toHaveBeenCalled();
   });
 });

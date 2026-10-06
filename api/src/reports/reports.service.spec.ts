@@ -1,8 +1,3 @@
-import {
-  ConflictException,
-  HttpException,
-  NotFoundException,
-} from '@nestjs/common';
 import { Prisma, Report } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from './reports.service';
@@ -81,7 +76,7 @@ describe('ReportsService', () => {
         targetId: 'nonexistent-id',
         reason: 'spam',
       }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toMatchObject({ code: 'REPORT_TARGET_NOT_FOUND' });
     expect(createReport).not.toHaveBeenCalled();
   });
 
@@ -94,7 +89,7 @@ describe('ReportsService', () => {
         targetId: 'comment-1',
         reason: 'spam',
       }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toMatchObject({ code: 'REPORT_DUPLICATE' });
   });
 
   it('UT-012 rejects with 429 on the 11th report in the same day', async () => {
@@ -106,7 +101,7 @@ describe('ReportsService', () => {
         targetId: 'comment-1',
         reason: 'spam',
       }),
-    ).rejects.toThrow(HttpException);
+    ).rejects.toMatchObject({ code: 'REPORT_RATE_LIMITED' });
     expect(createReport).not.toHaveBeenCalled();
   });
 });

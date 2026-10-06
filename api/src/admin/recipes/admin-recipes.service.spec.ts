@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { Recipe } from '@prisma/client';
 import { AuditLogService } from '../audit-log.service';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -90,9 +89,9 @@ describe('AdminRecipesService', () => {
   it('UT-004 getForReview throws 404 for a nonexistent recipe', async () => {
     findUniqueRecipe.mockResolvedValue(null);
 
-    await expect(service.getForReview('missing')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.getForReview('missing')).rejects.toMatchObject({
+      code: 'RECIPE_NOT_FOUND',
+    });
   });
 
   it('UT-005 approve sets status/approvedAt, clears adjustment fields, triggers FCM send', async () => {

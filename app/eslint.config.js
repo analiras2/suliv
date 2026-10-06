@@ -39,6 +39,29 @@ module.exports = defineConfig([
     },
   },
   {
+    // ADR-006: view models show resolver copy, never the text of a caught error. Services are not
+    // covered: they throw ApiError, whose message is a code and never reaches the screen.
+    files: [
+      "src/**/view-models/**/*.{ts,tsx}",
+      "src/**/viewModels/**/*.{ts,tsx}",
+      "src/**/use-*-view-model.{ts,tsx}",
+    ],
+    ignores: ["**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[property.name='message'][object.name=/^(caught|error|err|e|[a-zA-Z]*Error)$/]",
+          message: "Do not read .message from a caught error in a view model; use getErrorMessage from @/lib/error-messages.",
+        },
+        {
+          selector: "MemberExpression[property.name='message'][object.property.name=/^[a-zA-Z]*[eE]rror$/]",
+          message: "Do not read .message from a caught error in a view model; use getErrorMessage from @/lib/error-messages.",
+        },
+      ],
+    },
+  },
+  {
     ignores: ["dist/*"],
   }
 ]);

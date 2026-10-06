@@ -1,9 +1,3 @@
-import {
-  ForbiddenException,
-  HttpException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { CommentRating } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CommentsService } from './comments.service';
@@ -105,7 +99,7 @@ describe('CommentsService', () => {
     it('UT-003 rejects a rating outside 1-5 with a 422', async () => {
       await expect(
         service.upsert('recipe-1', 'user-1', { rating: 6 }),
-      ).rejects.toThrow(UnprocessableEntityException);
+      ).rejects.toMatchObject({ code: 'RATING_OUT_OF_RANGE' });
       expect(upsertCommentRating).not.toHaveBeenCalled();
     });
 
@@ -155,7 +149,7 @@ describe('CommentsService', () => {
 
       await expect(
         service.upsert('recipe-21', 'user-1', { rating: 3 }),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toMatchObject({ code: 'COMMENT_RATE_LIMITED' });
       expect(upsertCommentRating).not.toHaveBeenCalled();
     });
   });
@@ -178,18 +172,18 @@ describe('CommentsService', () => {
         commentRatingFixture({ userId: 'user-1' }),
       );
 
-      await expect(service.remove('comment-1', 'someone-else')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.remove('comment-1', 'someone-else'),
+      ).rejects.toMatchObject({ code: 'COMMENT_NOT_OWNED' });
       expect(deleteCommentRating).not.toHaveBeenCalled();
     });
 
     it('throws 404 when the comment does not exist', async () => {
       findUniqueCommentRating.mockResolvedValue(null);
 
-      await expect(service.remove('missing', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove('missing', 'user-1')).rejects.toMatchObject({
+        code: 'COMMENT_NOT_FOUND',
+      });
     });
   });
 

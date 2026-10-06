@@ -187,4 +187,23 @@ describe('favoritesSyncService', () => {
 
     expect(mockTrack).not.toHaveBeenCalledWith('favorite_saved_offline', expect.anything());
   });
+
+  it('keeps the action queued when the request fails without a response', async () => {
+    const { favoritesSyncService } = loadService();
+    netInfoListener({ isConnected: true });
+    fetchMock.mockRejectedValue(new TypeError('Network request failed'));
+    mockFlush.mockClear();
+    await favoritesSyncService.flush();
+    const [send] = mockFlush.mock.calls[0] as [(action: QueuedAction) => Promise<void>];
+    const action: QueuedAction = {
+      idempotencyKey: 'key-2',
+      actionType: 'favorite_add',
+      payload: { recipeId: 'recipe-1', occurredAt: '2026-07-23T10:00:00.000Z' },
+      occurredAt: '2026-07-23T10:00:00.000Z',
+    };
+
+    // A rejection is what tells sync-queue to stop and leave the action queued.
+    await expect(send(action)).rejects.toMatchObject({ code: 'NETWORK_UNAVAILABLE' });
+    expect(mockTrack).not.toHaveBeenCalledWith('favorite_saved_offline', expect.anything());
+  });
 });

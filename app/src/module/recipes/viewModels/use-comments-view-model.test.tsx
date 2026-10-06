@@ -9,25 +9,15 @@ import type { ReactNode } from 'react';
 // deps, so the defaults only need to exist as importable stubs.
 jest.mock('@/module/recipes/services/comments-service', () => ({
   commentsService: { list: jest.fn(), getOwn: jest.fn(), upsert: jest.fn(), remove: jest.fn() },
-  CommentsServiceError: class CommentsServiceError extends Error {
-    status: number;
-    constructor(status: number) {
-      super(`Comments request failed with status ${status}.`);
-      this.status = status;
-    }
-  },
 }));
 jest.mock('@/module/recipes/services/reports-service', () => ({
   reportsService: { create: jest.fn() },
-  ReportsServiceError: class ReportsServiceError extends Error {
-    status: number;
-    constructor(status: number) {
-      super(`Report request failed with status ${status}.`);
-      this.status = status;
-    }
-  },
 }));
 
+// eslint-disable-next-line import/first
+import { ApiError } from '@/lib/api-error';
+// eslint-disable-next-line import/first
+import { ERROR_MESSAGES } from '@/lib/error-messages';
 // eslint-disable-next-line import/first
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 // eslint-disable-next-line import/first
@@ -75,7 +65,7 @@ function buildReportsService(): jest.Mocked<ReportsService> {
 }
 
 function wrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
@@ -151,5 +141,48 @@ describe('useCommentsViewModel', () => {
     });
 
     expect(commentsService.remove).toHaveBeenCalledWith(ownComment.id);
+  });
+
+  it('UT-056 shows the duplicate-report copy when the report is rejected with REPORT_DUPLICATE', async () => {
+    const commentsService = buildCommentsService([otherUserComment]);
+    const reportsService = buildReportsService();
+    reportsService.create.mockRejectedValue(new ApiError('REPORT_DUPLICATE', 409));
+    const { result } = await renderHook(
+      () => useCommentsViewModel('recipe-1', { commentsService, reportsService }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(() => result.current.report('comment-1', 'spam').catch(() => undefined));
+
+    expect(result.current.error).toBe(ERROR_MESSAGES.REPORT_DUPLICATE);
+  });
+
+  it('UT-057 shows the rate-limit copy when a write is rejected with COMMENT_RATE_LIMITED', async () => {
+    const commentsService = buildCommentsService([otherUserComment]);
+    commentsService.upsert.mockRejectedValue(new ApiError('COMMENT_RATE_LIMITED', 429));
+    const { result } = await renderHook(
+      () => useCommentsViewModel('recipe-1', { commentsService, reportsService: buildReportsService() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(() => result.current.submit(4, 'bom').catch(() => undefined));
+
+    expect(result.current.error).toBe(ERROR_MESSAGES.COMMENT_RATE_LIMITED);
+  });
+
+  it('falls back to the action wording for an unrecognised failure', async () => {
+    const commentsService = buildCommentsService([otherUserComment]);
+    commentsService.upsert.mockRejectedValue(new Error('boom'));
+    const { result } = await renderHook(
+      () => useCommentsViewModel('recipe-1', { commentsService, reportsService: buildReportsService() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(() => result.current.submit(4, 'bom').catch(() => undefined));
+
+    expect(result.current.error).toBe('Não foi possível salvar. Tente novamente.');
   });
 });

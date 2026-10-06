@@ -1,10 +1,8 @@
 import NetInfo from '@react-native-community/netinfo';
 
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { apiRequest } from '@/lib/api-client';
 import { syncQueue, type QueuedAction } from '@/lib/sync-queue';
 import type { RecipeAuthoringPayload, RecipeDraft } from '@/module/recipe-authoring/types';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export interface DraftsSyncService {
   enqueueUpsert(draft: RecipeDraft, occurredAt: string): void; // text fields only, excludes localImageUri
@@ -58,15 +56,13 @@ function toWirePayload(draft: RecipeDraft): Partial<RecipeAuthoringPayload> & { 
 
 const syncedListeners = new Set<(draftId: string, syncedAt: string) => void>();
 
-async function sendSyncAction(action: QueuedAction, authentication: AuthService): Promise<void> {
-  const session = await authentication.getSession();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (session) headers.Authorization = `Bearer ${session.access_token}`;
-
-  const response = await fetch(`${API_BASE_URL}/sync`, {
+// POST /sync currently responds 201, not 200 — the client accepts any 2xx, never an
+// exact status code (see workflow memory: known SyncController quirk). A failure of
+// any kind rejects here, which leaves the action queued (sync-queue).
+async function sendSyncAction(action: QueuedAction): Promise<void> {
+  await apiRequest('/sync', {
     method: 'POST',
-    headers,
-    body: JSON.stringify({
+    body: {
       actions: [
         {
           type: action.actionType,
@@ -74,14 +70,8 @@ async function sendSyncAction(action: QueuedAction, authentication: AuthService)
           idempotency_key: action.idempotencyKey,
         },
       ],
-    }),
+    },
   });
-
-  // POST /sync currently responds 201, not 200 — check response.ok, never an
-  // exact status code (see workflow memory: known SyncController quirk).
-  if (!response.ok) {
-    throw new Error(`Sync request failed with status ${response.status}.`);
-  }
 
   if (action.actionType === 'draft_upsert') {
     const { id: draftId } = action.payload as { id: string };
@@ -91,7 +81,7 @@ async function sendSyncAction(action: QueuedAction, authentication: AuthService)
 }
 
 async function flush(): Promise<void> {
-  await syncQueue.flush((action) => sendSyncAction(action, authService));
+  await syncQueue.flush(sendSyncAction);
 }
 
 // Mirrors favorites-sync-service.ts's precedent: a plain module needing a

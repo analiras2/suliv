@@ -1,87 +1,28 @@
 import NetInfo from '@react-native-community/netinfo';
 
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { ERROR_MESSAGES, getErrorMessage } from '@/lib/error-messages';
+import { requestSignature, uploadToCloudinary } from '@/module/recipe-authoring/services/recipe-image-transport';
 import { recipeAuthoringService, type RecipeAuthoringService } from '@/module/recipe-authoring/services/recipe-authoring-service';
 import { useRecipeDraftsStore } from '@/module/recipe-authoring/store/use-recipe-drafts-store';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
-
 export const MAX_AUTO_RETRY_ATTEMPTS = 3;
-
-interface UploadSignature {
-  signature: string;
-  timestamp: number;
-  apiKey: string;
-  cloudName: string;
-  uploadPreset: string;
-}
 
 // ADR-001: POST /uploads/recipe-image-signature (Core Interfaces).
 export interface RecipeImageUploadService {
   upload(localUri: string, onProgress?: (pct: number) => void): Promise<string>; // returns cover_image_url
 }
 
-export class RecipeImageUploadServiceError extends Error {
-  constructor(readonly status: number) {
-    super(`Recipe image upload request failed with status ${status}.`);
-  }
-}
-
-async function requestSignature(authentication: AuthService): Promise<UploadSignature> {
-  const session = await authentication.getSession();
-  const headers: Record<string, string> = {};
-  if (session) headers.Authorization = `Bearer ${session.access_token}`;
-
-  const response = await fetch(`${API_BASE_URL}/uploads/recipe-image-signature`, {
-    method: 'POST',
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new RecipeImageUploadServiceError(response.status);
-  }
-
-  return response.json() as Promise<UploadSignature>;
-}
-
-async function uploadToCloudinary(signature: UploadSignature, localUri: string): Promise<string> {
-  const form = new FormData();
-  form.append('file', { uri: localUri, type: 'image/jpeg', name: 'recipe-image.jpg' } as unknown as Blob);
-  form.append('api_key', signature.apiKey);
-  form.append('timestamp', String(signature.timestamp));
-  form.append('signature', signature.signature);
-  form.append('upload_preset', signature.uploadPreset);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`, {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!response.ok) {
-    throw new RecipeImageUploadServiceError(response.status);
-  }
-
-  const body = (await response.json()) as { secure_url: string };
-  return body.secure_url;
-}
-
-export function createRecipeImageUploadService(
-  authentication: AuthService = authService,
-): RecipeImageUploadService {
-  return {
-    // UT-005/UT-006: calls the signature endpoint first — a signature failure
-    // short-circuits before any Cloudinary call is attempted.
-    async upload(localUri, onProgress) {
-      onProgress?.(0);
-      const signature = await requestSignature(authentication);
-      const url = await uploadToCloudinary(signature, localUri);
-      onProgress?.(100);
-      return url;
-    },
-  };
-}
-
-export const recipeImageUploadService: RecipeImageUploadService = createRecipeImageUploadService();
+export const recipeImageUploadService: RecipeImageUploadService = {
+  // UT-005/UT-006: calls the signature endpoint first — a signature failure
+  // short-circuits before any Cloudinary call is attempted.
+  async upload(localUri, onProgress) {
+    onProgress?.(0);
+    const signature = await requestSignature();
+    const url = await uploadToCloudinary(signature, localUri);
+    onProgress?.(100);
+    return url;
+  },
+};
 
 // --- Reconnect-driven auto-upload with a capped retry (ADR-003, subtask 3.6) ---
 
@@ -166,7 +107,7 @@ export async function attemptAutoUpload(
     uploadStates.set(draftId, {
       status,
       attempts,
-      error: error instanceof Error ? error.message : 'Upload failed',
+      error: getErrorMessage(error, ERROR_MESSAGES.IMAGE_UPLOAD_FAILED),
     });
   }
 }

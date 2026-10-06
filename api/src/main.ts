@@ -1,7 +1,8 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { buildCorsOptions } from './config/cors';
+import { createValidationPipe } from './errors/validation-exception.factory';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -9,9 +10,7 @@ async function bootstrap(): Promise<void> {
   if (corsOptions) {
     app.enableCors(corsOptions);
   }
-  app.useGlobalPipes(
-    new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-  );
+  app.useGlobalPipes(createValidationPipe());
   await app.listen(process.env.PORT ?? 3000);
 }
 

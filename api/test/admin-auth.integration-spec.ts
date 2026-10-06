@@ -9,6 +9,7 @@ import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { NotificationsService } from '../src/notifications/notifications.service';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -58,6 +59,7 @@ describe('Admin auth (integration)', () => {
       .useValue({ send: notificationsSend })
       .compile();
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
 
     adminEmail = `admin-auth-${randomUUID()}@example.com`;
@@ -111,6 +113,9 @@ describe('Admin auth (integration)', () => {
         password: 'anything',
       })
       .expect(401);
+    expect((wrongPasswordResponse.body as { code: string }).code).toBe(
+      'ADMIN_INVALID_CREDENTIALS',
+    );
     expect((wrongPasswordResponse.body as { message: string }).message).toBe(
       (nonexistentEmailResponse.body as { message: string }).message,
     );

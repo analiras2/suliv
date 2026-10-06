@@ -60,3 +60,31 @@ test('manages an approved allergen term while the pending queue stays available'
     await client.end();
   }
 });
+
+// mensageria E2E-007: adding a term that already exists for the allergen shows the Portuguese
+// ALLERGEN_TERM_DUPLICATE copy inline, not the API's English message.
+test('shows the Portuguese duplicate-term copy when the term already exists', async ({ page }) => {
+  const client = createDbClient();
+  await client.connect();
+
+  try {
+    const allergen = await createApprovedAllergen(client);
+
+    await loginAsAdmin(page);
+    await page.goto('/allergens');
+    const editor = page.getByRole('heading', { name: allergen.name }).locator('..');
+    await expect(editor).toBeVisible();
+
+    await editor.getByLabel('New ingredient term').fill('leite integral');
+    await editor.getByRole('button', { name: 'Adicionar termo' }).click();
+    await expect(editor.getByText('leite integral')).toBeVisible();
+
+    await editor.getByLabel('New ingredient term').fill('leite integral');
+    await editor.getByRole('button', { name: 'Adicionar termo' }).click();
+
+    await expect(editor.getByRole('alert')).toHaveText('Este termo já existe para este alérgeno.');
+  } finally {
+    await client.end();
+  }
+});
+

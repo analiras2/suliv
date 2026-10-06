@@ -1,5 +1,5 @@
 appId: host.exp.Exponent
-name: E2E-008 A deep link to a nonexistent recipe slug renders the not-found StateView with a back-to-feed action
+name: E2E-008 / mensageria E2E-001 A deep link to a nonexistent recipe slug renders the Portuguese not-found StateView with a back-to-feed action
 ---
 - launchApp:
     clearState: true
@@ -7,6 +7,10 @@ name: E2E-008 A deep link to a nonexistent recipe slug renders the not-found Sta
 - openLink: suliv://recipe/receita-que-nao-existe-em-nenhum-lugar
 - assertVisible:
     id: state-view-recipe_not_found
+# The API answers 404 RECIPE_NOT_FOUND; the screen shows Portuguese copy, never the English API message.
+- assertVisible: Receita não encontrada
+- assertVisible: Essa receita não existe ou não está mais disponível.
+- assertNotVisible: Recipe not found
 - assertVisible:
     id: state-view-primary-action
 - tapOn:

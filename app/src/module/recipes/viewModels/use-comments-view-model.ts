@@ -1,16 +1,15 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
+import { getErrorMessage } from '@/lib/error-messages';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import {
   commentsService as defaultCommentsService,
-  CommentsServiceError,
   type CommentRatingDto,
   type CommentsService,
 } from '@/module/recipes/services/comments-service';
 import {
   reportsService as defaultReportsService,
-  ReportsServiceError,
   type ReportReason,
   type ReportsService,
 } from '@/module/recipes/services/reports-service';
@@ -37,25 +36,9 @@ const defaultDeps: CommentsViewModelDeps = {
   reportsService: defaultReportsService,
 };
 
-const RATE_LIMIT_MESSAGE = 'Limite diário atingido. Tente novamente amanhã.';
-const DUPLICATE_REPORT_MESSAGE = 'Você já denunciou este comentário.';
 const GENERIC_WRITE_ERROR = 'Não foi possível salvar. Tente novamente.';
 const GENERIC_REPORT_ERROR = 'Não foi possível enviar a denúncia. Tente novamente.';
 
-function mapWriteError(error: unknown): string {
-  if (error instanceof CommentsServiceError && error.status === 429) {
-    return RATE_LIMIT_MESSAGE;
-  }
-  return GENERIC_WRITE_ERROR;
-}
-
-function mapReportError(error: unknown): string {
-  if (error instanceof ReportsServiceError) {
-    if (error.status === 409) return DUPLICATE_REPORT_MESSAGE;
-    if (error.status === 429) return RATE_LIMIT_MESSAGE;
-  }
-  return GENERIC_REPORT_ERROR;
-}
 
 export function useCommentsViewModel(
   recipeId: string,
@@ -107,7 +90,7 @@ export function useCommentsViewModel(
         await invalidate();
         setError(null);
       } catch (submitError) {
-        setError(mapWriteError(submitError));
+        setError(getErrorMessage(submitError, GENERIC_WRITE_ERROR));
         throw submitError;
       }
     },
@@ -121,7 +104,7 @@ export function useCommentsViewModel(
       await invalidate();
       setError(null);
     } catch (deleteError) {
-      setError(mapWriteError(deleteError));
+      setError(getErrorMessage(deleteError, GENERIC_WRITE_ERROR));
       throw deleteError;
     }
   }, [commentsService, ownReviewDto, invalidate]);
@@ -132,7 +115,7 @@ export function useCommentsViewModel(
         await reportsService.create({ targetType: 'comment', targetId: commentId, reason, freeText });
         setError(null);
       } catch (reportError) {
-        setError(mapReportError(reportError));
+        setError(getErrorMessage(reportError, GENERIC_REPORT_ERROR));
         throw reportError;
       }
     },

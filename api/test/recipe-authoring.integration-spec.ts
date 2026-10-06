@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { generateKeyPairSync } from 'node:crypto';
@@ -7,6 +7,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -44,9 +45,7 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
 
     const category = await prisma.category.upsert({
@@ -235,10 +234,13 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
       .expect(201);
     const recipeId = (created.body as { id: string }).id;
 
-    await request(app.getHttpServer())
+    const rejected = await request(app.getHttpServer())
       .post(`/recipes/${recipeId}/submit`)
       .set('Authorization', `Bearer ${tokenFor('user-1')}`)
       .expect(422);
+    expect((rejected.body as { code: string }).code).toBe(
+      'RECIPE_COVER_REQUIRED',
+    );
 
     await request(app.getHttpServer())
       .patch(`/recipes/${recipeId}`)
@@ -473,11 +475,12 @@ describe('Recipe authoring API + draft_upsert (integration)', () => {
     await bootstrapUser('user-2', 'v1');
     const recipe = await seedApprovedRecipe('user-1');
 
-    await request(app.getHttpServer())
+    const forbidden = await request(app.getHttpServer())
       .patch(`/recipes/${recipe.id}`)
       .set('Authorization', `Bearer ${tokenFor('user-2')}`)
       .send({ title: 'Tentativa alheia' })
       .expect(403);
+    expect((forbidden.body as { code: string }).code).toBe('RECIPE_NOT_OWNED');
 
     await request(app.getHttpServer())
       .post(`/recipes/${recipe.id}/submit`)

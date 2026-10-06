@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import type { AuthService } from '@/module/auth/services/auth-service';
+import { ERROR_MESSAGES } from '@/lib/error-messages';
 import type { RecipeDraft } from '@/module/recipe-authoring/types';
 
 type NetInfoState = { isConnected: boolean | null };
@@ -9,6 +9,7 @@ type NetInfoListener = (state: NetInfoState) => void;
 const mockAddEventListener = jest.fn<(listener: NetInfoListener) => () => void>();
 const mockSetCoverImageUrl = jest.fn<(id: string, coverImageUrl: string) => void>();
 const mockAuthoringUpdate = jest.fn<(id: string, payload: unknown) => Promise<unknown>>();
+const mockNetInfoFetch = jest.fn<() => Promise<NetInfoState>>();
 
 let netInfoListener: NetInfoListener = () => {};
 let mockStoreDrafts: Record<string, RecipeDraft> = {};
@@ -17,6 +18,7 @@ jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,
   default: {
     addEventListener: (listener: NetInfoListener) => mockAddEventListener(listener),
+    fetch: () => mockNetInfoFetch(),
   },
 }));
 
@@ -73,6 +75,7 @@ describe('recipeImageUploadService', () => {
     jest.resetModules();
     jest.clearAllMocks();
     mockStoreDrafts = {};
+    mockNetInfoFetch.mockResolvedValue({ isConnected: true });
     fetchMock = jest.fn();
     global.fetch = fetchMock as unknown as typeof fetch;
     mockAddEventListener.mockImplementation((listener) => {
@@ -100,15 +103,12 @@ describe('recipeImageUploadService', () => {
 
   // UT-005
   it('upload() calls the signature endpoint then uploads to Cloudinary, resolving the final URL', async () => {
-    const { createRecipeImageUploadService } = loadService();
-    const mockGetSession = jest.fn<AuthService['getSession']>(async () => ({ access_token: 'tok' }) as never);
-    const auth = { getSession: mockGetSession } as unknown as AuthService;
+    const { recipeImageUploadService } = loadService();
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => signature } as Response)
       .mockResolvedValueOnce({ ok: true, json: async () => ({ secure_url: 'https://cdn/img.jpg' }) } as Response);
 
-    const service = createRecipeImageUploadService(auth);
-    const url = await service.upload('file://local.jpg');
+    const url = await recipeImageUploadService.upload('file://local.jpg');
 
     expect(url).toBe('https://cdn/img.jpg');
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -125,13 +125,10 @@ describe('recipeImageUploadService', () => {
 
   // UT-006
   it('a signature request failure rejects without attempting a Cloudinary call', async () => {
-    const { createRecipeImageUploadService, RecipeImageUploadServiceError } = loadService();
-    const auth = { getSession: jest.fn(async () => ({ access_token: 'tok' })) } as unknown as AuthService;
-    fetchMock.mockResolvedValueOnce({ ok: false, status: 401 } as Response);
+    const { recipeImageUploadService } = loadService();
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 403 } as Response);
 
-    const service = createRecipeImageUploadService(auth);
-
-    await expect(service.upload('file://local.jpg')).rejects.toThrow(RecipeImageUploadServiceError);
+    await expect(recipeImageUploadService.upload('file://local.jpg')).rejects.toMatchObject({ status: 403 });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -205,5 +202,34 @@ describe('recipeImageUploadService', () => {
 
     // the 4th attempt never calls the network at all
     expect(fetchMock.mock.calls).toHaveLength(callsBeforeFourthAttempt);
+  });
+
+  // UT-062
+  it('a Cloudinary 400 stores the image-upload copy and increments the attempts', async () => {
+    const { attemptAutoUpload, getImageUploadState } = loadService();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => signature } as Response)
+      .mockResolvedValueOnce({ ok: false, status: 400 } as Response);
+
+    await attemptAutoUpload('draft-1', 'file://local.jpg');
+
+    expect(getImageUploadState('draft-1')).toEqual({
+      status: 'error',
+      attempts: 1,
+      error: ERROR_MESSAGES.IMAGE_UPLOAD_FAILED,
+    });
+  });
+
+  // UT-063
+  it('a Cloudinary request without a response while offline stores the offline copy', async () => {
+    const { attemptAutoUpload, getImageUploadState } = loadService();
+    mockNetInfoFetch.mockResolvedValue({ isConnected: false });
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => signature } as Response)
+      .mockRejectedValueOnce(new TypeError('Network request failed'));
+
+    await attemptAutoUpload('draft-1', 'file://local.jpg');
+
+    expect(getImageUploadState('draft-1').error).toBe(ERROR_MESSAGES.NETWORK_OFFLINE);
   });
 });

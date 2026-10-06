@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { analyticsClient, type AnalyticsClient } from '@/lib/analytics';
+import { ApiError } from '@/lib/api-error';
+import { getErrorMessage } from '@/lib/error-messages';
 import {
   recipeAuthoringService,
-  RecipeAuthoringServiceError,
   type RecipeAuthoringService,
 } from '@/module/recipe-authoring/services/recipe-authoring-service';
 import { attemptAutoUpload } from '@/module/recipe-authoring/services/recipe-image-upload-service';
@@ -31,16 +32,17 @@ export interface RecipeFormExisting {
   coverImageUrl?: string | null;
 }
 
-const HTTP_STATUS_BAD_REQUEST = 400;
-const HTTP_STATUS_UNPROCESSABLE_ENTITY = 422;
-const HTTP_STATUS_RATE_LIMITED = 429;
-
-// ADR-003: only 400/422/429 are validation-gate rejections with their own
-// inline messaging in this screen — everything else (network failure,
-// timeout, 5xx) is the new submit_error state.
-function isValidationGateStatus(status: number): boolean {
-  return status === HTTP_STATUS_BAD_REQUEST || status === HTTP_STATUS_UNPROCESSABLE_ENTITY;
-}
+// ADR-003: these codes are validation-gate rejections (formerly 400/422) with their own
+// inline messaging in this screen — everything else (network failure, timeout, 5xx)
+// is the new submit_error state.
+const VALIDATION_GATE_CODES: ReadonlySet<string> = new Set([
+  'VALIDATION_FAILED',
+  'UNPROCESSABLE',
+  'CATEGORY_NOT_FOUND',
+  'RECIPE_COVER_REQUIRED',
+  'RECIPE_TERMS_NOT_ACCEPTED',
+  'SYNC_PAYLOAD_INVALID',
+]);
 
 function emptyFields(): RecipeFormFields {
   return {
@@ -275,11 +277,11 @@ export function useRecipeFormViewModel(
       await authoring.submit(id);
       analytics.track('submitted_recipe_completed', { recipe_id: id });
     } catch (error) {
-      if (error instanceof RecipeAuthoringServiceError && error.status === HTTP_STATUS_RATE_LIMITED) {
+      if (error instanceof ApiError && error.code === 'RECIPE_SUBMISSION_RATE_LIMITED') {
         setIsRateLimited(true);
-        setSubmitError('Limite diário de envios atingido. Tente novamente amanhã.');
-      } else if (error instanceof RecipeAuthoringServiceError && isValidationGateStatus(error.status)) {
-        setSubmitError(error.message);
+        setSubmitError(getErrorMessage(error));
+      } else if (error instanceof ApiError && VALIDATION_GATE_CODES.has(error.code)) {
+        setSubmitError(getErrorMessage(error));
       } else {
         // ADR-003: network failure, timeout, or 5xx — a genuinely new failure
         // path this feature introduces, so it gets a structured log (not a
@@ -287,7 +289,7 @@ export function useRecipeFormViewModel(
         // eslint-disable-next-line no-console
         console.error('submit_error', {
           recipeId: id,
-          status: error instanceof RecipeAuthoringServiceError ? error.status : null,
+          status: error instanceof ApiError ? error.status : null,
         });
         setHasSubmitError(true);
       }

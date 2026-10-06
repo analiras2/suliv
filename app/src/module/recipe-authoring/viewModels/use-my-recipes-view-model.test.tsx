@@ -15,6 +15,10 @@ jest.mock('@/module/recipe-authoring/services/drafts-sync-service', () => ({
 }));
 
 // eslint-disable-next-line import/first
+import { ApiError } from '@/lib/api-error';
+// eslint-disable-next-line import/first
+import { ERROR_MESSAGES } from '@/lib/error-messages';
+// eslint-disable-next-line import/first
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 // eslint-disable-next-line import/first
 import type { RecipeAuthoringService } from '@/module/recipe-authoring/services/recipe-authoring-service';
@@ -62,7 +66,7 @@ function buildAuthoring(overrides: Partial<RecipeAuthoringService> = {}): Recipe
 }
 
 function wrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
@@ -99,6 +103,18 @@ describe('useMyRecipesViewModel', () => {
     expect(result.current.groups.em_analise.map((r) => r.id)).toEqual(['r2']);
     expect(result.current.groups.aprovada.map((r) => r.id)).toEqual(['r3']);
     expect(result.current.groups.precisa_de_ajustes.map((r) => r.id)).toEqual(['r4']);
+  });
+
+  it('UT-061 shows the offline copy, not an English string, when listing fails without a connection', async () => {
+    const authoring = buildAuthoring({
+      listMine: jest.fn(async () => {
+        throw new ApiError('NETWORK_OFFLINE', null);
+      }),
+    });
+
+    const { result } = await renderHook(() => useMyRecipesViewModel(authoring), { wrapper });
+
+    await waitFor(() => expect(result.current.error).toBe(ERROR_MESSAGES.NETWORK_OFFLINE));
   });
 
   // UT-016

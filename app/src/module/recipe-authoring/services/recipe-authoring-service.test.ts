@@ -1,20 +1,22 @@
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import type { RecipeAuthoringPayload } from '@/module/recipe-authoring/types';
+import {
+  API_TEST_BASE_URL,
+  apiErrorResponse,
+  BEARER_HEADER,
+  installFetchMock,
+  jsonResponse,
+  lastRequest,
+  resetFakeAuth,
+} from '@/test-utils/api-test-helpers';
 
 jest.mock('@/module/auth/services/auth-service', () => ({
-  authService: { getSession: jest.fn(async () => null) },
+  authService: require('@/test-utils/api-test-helpers').fakeAuthService,
 }));
 
 // eslint-disable-next-line import/first
-import type { AuthService } from '@/module/auth/services/auth-service';
-// eslint-disable-next-line import/first
-import {
-  createRecipeAuthoringService,
-  RecipeAuthoringServiceError,
-} from '@/module/recipe-authoring/services/recipe-authoring-service';
-// eslint-disable-next-line import/first
-import type { RecipeAuthoringPayload } from '@/module/recipe-authoring/types';
-
-const originalFetch = global.fetch;
+import { recipeAuthoringService } from '@/module/recipe-authoring/services/recipe-authoring-service';
 
 function buildPayload(): RecipeAuthoringPayload {
   return {
@@ -32,121 +34,98 @@ function buildPayload(): RecipeAuthoringPayload {
 }
 
 describe('recipeAuthoringService', () => {
-  let fetchMock: jest.Mock<(...args: Parameters<typeof fetch>) => Promise<Partial<Response>>>;
-  let auth: AuthService;
+  let fetchMock: ReturnType<typeof installFetchMock>;
 
   beforeEach(() => {
-    fetchMock = jest.fn();
-    global.fetch = fetchMock as unknown as typeof fetch;
-    auth = { getSession: jest.fn(async () => ({ access_token: 'token' })) } as unknown as AuthService;
+    resetFakeAuth();
+    fetchMock = installFetchMock();
   });
 
-  afterAll(() => {
-    global.fetch = originalFetch;
-  });
+  it('create() POSTs to /recipes with the payload and the bearer token', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ id: 'recipe-1' }));
 
-  it('create() POSTs to /recipes with the payload', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 'recipe-1' }) } as Response);
-    const service = createRecipeAuthoringService(auth);
+    await recipeAuthoringService.create(buildPayload());
 
-    await service.create(buildPayload());
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/recipes'),
-      expect.objectContaining({ method: 'POST', body: JSON.stringify(buildPayload()) }),
-    );
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe(`${API_TEST_BASE_URL}/recipes`);
+    expect(request.init.method).toBe('POST');
+    expect(request.headers).toEqual({ ...BEARER_HEADER, 'Content-Type': 'application/json' });
+    expect(request.body).toBe(JSON.stringify(buildPayload()));
   });
 
   it('update() PATCHes /recipes/:id', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 'recipe-1' }) } as Response);
-    const service = createRecipeAuthoringService(auth);
+    fetchMock.mockResolvedValue(jsonResponse({ id: 'recipe-1' }));
 
-    await service.update('recipe-1', { title: 'Novo título' });
+    await recipeAuthoringService.update('recipe-1', { title: 'Novo título' });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/recipes/recipe-1'),
-      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ title: 'Novo título' }) }),
-    );
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe(`${API_TEST_BASE_URL}/recipes/recipe-1`);
+    expect(request.init.method).toBe('PATCH');
+    expect(request.body).toBe(JSON.stringify({ title: 'Novo título' }));
   });
 
   it('submit() POSTs to /recipes/:id/submit', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 'recipe-1' }) } as Response);
-    const service = createRecipeAuthoringService(auth);
+    fetchMock.mockResolvedValue(jsonResponse({ id: 'recipe-1' }));
 
-    await service.submit('recipe-1');
+    await recipeAuthoringService.submit('recipe-1');
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/recipes/recipe-1/submit'),
-      expect.objectContaining({ method: 'POST' }),
-    );
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe(`${API_TEST_BASE_URL}/recipes/recipe-1/submit`);
+    expect(request.init.method).toBe('POST');
   });
 
-  // derived UT-010: rate-limit surfacing — the service must let a 429 through as a typed error
-  it('submit() rejects with a 429 RecipeAuthoringServiceError on the 6th same-day submission', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 429 } as Response);
-    const service = createRecipeAuthoringService(auth);
+  // derived UT-010: rate-limit surfacing — the service must let the coded 429 through
+  it('submit() rejects with RECIPE_SUBMISSION_RATE_LIMITED on the 6th same-day submission', async () => {
+    fetchMock.mockResolvedValue(apiErrorResponse(429, 'RECIPE_SUBMISSION_RATE_LIMITED'));
 
-    await expect(service.submit('recipe-1')).rejects.toMatchObject({ status: 429 });
-    await expect(service.submit('recipe-1')).rejects.toBeInstanceOf(RecipeAuthoringServiceError);
+    await expect(recipeAuthoringService.submit('recipe-1')).rejects.toMatchObject({
+      code: 'RECIPE_SUBMISSION_RATE_LIMITED',
+      status: 429,
+    });
   });
 
   // derived UT-013: delete-impact preview
   it('delete(id, false) returns the favoritesCount preview without deleting', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ favoritesCount: 3 }) } as Response);
-    const service = createRecipeAuthoringService(auth);
+    fetchMock.mockResolvedValue(jsonResponse({ favoritesCount: 3 }));
 
-    const result = await service.delete('recipe-1', false);
+    const result = await recipeAuthoringService.delete('recipe-1', false);
 
     expect(result).toEqual({ favoritesCount: 3 });
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/recipes/recipe-1?confirm=false'),
-      expect.objectContaining({ method: 'DELETE' }),
-    );
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe(`${API_TEST_BASE_URL}/recipes/recipe-1?confirm=false`);
+    expect(request.init.method).toBe('DELETE');
   });
 
   // derived UT-014: confirmed soft delete
   it('delete(id, true) confirms the soft delete and resolves without a body', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => undefined } as Response);
-    const service = createRecipeAuthoringService(auth);
+    fetchMock.mockResolvedValue({ ok: true, status: 204 } as Response);
 
-    const result = await service.delete('recipe-1', true);
+    const result = await recipeAuthoringService.delete('recipe-1', true);
 
     expect(result).toBeUndefined();
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/recipes/recipe-1?confirm=true'),
-      expect.objectContaining({ method: 'DELETE' }),
-    );
+    expect(lastRequest(fetchMock).url).toBe(`${API_TEST_BASE_URL}/recipes/recipe-1?confirm=true`);
   });
 
   it('listMine() GETs /me/recipes with status and cursor query params', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ items: [], nextCursor: null }) } as Response);
-    const service = createRecipeAuthoringService(auth);
+    fetchMock.mockResolvedValue(jsonResponse({ items: [], nextCursor: null }));
 
-    await service.listMine('aprovada', 'cursor-1');
+    await recipeAuthoringService.listMine('aprovada', 'cursor-1');
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/me/recipes?status=aprovada&cursor=cursor-1'),
-      expect.anything(),
-    );
+    expect(lastRequest(fetchMock).url).toBe(`${API_TEST_BASE_URL}/me/recipes?status=aprovada&cursor=cursor-1`);
   });
 
   it('listCategories() GETs /categories', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => [{ id: 'cat-1', key: 'cafe_da_manha', label: 'Café' }],
-    } as Response);
-    const service = createRecipeAuthoringService(auth);
+    const categories = [{ id: 'cat-1', key: 'cafe_da_manha', label: 'Café' }];
+    fetchMock.mockResolvedValue(jsonResponse(categories));
 
-    const result = await service.listCategories();
+    await expect(recipeAuthoringService.listCategories()).resolves.toEqual(categories);
 
-    expect(result).toEqual([{ id: 'cat-1', key: 'cafe_da_manha', label: 'Café' }]);
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/categories'), expect.anything());
+    expect(lastRequest(fetchMock).url).toBe(`${API_TEST_BASE_URL}/categories`);
   });
 
-  it('a non-ok response throws RecipeAuthoringServiceError with the response status', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 404 } as Response);
-    const service = createRecipeAuthoringService(auth);
+  it('a coded failure rejects with the API code and status', async () => {
+    fetchMock.mockResolvedValue(apiErrorResponse(404, 'RECIPE_NOT_FOUND'));
 
-    await expect(service.listMine()).rejects.toMatchObject({ status: 404 });
+    await expect(recipeAuthoringService.listMine()).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND', status: 404 });
   });
 });

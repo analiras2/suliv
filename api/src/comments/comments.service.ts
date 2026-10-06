@@ -1,12 +1,5 @@
-import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { CommentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CommentRatingDto } from './comment-rating.dto';
@@ -88,7 +81,8 @@ export class CommentsService {
       input.rating < MIN_RATING ||
       input.rating > MAX_RATING
     ) {
-      throw new UnprocessableEntityException(
+      throw new ApiException(
+        'RATING_OUT_OF_RANGE',
         'rating must be an integer between 1 and 5',
       );
     }
@@ -121,10 +115,13 @@ export class CommentsService {
       where: { id: commentId },
     });
     if (!row) {
-      throw new NotFoundException('Comment not found');
+      throw new ApiException('COMMENT_NOT_FOUND', 'Comment not found');
     }
     if (row.userId !== userId) {
-      throw new ForbiddenException('You do not own this comment');
+      throw new ApiException(
+        'COMMENT_NOT_OWNED',
+        'You do not own this comment',
+      );
     }
 
     await this.prisma.commentRating.delete({ where: { id: commentId } });
@@ -164,9 +161,9 @@ export class CommentsService {
       this.logger.warn(
         `Rate limit exceeded for user ${userId} on comments/ratings (${recentActionsCount} actions in the last 24h)`,
       );
-      throw new HttpException(
+      throw new ApiException(
+        'COMMENT_RATE_LIMITED',
         'Rate limit exceeded: maximum 20 comments/ratings per day',
-        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
   }

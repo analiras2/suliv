@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { ConfigService } from '@nestjs/config';
 import { compare } from 'bcrypt';
 import { sign, SignOptions } from 'jsonwebtoken';
@@ -28,7 +29,10 @@ export class AdminAuthService {
       ? await compare(password, admin.passwordHash)
       : false;
     if (!admin || !passwordMatches) {
-      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
+      throw new ApiException(
+        'ADMIN_INVALID_CREDENTIALS',
+        INVALID_CREDENTIALS_MESSAGE,
+      );
     }
 
     const signOptions: SignOptions = {

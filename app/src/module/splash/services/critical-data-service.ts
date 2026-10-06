@@ -1,5 +1,3 @@
-import type { Session } from '@supabase/supabase-js';
-
 import { offlineCache, type OfflineCache } from '@/lib/offline-cache';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
@@ -37,11 +35,11 @@ function toSnapshot(profile: UserProfile): ProfileSnapshot {
   };
 }
 
-async function fetchWithTimeout(profiles: ProfileService, session: Session): Promise<UserProfile> {
+async function fetchWithTimeout(profiles: ProfileService): Promise<UserProfile> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CRITICAL_DATA_TIMEOUT_MS);
   try {
-    return await profiles.getMe(session, controller.signal);
+    return await profiles.getMe(controller.signal);
   } finally {
     clearTimeout(timer);
   }
@@ -60,7 +58,7 @@ export function createCriticalDataService(
       }
 
       try {
-        const profile = await fetchWithTimeout(profiles, session);
+        const profile = await fetchWithTimeout(profiles);
         const snapshot = toSnapshot(profile);
         cache.set(PROFILE_SNAPSHOT_CACHE_KEY, snapshot);
         return { kind: 'online', profile: snapshot };

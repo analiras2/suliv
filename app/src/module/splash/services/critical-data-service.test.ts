@@ -113,7 +113,7 @@ describe('critical-data-service', () => {
     jest.useFakeTimers();
     let capturedSignal: AbortSignal | undefined;
     profiles.getMe.mockImplementation(
-      (_session, signal) =>
+      (signal) =>
         new Promise((_resolve, reject) => {
           capturedSignal = signal;
           signal?.addEventListener('abort', () => reject(new Error('aborted')));
