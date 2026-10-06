@@ -120,6 +120,7 @@ describe('RecipesService', () => {
   const createRecipeVersion = jest.fn();
   const deleteManyIngredient = jest.fn();
   const createManyIngredient = jest.fn();
+  const findManyIngredient = jest.fn();
   const deleteManyStep = jest.fn();
   const createManyStep = jest.fn();
   const syncRecipeAllergens = jest.fn<
@@ -137,6 +138,7 @@ describe('RecipesService', () => {
     recipeIngredient: {
       deleteMany: deleteManyIngredient,
       createMany: createManyIngredient,
+      findMany: findManyIngredient,
     },
     recipeStep: { deleteMany: deleteManyStep, createMany: createManyStep },
   };
@@ -202,6 +204,7 @@ describe('RecipesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    findManyIngredient.mockResolvedValue([]);
     upsertRecipeTx.mockResolvedValue({ id: 'recipe-1' });
     createRecipeTx.mockResolvedValue({ id: 'recipe-1', status: 'rascunho' });
     findUniqueFavorite.mockResolvedValue(null);
@@ -532,6 +535,36 @@ describe('RecipesService', () => {
       });
       expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
         'Banana',
+      ]);
+    });
+
+    // Imported recipes classify allergens on a canonical name; a wholesale
+    // ingredient rewrite must not silently drop it.
+    it('keeps the canonical name of an ingredient whose name is unchanged and classifies on it', async () => {
+      findUniqueRecipe.mockResolvedValue(
+        recipeWithDetailsFixture({ status: 'rascunho' }),
+      );
+      updateRecipeTx.mockResolvedValue({ id: 'recipe-1' });
+      findManyIngredient.mockResolvedValue([
+        { name: 'Banana', canonicalName: 'banana' },
+      ]);
+
+      await service.update('author-1', 'recipe-1', {
+        ingredients: [
+          ingredientPayload,
+          { ...ingredientPayload, name: 'Leite novo', order: 2 },
+        ],
+      });
+
+      expect(createManyIngredient).toHaveBeenCalledWith({
+        data: [
+          expect.objectContaining({ name: 'Banana', canonicalName: 'banana' }),
+          expect.objectContaining({ name: 'Leite novo', canonicalName: null }),
+        ],
+      });
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'banana',
+        'Leite novo',
       ]);
     });
 

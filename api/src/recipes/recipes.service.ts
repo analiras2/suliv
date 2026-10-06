@@ -301,6 +301,7 @@ export class RecipesService {
       }
 
       if (payload.ingredients) {
+        const canonicalNames = await this.loadCanonicalNames(tx, recipe.id);
         await tx.recipeIngredient.deleteMany({
           where: { recipeId: recipe.id },
         });
@@ -308,6 +309,7 @@ export class RecipesService {
           data: payload.ingredients.map((ingredient) => ({
             recipeId: recipe.id,
             name: ingredient.name,
+            canonicalName: canonicalNames.get(ingredient.name) ?? null,
             quantity: ingredient.quantity,
             unit: ingredient.unit,
             scalesWithServings: ingredient.scalesWithServings,
@@ -317,7 +319,10 @@ export class RecipesService {
         await this.allergenClassification.syncRecipeAllergens(
           tx,
           recipe.id,
-          payload.ingredients.map((ingredient) => ingredient.name),
+          payload.ingredients.map(
+            (ingredient) =>
+              canonicalNames.get(ingredient.name) ?? ingredient.name,
+          ),
         );
       }
       if (payload.steps) {
@@ -440,6 +445,24 @@ export class RecipesService {
     );
   }
 
+  // Ingredients are rewritten wholesale on edit, which would drop the canonical
+  // name that imported recipes classify allergens on. It is carried over by
+  // exact name, so a renamed ingredient correctly falls back to its new name.
+  private async loadCanonicalNames(
+    tx: Prisma.TransactionClient,
+    recipeId: string,
+  ): Promise<Map<string, string>> {
+    const existing = await tx.recipeIngredient.findMany({
+      where: { recipeId, canonicalName: { not: null } },
+      select: { name: true, canonicalName: true },
+    });
+    return new Map(
+      existing.flatMap((row) =>
+        row.canonicalName ? [[row.name, row.canonicalName] as const] : [],
+      ),
+    );
+  }
+
   // ADR-003/ADR-004: create-or-update the Recipe plus a full delete-and-
   // recreate of its ingredients/steps, all within the caller's transaction
   // (SyncService wraps this together with its own syncOperation record).
@@ -479,6 +502,7 @@ export class RecipesService {
       },
     });
 
+    const canonicalNames = await this.loadCanonicalNames(tx, recipe.id);
     await tx.recipeIngredient.deleteMany({ where: { recipeId: recipe.id } });
     await tx.recipeStep.deleteMany({ where: { recipeId: recipe.id } });
 
@@ -487,6 +511,7 @@ export class RecipesService {
         data: payload.ingredients.map((ingredient) => ({
           recipeId: recipe.id,
           name: ingredient.name,
+          canonicalName: canonicalNames.get(ingredient.name) ?? null,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           scalesWithServings: ingredient.scalesWithServings,
@@ -508,7 +533,9 @@ export class RecipesService {
     await this.allergenClassification.syncRecipeAllergens(
       tx,
       recipe.id,
-      payload.ingredients.map((ingredient) => ingredient.name),
+      payload.ingredients.map(
+        (ingredient) => canonicalNames.get(ingredient.name) ?? ingredient.name,
+      ),
     );
 
     return recipe;
