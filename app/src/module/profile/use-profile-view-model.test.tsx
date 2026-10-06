@@ -51,7 +51,7 @@ const user: UserProfile = {
 };
 
 function wrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 

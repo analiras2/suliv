@@ -34,7 +34,7 @@ import { useRecipeDraftsStore } from '@/module/recipe-authoring/store/use-recipe
 import { useMyRecipesListScreenViewModel } from './use-my-recipes-list-screen-view-model';
 
 function wrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
