@@ -5,6 +5,7 @@ import { CategoryRow } from '@/components/organisms/category-row';
 import { FeedOfflineView } from '@/components/organisms/feed-offline-view';
 import { RecipeCarousel } from '@/components/organisms/recipe-carousel';
 import { TopOfWeekList } from '@/components/organisms/top-of-week-list';
+import { InlineErrorNotice } from '@/components/molecules/inline-error-notice';
 import { SectionHeader } from '@/components/molecules/section-header';
 import { StateView } from '@/components/molecules/state-view';
 import { layout, semanticColors, spacing } from '@/design-system/tokens';
@@ -51,6 +52,7 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <InlineErrorNotice message={feed.favoriteError} testID="favorite-error-message" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.stack}>
           <SectionHeader overline="para você" title="Selecionadas para você" />

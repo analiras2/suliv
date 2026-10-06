@@ -1,0 +1,20 @@
+appId: host.exp.Exponent
+name: mensageria E2E-002 Favoriting an uncached recipe while offline shows the connection message, which clears on reconnect
+---
+# A recipe card whose detail was never opened has nothing cached, so favoriting it offline cannot run.
+# The user is told why instead of seeing the heart do nothing. Cached recipes keep toggling silently
+# (see saved-favorite-offline-reconnect-syncs.yaml). Depends on setAirplaneMode (Android only at
+# time of writing), like the other offline flows, and on the Prisma seed having run.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
+- assertVisible: Selecionadas para você
+- setAirplaneMode: true
+- tapOn:
+    id: recipe-card-save-button
+- assertVisible:
+    id: favorite-error-message
+- assertVisible: Você está sem conexão. Verifique sua internet e tente novamente.
+- setAirplaneMode: false
+- assertNotVisible:
+    id: favorite-error-message

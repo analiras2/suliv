@@ -18,6 +18,7 @@ export interface FeedViewModel {
   topOfWeek: RecipeSummary[];
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
+  favoriteError: string | null;
   openRecipe: (slug: string, origin: string) => void;
   openVerTudo: (origin: VerTudoOrigin, categoryKey?: string) => void;
   refetch: () => void;
@@ -34,7 +35,7 @@ export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): 
     ],
     [feedQuery.data],
   );
-  const { savedIds, toggleSaved } = useFavoriteToggle(allRecipes);
+  const { savedIds, toggleSaved, favoriteError } = useFavoriteToggle(allRecipes);
   const recipesBySlug = useMemo(() => new Map(allRecipes.map((recipe) => [recipe.slug, recipe])), [allRecipes]);
 
   const openRecipe = useCallback(
@@ -64,6 +65,7 @@ export function useFeedViewModel(analytics: AnalyticsClient = analyticsClient): 
     topOfWeek: feedQuery.data?.topOfWeek ?? [],
     savedIds,
     toggleSaved,
+    favoriteError,
     openRecipe,
     openVerTudo,
     refetch: () => void feedQuery.refetch(),
