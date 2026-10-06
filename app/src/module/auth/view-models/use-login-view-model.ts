@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES, ERROR_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 import { resolveHomeRoute } from '@/module/auth/navigation';
 import { authService, type AuthService, type OAuthProvider } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
@@ -27,7 +27,9 @@ export function useLoginViewModel(
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<LoginStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setError] = useState<string | null>(null);
+  const authNotice = useSessionStore((state) => state.authNotice);
+  const error = localError ?? (authNotice ? ERROR_MESSAGES[authNotice] : null);
   const handledToken = useRef<string | null>(null);
 
   const processSession = async (session: Session) => {
@@ -35,6 +37,7 @@ export function useLoginViewModel(
     handledToken.current = session.access_token;
     setStatus('authenticating');
     setError(null);
+    useSessionStore.getState().clearAuthNotice();
 
     try {
       useSessionStore.getState().setSession(session);
@@ -43,7 +46,7 @@ export function useLoginViewModel(
       router.replace(result.missingName ? COMPLETE_PROFILE_ROUTE : resolveHomeRoute(result.user));
     } catch (caught: unknown) {
       handledToken.current = null;
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.finishSignInFailed);
+      setError(getErrorMessage(caught, AUTH_MESSAGES.finishSignInFailed));
       setStatus('error');
     }
   };
@@ -62,11 +65,12 @@ export function useLoginViewModel(
     }
     setStatus('submitting');
     setError(null);
+    useSessionStore.getState().clearAuthNotice();
     try {
       await authentication.signInWithMagicLink(email.trim());
       setStatus('sent');
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.magicLinkFailed);
+      setError(getErrorMessage(caught, AUTH_MESSAGES.magicLinkFailed));
       setStatus('error');
     }
   };
@@ -80,7 +84,7 @@ export function useLoginViewModel(
       if (session) await processSession(session);
       else setStatus('idle');
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.signInFailed);
+      setError(getErrorMessage(caught, AUTH_MESSAGES.signInFailed));
       setStatus('error');
     }
   };

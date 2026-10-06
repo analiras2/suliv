@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES } from '@/lib/error-messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
 import { ProfileServiceError, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';

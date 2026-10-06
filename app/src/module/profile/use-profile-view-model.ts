@@ -3,7 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 
 import type { IconName } from '@/components/atoms/icon';
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES } from '@/lib/error-messages';
 import { authService } from '@/module/auth/services/auth-service';
 import { profileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';

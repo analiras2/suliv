@@ -2,7 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES } from '@/lib/error-messages';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';

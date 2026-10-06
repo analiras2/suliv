@@ -1,7 +1,7 @@
 import { useRouter, useSegments, type Href } from 'expo-router';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES } from '@/lib/error-messages';
 import { resolveHomeRoute } from '@/module/auth/navigation';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import {

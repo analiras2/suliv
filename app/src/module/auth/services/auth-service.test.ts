@@ -84,11 +84,12 @@ describe('AuthService', () => {
     await expect(authService.signInWithMagicLink('user@example.com')).rejects.toBe(error);
   });
 
-  it('throws an error returned by a magic-link request', async () => {
-    const error = new Error('Provider error');
-    mockAuth.signInWithOtp.mockResolvedValue({ error });
+  it('throws an ApiError for an error returned by a magic-link request', async () => {
+    mockAuth.signInWithOtp.mockResolvedValue({ error: new Error('Provider error') });
 
-    await expect(authService.signInWithMagicLink('user@example.com')).rejects.toBe(error);
+    await expect(authService.signInWithMagicLink('user@example.com')).rejects.toMatchObject({
+      code: 'UNKNOWN_ERROR',
+    });
   });
 
   it.each(['google', 'apple'] as const)('UT-019 opens the %s OAuth URL', async (provider) => {
@@ -104,7 +105,7 @@ describe('AuthService', () => {
   it('does not open a browser when OAuth has no URL', async () => {
     mockAuth.signInWithOAuth.mockResolvedValue({ data: { url: null }, error: null });
 
-    await expect(authService.signInWithOAuth('google')).rejects.toThrow('OAuth URL');
+    await expect(authService.signInWithOAuth('google')).rejects.toMatchObject({ code: 'AUTH_PROVIDER_FAILED' });
     expect(WebBrowser.openAuthSessionAsync).not.toHaveBeenCalled();
   });
 
