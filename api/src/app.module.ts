@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { AdminAuthModule } from './admin-auth/admin-auth.module';
 import { AdminAllergensModule } from './admin/allergens/admin-allergens.module';
@@ -16,6 +17,7 @@ import {
   environmentConfiguration,
   environmentValidationSchema,
 } from './config/environment';
+import { ApiExceptionFilter } from './errors/api-exception.filter';
 import { EventsModule } from './events/events.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { FeedModule } from './feed/feed.module';
@@ -72,6 +74,9 @@ import { UsersModule } from './users/users.module';
     AdminFeatureFlagsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: ApiExceptionFilter },
+  ],
 })
 export class AppModule {}

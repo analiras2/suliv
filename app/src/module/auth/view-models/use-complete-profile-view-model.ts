@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES, getErrorMessage, getFieldErrors } from '@/lib/error-messages';
 import { resolveHomeRoute } from '@/module/auth/navigation';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -13,6 +13,7 @@ export function useCompleteProfileViewModel(profiles: ProfileService = profileSe
   const [name, setName] = useState('');
   const [status, setStatus] = useState<CompleteProfileStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const submitName = async () => {
     const normalizedName = name.trim();
@@ -31,15 +32,17 @@ export function useCompleteProfileViewModel(profiles: ProfileService = profileSe
 
     setStatus('submitting');
     setError(null);
+    setFieldErrors({});
     try {
-      const user = await profiles.updateName(session, normalizedName);
+      const user = await profiles.updateName(normalizedName);
       useSessionStore.getState().setUser(user);
       router.replace(resolveHomeRoute(user));
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.updateProfileFailed);
+      setFieldErrors(getFieldErrors(caught));
+      setError(getErrorMessage(caught, AUTH_MESSAGES.updateProfileFailed));
       setStatus('error');
     }
   };
 
-  return { error, name, setName, status, submitName };
+  return { error, fieldErrors, name, setName, status, submitName };
 }

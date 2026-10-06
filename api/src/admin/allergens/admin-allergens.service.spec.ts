@@ -1,9 +1,3 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { Allergen, AllergenIngredientTerm, Prisma } from '@prisma/client';
 import { AllergenClassificationService } from '../../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -146,9 +140,9 @@ describe('AdminAllergensService', () => {
   it('approve throws NotFoundException for a nonexistent allergen', async () => {
     findUniqueAllergen.mockResolvedValue(null);
 
-    await expect(service.approve('admin-1', 'missing')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.approve('admin-1', 'missing')).rejects.toMatchObject({
+      code: 'ALLERGEN_NOT_FOUND',
+    });
     expect(update).not.toHaveBeenCalled();
   });
 
@@ -174,8 +168,8 @@ describe('AdminAllergensService', () => {
       allergenFixture({ status: 'approved' }),
     );
 
-    await expect(service.reject('admin-1', 'allergen-1')).rejects.toThrow(
-      ConflictException,
+    await expect(service.reject('admin-1', 'allergen-1')).rejects.toMatchObject(
+      { code: 'ALLERGEN_NOT_PENDING' },
     );
     expect(deleteAllergen).not.toHaveBeenCalled();
     expect(auditLog).not.toHaveBeenCalled();
@@ -184,9 +178,9 @@ describe('AdminAllergensService', () => {
   it('reject throws NotFoundException for a nonexistent allergen', async () => {
     findUniqueAllergen.mockResolvedValue(null);
 
-    await expect(service.reject('admin-1', 'missing')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.reject('admin-1', 'missing')).rejects.toMatchObject({
+      code: 'ALLERGEN_NOT_FOUND',
+    });
   });
 
   describe('term management', () => {
@@ -258,7 +252,7 @@ describe('AdminAllergensService', () => {
 
       await expect(
         service.createTerm('admin-1', 'allergen-1', 'Leite integral'),
-      ).rejects.toThrow(UnprocessableEntityException);
+      ).rejects.toMatchObject({ code: 'ALLERGEN_NOT_APPROVED' });
       expect(createTerm).not.toHaveBeenCalled();
       expect(auditLog).not.toHaveBeenCalled();
     });
@@ -268,7 +262,7 @@ describe('AdminAllergensService', () => {
 
       await expect(
         service.createTerm('admin-1', 'missing', 'Leite integral'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'ALLERGEN_NOT_FOUND' });
       expect(createTerm).not.toHaveBeenCalled();
       expect(auditLog).not.toHaveBeenCalled();
     });
@@ -281,7 +275,7 @@ describe('AdminAllergensService', () => {
 
       await expect(
         service.createTerm('admin-1', 'allergen-1', 'Leite integral'),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toMatchObject({ code: 'ALLERGEN_TERM_DUPLICATE' });
       expect(auditLog).not.toHaveBeenCalled();
     });
 
@@ -292,7 +286,7 @@ describe('AdminAllergensService', () => {
 
       await expect(
         service.createTerm('admin-1', 'allergen-1', '!!! ,,,'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toMatchObject({ code: 'ALLERGEN_TERM_INVALID' });
       expect(createTerm).not.toHaveBeenCalled();
       expect(auditLog).not.toHaveBeenCalled();
     });
@@ -316,7 +310,7 @@ describe('AdminAllergensService', () => {
 
       await expect(
         service.deleteTerm('admin-1', 'allergen-1', 'missing-term'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'ALLERGEN_TERM_NOT_FOUND' });
       expect(deleteTerm).not.toHaveBeenCalled();
       expect(auditLog).not.toHaveBeenCalled();
     });

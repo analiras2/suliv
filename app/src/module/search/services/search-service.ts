@@ -1,16 +1,8 @@
-import { authService, type AuthService } from '@/module/auth/services/auth-service';
+import { apiRequestJson } from '@/lib/api-client';
 import type { ListingFilters, ListingOrigin, PaginatedRecipes } from '@/module/search/types';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export interface SearchService {
   search(origin: ListingOrigin, filters: ListingFilters, cursor?: string): Promise<PaginatedRecipes>;
-}
-
-export class SearchServiceError extends Error {
-  constructor(readonly status: number) {
-    super(`Search request failed with status ${status}.`);
-  }
 }
 
 function buildQueryParams(origin: ListingOrigin, filters: ListingFilters, cursor?: string): URLSearchParams {
@@ -28,26 +20,7 @@ function buildQueryParams(origin: ListingOrigin, filters: ListingFilters, cursor
   return params;
 }
 
-export function createSearchService(authentication: AuthService = authService): SearchService {
-  return {
-    async search(origin, filters, cursor) {
-      const session = await authentication.getSession();
-      if (!session) {
-        throw new SearchServiceError(401);
-      }
-
-      const params = buildQueryParams(origin, filters, cursor);
-      const response = await fetch(`${API_BASE_URL}/recipes/search?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (!response.ok) {
-        throw new SearchServiceError(response.status);
-      }
-
-      return response.json() as Promise<PaginatedRecipes>;
-    },
-  };
-}
-
-export const searchService: SearchService = createSearchService();
+export const searchService: SearchService = {
+  search: (origin, filters, cursor) =>
+    apiRequestJson<PaginatedRecipes>(`/recipes/search?${buildQueryParams(origin, filters, cursor).toString()}`),
+};

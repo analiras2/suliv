@@ -11,6 +11,7 @@ jest.mock('@anthropic-ai/sdk');
 interface TranslationRequest {
   model: string;
   max_tokens: number;
+  system: string;
   output_config: { effort: string; format: { type: string } };
 }
 
@@ -54,7 +55,8 @@ describe('RecipeTranslationService', () => {
     const translation = {
       title: 'Sopa de Lentilha Vegana',
       description: 'Uma sopa vegana reconfortante.',
-      ingredientNames: ['lentilhas', 'cenoura'],
+      ingredientNames: ['lentilhas cozidas', 'cenoura ralada'],
+      canonicalIngredientNames: ['lentilha', 'cenoura'],
       stepDescriptions: ['Pique os legumes.', 'Cozinhe por 20 minutos.'],
     };
     create.mockResolvedValue(messageFixture(translation));
@@ -70,6 +72,7 @@ describe('RecipeTranslationService', () => {
         title: 'x',
         description: 'y',
         ingredientNames: ['a', 'b'],
+        canonicalIngredientNames: ['a', 'b'],
         stepDescriptions: ['c', 'd'],
       }),
     );
@@ -79,6 +82,65 @@ describe('RecipeTranslationService', () => {
     const request = create.mock.calls[0][0];
     expect(request.model).toBe('claude-sonnet-5');
     expect(request.output_config.format.type).toBe('json_schema');
+  });
+
+  // The app has no brand partnerships, so imported recipes must not carry
+  // commercial names. Only the model can generalize them, so the guarantee
+  // lives in the prompt — this keeps it from being dropped unnoticed.
+  it('instructs the model to strip brand names and keep type designations', async () => {
+    create.mockResolvedValue(
+      messageFixture({
+        title: 'x',
+        description: 'y',
+        ingredientNames: ['a', 'b'],
+        canonicalIngredientNames: ['a', 'b'],
+        stepDescriptions: ['c', 'd'],
+      }),
+    );
+
+    await service.translateToPortuguese(recipeFixture());
+
+    const { system } = create.mock.calls[0][0];
+    expect(system).toContain('never carry a brand');
+    expect(system).toContain('not brands');
+    expect(system).toContain('Sriracha is a brand');
+  });
+
+  // Allergen matching is exact against a curated catalog, so a descriptive
+  // name never matches. The canonical name is what makes that work, and only
+  // the prompt can produce it — this keeps it from being dropped unnoticed.
+  it('instructs the model to return a bare pantry name per ingredient', async () => {
+    create.mockResolvedValue(
+      messageFixture({
+        title: 'x',
+        description: 'y',
+        ingredientNames: ['a', 'b'],
+        canonicalIngredientNames: ['a', 'b'],
+        stepDescriptions: ['c', 'd'],
+      }),
+    );
+
+    await service.translateToPortuguese(recipeFixture());
+
+    const { system } = create.mock.calls[0][0];
+    expect(system).toContain('canonicalIngredientNames');
+    expect(system).toContain('no preparation');
+  });
+
+  it('throws when the canonical names do not align with the ingredients', async () => {
+    create.mockResolvedValue(
+      messageFixture({
+        title: 'Sopa',
+        description: 'Uma sopa.',
+        ingredientNames: ['lentilhas', 'cenoura'],
+        canonicalIngredientNames: ['lentilha'],
+        stepDescriptions: ['Pique os legumes.', 'Cozinhe por 20 minutos.'],
+      }),
+    );
+
+    await expect(
+      service.translateToPortuguese(recipeFixture()),
+    ).rejects.toThrow(RecipeTranslationError);
   });
 
   it('throws when the model refuses the request', async () => {
@@ -103,6 +165,7 @@ describe('RecipeTranslationService', () => {
         title: 'Sopa',
         description: 'Uma sopa.',
         ingredientNames: ['lentilhas'],
+        canonicalIngredientNames: ['lentilha'],
         stepDescriptions: ['Pique os legumes.', 'Cozinhe por 20 minutos.'],
       }),
     );
@@ -118,6 +181,7 @@ describe('RecipeTranslationService', () => {
         title: 'Sopa',
         description: 'Uma sopa.',
         ingredientNames: ['lentilhas', 'cenoura'],
+        canonicalIngredientNames: ['lentilha', 'cenoura'],
         stepDescriptions: ['Pique.', 'Cozinhe.', 'Sirva.'],
       }),
     );

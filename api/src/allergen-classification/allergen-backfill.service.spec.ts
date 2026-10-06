@@ -9,6 +9,7 @@ interface RecipeRef {
 function buildPrisma(options: {
   batches: RecipeRef[][];
   ingredientsByRecipe?: Record<string, string[]>;
+  canonicalByName?: Record<string, string>;
 }) {
   let index = 0;
   const recipeFindMany = jest.fn(() => {
@@ -22,6 +23,7 @@ function buildPrisma(options: {
         Promise.resolve(
           (options.ingredientsByRecipe?.[where.recipeId] ?? []).map((name) => ({
             name,
+            canonicalName: options.canonicalByName?.[name] ?? null,
           })),
         ),
       ),
@@ -169,8 +171,28 @@ describe('AllergenBackfillService', () => {
 
     expect(tx.recipeIngredient.findMany).toHaveBeenCalledWith({
       where: { recipeId: 'r1' },
-      select: { name: true },
+      select: { name: true, canonicalName: true },
     });
     expect(classifier.syncRecipeAllergens).toHaveBeenCalledWith(tx, 'r1', []);
+  });
+
+  // Imported recipes display descriptive names that exact matching misses, so
+  // the backfill must classify on the stored canonical name or it would undo
+  // what promotion classified.
+  it('classifies on the canonical name when one is stored, else on the name', async () => {
+    const { prisma, tx } = buildPrisma({
+      batches: [[{ id: 'r1' }], []],
+      ingredientsByRecipe: { r1: ['tofu light em bloco', 'Leite'] },
+      canonicalByName: { 'tofu light em bloco': 'tofu' },
+    });
+    const classifier = buildClassifier();
+    const service = new AllergenBackfillService(prisma, classifier);
+
+    await service.runBackfill();
+
+    expect(classifier.syncRecipeAllergens).toHaveBeenCalledWith(tx, 'r1', [
+      'tofu',
+      'Leite',
+    ]);
   });
 });

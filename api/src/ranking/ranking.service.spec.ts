@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import {
   Category,
   CookingLevel,
@@ -136,8 +135,8 @@ describe('RankingService', () => {
 
   it('throws NotFoundException for an unknown user', async () => {
     findUniqueUser.mockResolvedValue(null);
-    await expect(service.getSelectedForYou('unknown', 5)).rejects.toThrow(
-      NotFoundException,
+    await expect(service.getSelectedForYou('unknown', 5)).rejects.toMatchObject(
+      { code: 'USER_NOT_FOUND' },
     );
   });
 

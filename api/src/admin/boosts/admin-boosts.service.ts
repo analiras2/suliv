@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../../errors/api-exception';
 import { EditorialBoost } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../audit-log.service';
@@ -24,7 +25,10 @@ export class AdminBoostsService {
     endsAt: Date,
   ): Promise<EditorialBoost> {
     if (endsAt <= startsAt) {
-      throw new BadRequestException('ends_at must be after starts_at');
+      throw new ApiException(
+        'BOOST_INVALID_PERIOD',
+        'ends_at must be after starts_at',
+      );
     }
 
     const boost = await this.prisma.editorialBoost.create({

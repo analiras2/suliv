@@ -3,7 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 
 import { analyticsClient, type AnalyticsClient } from '@/lib/analytics';
 import { useThemePreferenceStore, type ThemePreference } from '@/lib/theme-preference';
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 import { authService } from '@/module/auth/services/auth-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import { useAccountViewModel } from '@/module/auth/view-models/use-account-view-model';
@@ -33,7 +33,7 @@ export function useSettingsViewModel(
         setUser(updated);
         analytics.track('profile_updated', { fields_changed: fieldsChanged });
       } catch (caught: unknown) {
-        setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.updateProfileFailed);
+        setError(getErrorMessage(caught, AUTH_MESSAGES.updateProfileFailed));
       }
     },
     [analytics, setUser],

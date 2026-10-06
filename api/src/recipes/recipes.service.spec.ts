@@ -1,9 +1,3 @@
-import {
-  ForbiddenException,
-  HttpStatus,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { Category, Prisma, Recipe } from '@prisma/client';
 import { AllergenClassificationService } from '../allergen-classification/allergen-classification.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -120,6 +114,7 @@ describe('RecipesService', () => {
   const createRecipeVersion = jest.fn();
   const deleteManyIngredient = jest.fn();
   const createManyIngredient = jest.fn();
+  const findManyIngredient = jest.fn();
   const deleteManyStep = jest.fn();
   const createManyStep = jest.fn();
   const syncRecipeAllergens = jest.fn<
@@ -137,6 +132,7 @@ describe('RecipesService', () => {
     recipeIngredient: {
       deleteMany: deleteManyIngredient,
       createMany: createManyIngredient,
+      findMany: findManyIngredient,
     },
     recipeStep: { deleteMany: deleteManyStep, createMany: createManyStep },
   };
@@ -202,6 +198,7 @@ describe('RecipesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    findManyIngredient.mockResolvedValue([]);
     upsertRecipeTx.mockResolvedValue({ id: 'recipe-1' });
     createRecipeTx.mockResolvedValue({ id: 'recipe-1', status: 'rascunho' });
     findUniqueFavorite.mockResolvedValue(null);
@@ -287,9 +284,9 @@ describe('RecipesService', () => {
     it('UT-008 a slug matching no recipe throws not-found', async () => {
       findUniqueRecipe.mockResolvedValue(null);
 
-      await expect(service.getBySlug('does-not-exist')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getBySlug('does-not-exist')).rejects.toMatchObject({
+        code: 'RECIPE_NOT_FOUND',
+      });
     });
 
     it("UT-009 a recipe with status: 'removida' throws not-found", async () => {
@@ -299,7 +296,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.getBySlug('panqueca-de-banana-vegana'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('UT-010 unapproved recipe, userId different from authorId, throws not-found', async () => {
@@ -312,7 +309,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.getBySlug('panqueca-de-banana-vegana', 'someone-else'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('UT-011 unapproved recipe, userId === authorId, resolves successfully', async () => {
@@ -434,7 +431,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.create('author-1', createRecipePayloadFixture()),
-      ).rejects.toThrow('categoryId does not reference an existing category');
+      ).rejects.toMatchObject({ code: 'CATEGORY_NOT_FOUND' });
       expect(syncRecipeAllergens).not.toHaveBeenCalled();
     });
   });
@@ -445,7 +442,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.update('author-1', 'recipe-1', { title: 'Novo titulo' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_FOUND' });
     });
 
     it('throws forbidden when the caller does not own the recipe', async () => {
@@ -455,7 +452,7 @@ describe('RecipesService', () => {
 
       await expect(
         service.update('someone-else', 'recipe-1', { title: 'Novo titulo' }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toMatchObject({ code: 'RECIPE_NOT_OWNED' });
     });
 
     it('UT-012 editing a rascunho updates fields in place without touching recipe_versions', async () => {
@@ -535,6 +532,36 @@ describe('RecipesService', () => {
       ]);
     });
 
+    // Imported recipes classify allergens on a canonical name; a wholesale
+    // ingredient rewrite must not silently drop it.
+    it('keeps the canonical name of an ingredient whose name is unchanged and classifies on it', async () => {
+      findUniqueRecipe.mockResolvedValue(
+        recipeWithDetailsFixture({ status: 'rascunho' }),
+      );
+      updateRecipeTx.mockResolvedValue({ id: 'recipe-1' });
+      findManyIngredient.mockResolvedValue([
+        { name: 'Banana', canonicalName: 'banana' },
+      ]);
+
+      await service.update('author-1', 'recipe-1', {
+        ingredients: [
+          ingredientPayload,
+          { ...ingredientPayload, name: 'Leite novo', order: 2 },
+        ],
+      });
+
+      expect(createManyIngredient).toHaveBeenCalledWith({
+        data: [
+          expect.objectContaining({ name: 'Banana', canonicalName: 'banana' }),
+          expect.objectContaining({ name: 'Leite novo', canonicalName: null }),
+        ],
+      });
+      expect(syncRecipeAllergens).toHaveBeenCalledWith(txClient, 'recipe-1', [
+        'banana',
+        'Leite novo',
+      ]);
+    });
+
     it('does not recompute the allergen projection when ingredients are not part of the update', async () => {
       findUniqueRecipe.mockResolvedValue(
         recipeWithDetailsFixture({ status: 'rascunho' }),
@@ -553,9 +580,9 @@ describe('RecipesService', () => {
         recipeWithDetailsFixture({ coverImageUrl: null }),
       );
 
-      await expect(service.submit('author-1', 'recipe-1')).rejects.toThrow(
-        UnprocessableEntityException,
-      );
+      await expect(
+        service.submit('author-1', 'recipe-1'),
+      ).rejects.toMatchObject({ code: 'RECIPE_COVER_REQUIRED' });
     });
 
     it('rejects when the user has not accepted the terms of service', async () => {
@@ -564,9 +591,9 @@ describe('RecipesService', () => {
       );
       findUniqueUser.mockResolvedValue({ termsVersionAccepted: null });
 
-      await expect(service.submit('author-1', 'recipe-1')).rejects.toThrow(
-        UnprocessableEntityException,
-      );
+      await expect(
+        service.submit('author-1', 'recipe-1'),
+      ).rejects.toMatchObject({ code: 'RECIPE_TERMS_NOT_ACCEPTED' });
     });
 
     it('UT-010 rejects with 429 once the daily submission limit is reached', async () => {
@@ -579,7 +606,7 @@ describe('RecipesService', () => {
       await expect(
         service.submit('author-1', 'recipe-1'),
       ).rejects.toMatchObject({
-        status: HttpStatus.TOO_MANY_REQUESTS,
+        code: 'RECIPE_SUBMISSION_RATE_LIMITED',
       });
     });
 

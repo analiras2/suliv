@@ -1,4 +1,3 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Report } from '@prisma/client';
 import { AuditLogService } from '../audit-log.service';
 import { AdminReportsService } from './admin-reports.service';
@@ -91,7 +90,7 @@ describe('AdminReportsService', () => {
 
     await expect(
       service.resolve('admin-1', 'missing', 'dismiss'),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toMatchObject({ code: 'REPORT_NOT_FOUND' });
   });
 
   it('resolve(hide_content) rejects a recipe-targeted report', async () => {
@@ -101,7 +100,7 @@ describe('AdminReportsService', () => {
 
     await expect(
       service.resolve('admin-1', 'report-1', 'hide_content'),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'REPORT_ACTION_NOT_APPLICABLE' });
   });
 
   it('resolve(reopen_recipe) rejects a comment-targeted report', async () => {
@@ -111,6 +110,6 @@ describe('AdminReportsService', () => {
 
     await expect(
       service.resolve('admin-1', 'report-1', 'reopen_recipe'),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'REPORT_ACTION_NOT_APPLICABLE' });
   });
 });

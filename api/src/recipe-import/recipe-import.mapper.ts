@@ -33,32 +33,65 @@ const DISH_TYPE_TO_CATEGORY: Record<string, RecipeCategory> = {
 
 const DEFAULT_CATEGORY = RecipeCategory.almoco_jantar;
 
-const UNIT_ALIASES: Record<string, IngredientUnit> = {
-  g: IngredientUnit.g,
-  gram: IngredientUnit.g,
-  grams: IngredientUnit.g,
-  kg: IngredientUnit.kg,
-  kilogram: IngredientUnit.kg,
-  kilograms: IngredientUnit.kg,
-  ml: IngredientUnit.ml,
-  milliliter: IngredientUnit.ml,
-  milliliters: IngredientUnit.ml,
-  l: IngredientUnit.l,
-  liter: IngredientUnit.l,
-  liters: IngredientUnit.l,
-  cup: IngredientUnit.xicara,
-  cups: IngredientUnit.xicara,
-  tablespoon: IngredientUnit.colher_sopa,
-  tablespoons: IngredientUnit.colher_sopa,
-  tbsp: IngredientUnit.colher_sopa,
-  teaspoon: IngredientUnit.colher_cha,
-  teaspoons: IngredientUnit.colher_cha,
-  tsp: IngredientUnit.colher_cha,
-  pinch: IngredientUnit.pitada,
-  pinches: IngredientUnit.pitada,
+// IngredientUnit has no imperial weights, so those are converted instead of
+// falling back to `unidade` — "8 oz" must not become "8 unidade".
+const GRAMS_PER_OUNCE = 28.35;
+const GRAMS_PER_POUND = 453.59;
+
+interface UnitMapping {
+  unit: IngredientUnit;
+  // Multiplies the provider's amount. Set only where the upstream unit has
+  // no equivalent in IngredientUnit and the quantity must be converted.
+  factor?: number;
+}
+
+const UNIT_ALIASES: Record<string, UnitMapping> = {
+  g: { unit: IngredientUnit.g },
+  gram: { unit: IngredientUnit.g },
+  grams: { unit: IngredientUnit.g },
+  kg: { unit: IngredientUnit.kg },
+  kilogram: { unit: IngredientUnit.kg },
+  kilograms: { unit: IngredientUnit.kg },
+  ml: { unit: IngredientUnit.ml },
+  milliliter: { unit: IngredientUnit.ml },
+  milliliters: { unit: IngredientUnit.ml },
+  l: { unit: IngredientUnit.l },
+  liter: { unit: IngredientUnit.l },
+  liters: { unit: IngredientUnit.l },
+  cup: { unit: IngredientUnit.xicara },
+  cups: { unit: IngredientUnit.xicara },
+  // Spoonacular's abbreviation for cup.
+  c: { unit: IngredientUnit.xicara },
+  tablespoon: { unit: IngredientUnit.colher_sopa },
+  tablespoons: { unit: IngredientUnit.colher_sopa },
+  tbsp: { unit: IngredientUnit.colher_sopa },
+  tbsps: { unit: IngredientUnit.colher_sopa },
+  tbs: { unit: IngredientUnit.colher_sopa },
+  teaspoon: { unit: IngredientUnit.colher_cha },
+  teaspoons: { unit: IngredientUnit.colher_cha },
+  tsp: { unit: IngredientUnit.colher_cha },
+  tsps: { unit: IngredientUnit.colher_cha },
+  // Culinary convention is lowercase "t" for teaspoon (uppercase "T" being
+  // tablespoon), but units are matched case-insensitively — so an upstream
+  // "T" lands here too. Teaspoon is the far more common of the two.
+  t: { unit: IngredientUnit.colher_cha },
+  pinch: { unit: IngredientUnit.pitada },
+  pinches: { unit: IngredientUnit.pitada },
+  'small pinch': { unit: IngredientUnit.pitada },
+  dash: { unit: IngredientUnit.pitada },
+  dashes: { unit: IngredientUnit.pitada },
+  oz: { unit: IngredientUnit.g, factor: GRAMS_PER_OUNCE },
+  ounce: { unit: IngredientUnit.g, factor: GRAMS_PER_OUNCE },
+  ounces: { unit: IngredientUnit.g, factor: GRAMS_PER_OUNCE },
+  lb: { unit: IngredientUnit.g, factor: GRAMS_PER_POUND },
+  lbs: { unit: IngredientUnit.g, factor: GRAMS_PER_POUND },
+  pound: { unit: IngredientUnit.g, factor: GRAMS_PER_POUND },
+  pounds: { unit: IngredientUnit.g, factor: GRAMS_PER_POUND },
 };
 
-const DEFAULT_UNIT = IngredientUnit.unidade;
+// Everything else — "medium", "clove", "bunch", "can", or an empty unit — is
+// a countable item, which `unidade` represents correctly.
+const DEFAULT_UNIT: UnitMapping = { unit: IngredientUnit.unidade };
 
 export interface MappedIngredient {
   name: string;
@@ -102,9 +135,18 @@ function mapCategory(dishTypes: string[]): RecipeCategory {
   return match ? DISH_TYPE_TO_CATEGORY[match] : DEFAULT_CATEGORY;
 }
 
-function mapUnit(unit: string): IngredientUnit {
+function mapUnit(unit: string): UnitMapping {
   const normalized = unit.trim().toLowerCase();
   return UNIT_ALIASES[normalized] ?? DEFAULT_UNIT;
+}
+
+// Converted quantities are rounded: a recipe asking for "227 g" of tofu is
+// more useful to a cook than "226.8 g".
+function convertQuantity(amount: number, mapping: UnitMapping): number {
+  if (mapping.factor === undefined) {
+    return amount;
+  }
+  return Math.round(amount * mapping.factor);
 }
 
 // Spoonacular has no difficulty field; readyInMinutes is the closest signal
@@ -122,13 +164,18 @@ function deriveDifficulty(readyInMinutes: number): CookingLevel {
 export function mapSpoonacularRecipe(
   recipe: SpoonacularRecipe,
 ): MappedRecipe | null {
-  const ingredients = recipe.extendedIngredients.map((ingredient, index) => ({
-    name: ingredient.name,
-    quantity: ingredient.amount,
-    unit: mapUnit(ingredient.unit),
-    scalesWithServings: true,
-    order: index + 1,
-  }));
+  const ingredients: MappedIngredient[] = recipe.extendedIngredients.map(
+    (ingredient, index) => {
+      const mapping = mapUnit(ingredient.unit);
+      return {
+        name: ingredient.name,
+        quantity: convertQuantity(ingredient.amount, mapping),
+        unit: mapping.unit,
+        scalesWithServings: true,
+        order: index + 1,
+      };
+    },
+  );
 
   const steps: MappedStep[] = (recipe.analyzedInstructions[0]?.steps ?? []).map(
     (step) => ({

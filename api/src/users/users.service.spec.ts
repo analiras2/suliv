@@ -1,9 +1,3 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { AccountStatus, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseAdminService } from './supabase-admin.service';
@@ -143,7 +137,9 @@ describe('UsersService', () => {
 
   it('UT-005 throws for an unknown user', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
-    await expect(service.getMe('unknown')).rejects.toThrow(NotFoundException);
+    await expect(service.getMe('unknown')).rejects.toMatchObject({
+      code: 'USER_NOT_FOUND',
+    });
   });
 
   it('UT-006 updates a valid username and its timestamp', async () => {
@@ -170,7 +166,7 @@ describe('UsersService', () => {
 
     await expect(
       service.updateMe('user-1', { username: 'existing_user' }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toMatchObject({ code: 'USERNAME_TAKEN' });
   });
 
   it('UT-008 rejects a username change during cooldown', async () => {
@@ -182,7 +178,7 @@ describe('UsersService', () => {
 
     await expect(
       service.updateMe('user-1', { username: 'new_name' }),
-    ).rejects.toThrow(UnprocessableEntityException);
+    ).rejects.toMatchObject({ code: 'USERNAME_CHANGE_TOO_SOON' });
   });
 
   it('UT-009 permits a username change exactly 30 days later', async () => {
@@ -204,17 +200,17 @@ describe('UsersService', () => {
 
     await expect(
       service.updateMe('user-1', { username: 'ab' }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'USERNAME_INVALID' });
     await expect(
       service.updateMe('user-1', { username: 'invalid-name' }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'USERNAME_INVALID' });
   });
 
   it('UT-011 rejects a profane username', async () => {
     prisma.user.findUnique.mockResolvedValue(userFixture());
     await expect(
       service.updateMe('user-1', { username: 'puta.oficial' }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toMatchObject({ code: 'USERNAME_PROHIBITED' });
   });
 
   it('UT-012 records the accepted terms version and timestamp', async () => {
@@ -301,7 +297,7 @@ describe('UsersService', () => {
 
     await expect(
       service.bootstrap('user-1', 'ana@example.com'),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toMatchObject({ code: 'USERNAME_GENERATION_FAILED' });
     expect(prisma.user.upsert).toHaveBeenCalledTimes(5);
   });
 

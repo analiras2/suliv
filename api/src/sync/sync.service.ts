@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import {
   FAVORITE_ADD_ACTION_TYPE,
   FAVORITE_REMOVE_ACTION_TYPE,
@@ -107,6 +108,9 @@ export class SyncService {
     ) {
       return (payload as Record<string, unknown>).recipeId as string;
     }
-    throw new BadRequestException('payload.recipeId is required');
+    throw new ApiException(
+      'SYNC_PAYLOAD_INVALID',
+      'payload.recipeId is required',
+    );
   }
 }

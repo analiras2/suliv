@@ -1,3 +1,5 @@
+import { ApiError } from './api-error';
+import { apiErrorFromResponse } from './api-response-error';
 import type {
   Allergen,
   AllergenIngredientTerm,
@@ -9,25 +11,26 @@ import type {
   ResolveReportAction,
 } from './types';
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
+export { ApiError };
+
+async function sendRequest(path: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`/api/admin${path}`, {
+      ...init,
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', ...init?.headers },
+    });
+  } catch {
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    throw new ApiError(isOffline ? 'NETWORK_OFFLINE' : 'NETWORK_UNAVAILABLE', null);
   }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/admin${path}`, {
-    ...init,
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  });
+  const response = await sendRequest(path, init);
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new ApiError(body?.message ?? `Request failed with status ${response.status}`, response.status);
+    throw await apiErrorFromResponse(response);
   }
 
   const text = await response.text();

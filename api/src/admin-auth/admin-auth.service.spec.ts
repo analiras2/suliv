@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { hashSync } from 'bcrypt';
 import { AdminAuthService } from './admin-auth.service';
 
@@ -64,10 +64,12 @@ describe('AdminAuthService', () => {
       nonexistentEmailError = error;
     }
 
-    expect(wrongPasswordError).toBeInstanceOf(UnauthorizedException);
-    expect(nonexistentEmailError).toBeInstanceOf(UnauthorizedException);
-    expect((wrongPasswordError as UnauthorizedException).message).toBe(
-      (nonexistentEmailError as UnauthorizedException).message,
+    expect(wrongPasswordError).toMatchObject({
+      code: 'ADMIN_INVALID_CREDENTIALS',
+    });
+    expect(nonexistentEmailError).toBeInstanceOf(ApiException);
+    expect((wrongPasswordError as ApiException).message).toBe(
+      (nonexistentEmailError as ApiException).message,
     );
   });
 });

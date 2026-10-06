@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { hashSync } from 'bcrypt';
@@ -8,6 +8,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { AppModule } from '../src/app.module';
 import { RecipeImportService } from '../src/recipe-import/recipe-import.service';
@@ -73,9 +74,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
       .useValue({ translateToPortuguese })
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
     importService = moduleFixture.get(RecipeImportService);
 
@@ -483,6 +482,7 @@ describe('Recipe allergen classification integration (task_02)', () => {
       title: `Sopa de lentilha com ${milkTerm}`,
       description: 'Uma sopa vegana reconfortante.',
       ingredientNames: [milkTerm],
+      canonicalIngredientNames: [milkTerm],
       stepDescriptions: ['Cozinhe tudo junto em fogo baixo.'],
     });
 

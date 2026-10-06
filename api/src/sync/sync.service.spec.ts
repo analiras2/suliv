@@ -1,3 +1,4 @@
+import { ApiException } from '../errors/api-exception';
 import { FavoritesService } from '../favorites/favorites.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecipesService } from '../recipes/recipes.service';
@@ -198,12 +199,21 @@ describe('SyncService', () => {
 
   it('draft_upsert with an invalid payload propagates the validation error without applying anything', async () => {
     parseCreateRecipePayload.mockImplementationOnce(() => {
-      throw new Error('Invalid draft_upsert payload');
+      throw new ApiException(
+        'SYNC_PAYLOAD_INVALID',
+        'Invalid draft_upsert payload',
+      );
     });
 
     await expect(
       service.apply('user-1', [draftUpsertAction()]),
-    ).rejects.toThrow('Invalid draft_upsert payload');
+    ).rejects.toMatchObject({ code: 'SYNC_PAYLOAD_INVALID' });
     expect(upsertDraftWithClient).not.toHaveBeenCalled();
+  });
+
+  it('favorite_add without payload.recipeId is rejected with SYNC_PAYLOAD_INVALID', async () => {
+    await expect(
+      service.apply('user-1', [favoriteAddAction({ payload: {} })]),
+    ).rejects.toMatchObject({ code: 'SYNC_PAYLOAD_INVALID' });
   });
 });

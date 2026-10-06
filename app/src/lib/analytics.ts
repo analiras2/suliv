@@ -26,6 +26,7 @@ export interface AnalyticsEventPayloads {
   submitted_recipe_started: { recipe_id: string };
   submitted_recipe_completed: { recipe_id: string };
   profile_updated: { fields_changed: string[] };
+  error_unmapped: { code: string; status: number | null; source: 'api' | 'auth' | 'network' | 'validation' };
 }
 
 export interface AnalyticsClient {

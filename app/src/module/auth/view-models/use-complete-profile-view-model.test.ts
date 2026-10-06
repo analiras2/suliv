@@ -2,7 +2,8 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { ApiError } from '@/lib/api-error';
+import { AUTH_MESSAGES, ERROR_MESSAGES, VALIDATION_MESSAGES } from '@/lib/error-messages';
 import type { ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
@@ -22,10 +23,10 @@ describe('useCompleteProfileViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     profiles = {
-      bootstrap: jest.fn<(currentSession: Session) => Promise<never>>(),
+      bootstrap: jest.fn<() => Promise<never>>(),
       deleteMe: jest.fn(),
       getMe: jest.fn(),
-      updateName: jest.fn<(currentSession: Session, name: string) => Promise<UserProfile>>()
+      updateName: jest.fn<(name: string) => Promise<UserProfile>>()
         .mockResolvedValue(user),
     };
     useSessionStore.setState({ session, status: 'authenticated', user: null });
@@ -35,7 +36,7 @@ describe('useCompleteProfileViewModel', () => {
     const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
     await act(() => result.current.setName('  Ana  '));
     await act(() => result.current.submitName());
-    expect(profiles.updateName).toHaveBeenCalledWith(session, 'Ana');
+    expect(profiles.updateName).toHaveBeenCalledWith('Ana');
     expect(useSessionStore.getState().user).toBe(user);
     expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });
@@ -61,12 +62,22 @@ describe('useCompleteProfileViewModel', () => {
   });
 
   it('exposes profile update failures', async () => {
-    profiles.updateName.mockRejectedValue(new Error('API unavailable'));
+    profiles.updateName.mockRejectedValue(new ApiError('USERNAME_TAKEN', 409));
     const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
     await act(() => result.current.setName('Ana'));
     await act(() => result.current.submitName());
     expect(result.current.status).toBe('error');
-    expect(result.current.error).toBe('API unavailable');
+    expect(result.current.error).toBe(ERROR_MESSAGES.USERNAME_TAKEN);
+  });
+
+  it('UT-060 exposes field errors from the validation details', async () => {
+    profiles.updateName.mockRejectedValue(
+      new ApiError('VALIDATION_FAILED', 400, [{ field: 'name', constraint: 'isNotEmpty' }]),
+    );
+    const { result } = await renderHook(() => useCompleteProfileViewModel(profiles));
+    await act(() => result.current.setName('Ana'));
+    await act(() => result.current.submitName());
+    expect(result.current.fieldErrors.name).toBe(VALIDATION_MESSAGES.isNotEmpty);
   });
 
   it('uses a safe message for non-Error update failures', async () => {

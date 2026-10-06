@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { ApiError } from '@/lib/api-error';
+import { ERROR_MESSAGES } from '@/lib/error-messages';
 import type { UserProfile } from '@/module/auth/types';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { ProfileService } from '@/module/profile/services/profile-service';
@@ -128,12 +130,12 @@ describe('useSettingsViewModel', () => {
   });
 
   it('UT-006: a rejected update surfaces an error without firing analytics or losing the session user', async () => {
-    profiles.updateProfile.mockRejectedValue(new Error('Conflict'));
+    profiles.updateProfile.mockRejectedValue(new ApiError('CONFLICT', 409));
     const { result } = await renderHook(() => useSettingsViewModel(profiles, analytics));
 
     await act(() => result.current.updateDietPreference('vegano'));
 
-    await waitFor(() => expect(result.current.error).toBe('Conflict'));
+    await waitFor(() => expect(result.current.error).toBe(ERROR_MESSAGES.CONFLICT));
     expect(analytics.track).not.toHaveBeenCalled();
     expect(useSessionStore.getState().user).toEqual(user);
   });

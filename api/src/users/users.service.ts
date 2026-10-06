@@ -1,11 +1,5 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ApiException } from '../errors/api-exception';
 import { Prisma, User } from '@prisma/client';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -75,13 +69,16 @@ export class UsersService {
       }
     }
 
-    throw new ConflictException('Unable to generate a unique username');
+    throw new ApiException(
+      'USERNAME_GENERATION_FAILED',
+      'Unable to generate a unique username',
+    );
   }
 
   async getMe(userId: string): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new ApiException('USER_NOT_FOUND', 'User not found');
     }
     return UserDto.fromUser(user);
   }
@@ -91,7 +88,7 @@ export class UsersService {
       where: { id: userId },
     });
     if (!currentUser) {
-      throw new NotFoundException('User not found');
+      throw new ApiException('USER_NOT_FOUND', 'User not found');
     }
 
     const usernameChanged =
@@ -116,7 +113,7 @@ export class UsersService {
       return UserDto.fromUser(user);
     } catch (error: unknown) {
       if (this.isUniqueConflict(error, 'username')) {
-        throw new ConflictException('Username is already taken');
+        throw new ApiException('USERNAME_TAKEN', 'Username is already taken');
       }
       throw error;
     }
@@ -159,7 +156,7 @@ export class UsersService {
       return UserDto.fromUser(user);
     } catch (error: unknown) {
       if (this.isRecordNotFound(error)) {
-        throw new NotFoundException('User not found');
+        throw new ApiException('USER_NOT_FOUND', 'User not found');
       }
       throw error;
     }
@@ -177,7 +174,7 @@ export class UsersService {
       return UserDto.fromUser(user);
     } catch (error: unknown) {
       if (this.isRecordNotFound(error)) {
-        throw new NotFoundException('User not found');
+        throw new ApiException('USER_NOT_FOUND', 'User not found');
       }
       throw error;
     }
@@ -225,7 +222,7 @@ export class UsersService {
       return UserDto.fromUser(user);
     } catch (error: unknown) {
       if (this.isRecordNotFound(error)) {
-        throw new NotFoundException('User not found');
+        throw new ApiException('USER_NOT_FOUND', 'User not found');
       }
       throw error;
     }
@@ -276,7 +273,8 @@ export class UsersService {
       usernameUpdatedAt &&
       Date.now() - usernameUpdatedAt.getTime() < USERNAME_COOLDOWN_MS
     ) {
-      throw new UnprocessableEntityException(
+      throw new ApiException(
+        'USERNAME_CHANGE_TOO_SOON',
         'Username can only be changed every 30 days',
       );
     }
@@ -322,13 +320,17 @@ export class UsersService {
 
   private validateUsername(username: string): void {
     if (!USERNAME_PATTERN.test(username)) {
-      throw new BadRequestException(
+      throw new ApiException(
+        'USERNAME_INVALID',
         'Username must be 3-20 characters using letters, numbers, _ or .',
       );
     }
     const terms = username.toLowerCase().split(/[_.]+/);
     if (terms.some((term) => PROFANE_TERMS.has(term))) {
-      throw new BadRequestException('Username contains prohibited language');
+      throw new ApiException(
+        'USERNAME_PROHIBITED',
+        'Username contains prohibited language',
+      );
     }
   }
 }

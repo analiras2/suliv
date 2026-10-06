@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { hashSync } from 'bcrypt';
@@ -8,6 +8,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
 
@@ -62,9 +63,7 @@ describe('Comments/ratings routes (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
 
     const adminEmail = `comments-spec-admin-${randomUUID()}@example.com`;
@@ -269,10 +268,21 @@ describe('Comments/ratings routes (integration)', () => {
       })),
     });
     const newRecipe = await upsertRecipe('it-004-comments-21st', category.id);
+    const warnSpy = jest.spyOn(Logger.prototype, 'warn');
 
     const response = await submitComment(newRecipe.id, user, { rating: 1 });
 
     expect(response.status).toBe(429);
+    expect((response.body as { code: string }).code).toBe(
+      'COMMENT_RATE_LIMITED',
+    );
+    const filterLines = warnSpy.mock.calls.filter(
+      ([entry]) =>
+        typeof entry === 'string' &&
+        entry.includes('"code":"COMMENT_RATE_LIMITED"'),
+    );
+    expect(filterLines).toHaveLength(1);
+    warnSpy.mockRestore();
     const rows = await prisma.commentRating.findMany({
       where: { recipeId: newRecipe.id, userId: user },
     });

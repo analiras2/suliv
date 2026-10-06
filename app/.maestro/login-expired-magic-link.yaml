@@ -1,0 +1,19 @@
+appId: host.exp.Exponent
+name: mensageria E2E-003 An expired magic link is visible on the login screen and recoverable by sending a new link
+---
+# Opening a magic link Supabase already rejected arrives as an error in the URL fragment. It used
+# to fail silently; the login screen now explains it and keeps "Enviar link mágico" available.
+- launchApp:
+    clearState: true
+- openLink: suliv://login#error=access_denied&error_code=otp_expired
+- assertVisible: Esse link expirou. Peça um novo link mágico.
+- assertVisible:
+    id: login-magic-link-button
+- tapOn:
+    id: login-email-input
+- inputText: maestro@example.com
+- tapOn:
+    id: login-magic-link-button
+# Sending a new link clears the notice and shows the normal confirmation.
+- assertVisible: Confira seu e-mail para continuar.
+- assertNotVisible: Esse link expirou. Peça um novo link mágico.

@@ -128,3 +128,16 @@ asserting the same draft content the user entered is still there once the
 retry succeeds. The `submit_error` structured log firing is verified via a
 test-only check against the test backend/log output, not a user-visible
 assertion, same pattern as the analytics-event flows above.
+
+The error-messaging flows (mensageria-erros-api):
+`recipe-not-found-state-view.yaml` also asserts the Portuguese not-found copy (E2E-001).
+`login-expired-magic-link.yaml` opens a URL carrying `error_code=otp_expired` and asserts the
+expired-link notice, then that sending a new link clears it (E2E-003).
+`session-revoked-returns-to-login.yaml` needs a dedicated `REVOKED_ACCESS_TOKEN`/`REVOKED_REFRESH_TOKEN`
+pair plus `REVOKED_USER_ID`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: it deletes the user through
+the local Supabase admin API (`session-revoked-returns-to-login.js`), pulls to refresh and asserts the
+login screen shows "Sua sessão expirou. Entre novamente." (E2E-004).
+Not written: E2E-002 (offline favorite shows a connection message) and E2E-005 (username taken in profile
+settings). The favorite toggle is local-first and shows no inline error, and the app has no username-edit
+screen, so there is no UI surface to assert; the copy is covered by unit and integration tests instead.
+

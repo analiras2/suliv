@@ -63,7 +63,22 @@ Acontece **na promoção**, não na busca. O pool guarda o inglês original inta
 
 Qualquer uma dessas falhas lança `RecipeTranslationError`, a promoção daquele candidato é abortada e ele **fica no pool** para a próxima execução tentar de novo. Nunca publica inglês na fila de moderação.
 
-Depois de validada, a lista traduzida de ingredientes também alimenta a classificação automática de alérgenos. A promoção compara cada nome completo normalizado com o catálogo administrativo `allergen_ingredient_terms`, grava a projeção `recipe_allergens` e marca o candidato como promovido na **mesma transação**. Portanto, o classificador usa exatamente os nomes pt-BR que serão exibidos no app.
+### Nome de exibição x nome canônico
+
+A tradução devolve **dois nomes por ingrediente**:
+
+| Campo | Para que serve | Exemplo |
+|---|---|---|
+| `ingredientNames` | O que o app exibe, com o preparo que o original traz | `castanha de caju deixada de molho durante a noite` |
+| `canonicalIngredientNames` | Só a classificação de alérgenos | `castanha de caju` |
+
+A razão é o match exato do ADR-001/ADR-002 de classificação de alérgenos: o catálogo guarda `castanha de caju`, e um nome descritivo nunca bate com ele. Sem o nome canônico, `tofu light em bloco` e `farinha de rosca temperada` passavam como se não tivessem alérgeno — foi o que aconteceu no primeiro lote importado. A alternativa seria match por substring, que foi rejeitada no ADR porque `leite` casaria com `leite de coco`.
+
+O nome canônico fica gravado em `recipe_ingredients.canonical_name` (nulo = usar `name`). Assim o `allergens:backfill` classifica pelo mesmo nome que a promoção usou; sem isso ele reclassificaria pelos nomes exibidos e apagaria os vínculos das receitas importadas. Quando os ingredientes de uma receita são reescritos (o fluxo apaga e recria as linhas), o nome canônico é preservado para cada ingrediente cujo nome não mudou; um ingrediente renomeado perde o canônico e passa a ser classificado pelo novo nome.
+
+As duas listas também precisam ter o mesmo tamanho da lista original, pela mesma razão de índice da tabela acima.
+
+Depois de validada, a lista **canônica** alimenta a classificação automática de alérgenos. A promoção compara cada nome normalizado com o catálogo administrativo `allergen_ingredient_terms`, grava a projeção `recipe_allergens` e marca o candidato como promovido na **mesma transação**.
 
 ## 4. Mapeamento de dados
 

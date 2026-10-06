@@ -10,9 +10,15 @@ export interface AdminLoginResponse {
   };
 }
 
-export class AdminLoginError extends Error {}
-
-const GENERIC_LOGIN_ERROR_MESSAGE = 'Invalid email or password';
+/** The API's answer to a rejected login: its status and parsed error body, forwarded unchanged. */
+export class AdminLoginError extends Error {
+  constructor(
+    readonly status: number,
+    readonly body: unknown,
+  ) {
+    super('Admin login failed');
+  }
+}
 
 export async function loginAdmin(email: string, password: string): Promise<AdminLoginResponse> {
   const response = await fetch(`${ADMIN_API_URL}/admin/auth/login`, {
@@ -23,8 +29,8 @@ export async function loginAdmin(email: string, password: string): Promise<Admin
   });
 
   if (!response.ok) {
-    // Never surface a distinct message for wrong-password vs. nonexistent-email.
-    throw new AdminLoginError(GENERIC_LOGIN_ERROR_MESSAGE);
+    // The API answers wrong-password and nonexistent-email with the same code.
+    throw new AdminLoginError(response.status, await response.json().catch(() => null));
   }
 
   return response.json();

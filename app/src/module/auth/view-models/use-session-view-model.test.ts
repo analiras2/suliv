@@ -2,9 +2,10 @@ import type { Session } from '@supabase/supabase-js';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { ApiError } from '@/lib/api-error';
+import { AUTH_MESSAGES, ERROR_MESSAGES } from '@/lib/error-messages';
 import type { AuthService } from '@/module/auth/services/auth-service';
-import { ProfileServiceError, type ProfileService } from '@/module/auth/services/profile-service';
+import { type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
 
@@ -38,7 +39,7 @@ describe('useSessionViewModel', () => {
       signInWithOAuth: jest.fn(), signOut: jest.fn<() => Promise<void>>().mockResolvedValue(),
     };
     profiles = {
-      bootstrap: jest.fn<(value: Session) => Promise<{ missingName: boolean; user: UserProfile }>>()
+      bootstrap: jest.fn<() => Promise<{ missingName: boolean; user: UserProfile }>>()
         .mockResolvedValue({ missingName: false, user }),
       deleteMe: jest.fn(), getMe: jest.fn(), updateName: jest.fn(),
     };
@@ -47,7 +48,7 @@ describe('useSessionViewModel', () => {
   it('restores, bootstraps, hydrates, and routes a persisted session', async () => {
     await renderHook(() => useSessionViewModel(authentication, profiles));
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(tabs)'));
-    expect(profiles.bootstrap).toHaveBeenCalledWith(session);
+    expect(profiles.bootstrap).toHaveBeenCalledWith();
     expect(useSessionStore.getState()).toMatchObject({ session, user, status: 'authenticated' });
   });
 
@@ -64,19 +65,18 @@ describe('useSessionViewModel', () => {
     expect(profiles.bootstrap).not.toHaveBeenCalled();
   });
 
-  it('clears an unauthorized restored session', async () => {
-    profiles.bootstrap.mockRejectedValue(new ProfileServiceError(401));
-    authentication.signOut.mockRejectedValue(new Error('Already expired'));
-    await renderHook(() => useSessionViewModel(authentication, profiles));
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/login'));
-    expect(authentication.signOut).toHaveBeenCalledTimes(1);
-    expect(useSessionStore.getState().session).toBeNull();
+  it('leaves an unauthorized restoration to the central session ending', async () => {
+    profiles.bootstrap.mockRejectedValue(new ApiError('UNAUTHORIZED', 401));
+    const { result } = await renderHook(() => useSessionViewModel(authentication, profiles));
+    await waitFor(() => expect(profiles.bootstrap).toHaveBeenCalledTimes(1));
+    expect(result.current.error).toBeNull();
+    expect(authentication.signOut).not.toHaveBeenCalled();
   });
 
   it('keeps a valid cached session available when bootstrap is offline', async () => {
-    profiles.bootstrap.mockRejectedValue(new Error('offline'));
+    profiles.bootstrap.mockRejectedValue(new ApiError('NETWORK_OFFLINE', null));
     const { result } = await renderHook(() => useSessionViewModel(authentication, profiles));
-    await waitFor(() => expect(result.current.error).toBe('offline'));
+    await waitFor(() => expect(result.current.error).toBe(ERROR_MESSAGES.NETWORK_OFFLINE));
     expect(useSessionStore.getState().status).toBe('authenticated');
     expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });

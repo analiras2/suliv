@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
+import { getErrorMessage } from '@/lib/error-messages';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
 import {
   recipeAuthoringService,
@@ -102,7 +103,7 @@ export function useMyRecipesViewModel(
     groups,
     isEmpty,
     isLoading: query.isLoading,
-    error: query.error instanceof Error ? query.error.message : null,
+    error: query.error ? getErrorMessage(query.error) : null,
     hasTooManyUnsentDrafts,
     staleDraftIds,
     requestDelete,

@@ -300,6 +300,9 @@ model RecipeIngredient {
   id                 String         @id @default(uuid())
   recipeId           String         @map("recipe_id")
   name               String
+  // Bare pantry name used for allergen matching; null means `name` is used.
+  // Imported recipes display descriptive names that exact matching misses.
+  canonicalName      String?        @map("canonical_name")
   quantity           Decimal?
   unit               IngredientUnit
   scalesWithServings Boolean        @default(true) @map("scales_with_servings")

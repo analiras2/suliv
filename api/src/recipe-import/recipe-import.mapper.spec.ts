@@ -72,6 +72,62 @@ describe('mapSpoonacularRecipe', () => {
     expect(mapped?.externalNutritionData).toBeNull();
   });
 
+  it.each([
+    ['tbs', 'colher_sopa'],
+    ['tbsps', 'colher_sopa'],
+    ['tsps', 'colher_cha'],
+    ['t', 'colher_cha'],
+    ['c', 'xicara'],
+    ['dashes', 'pitada'],
+    ['small pinch', 'pitada'],
+  ])('maps the abbreviation "%s" to %s', (upstreamUnit, expectedUnit) => {
+    const mapped = mapSpoonacularRecipe(
+      recipeFixture({
+        extendedIngredients: [{ name: 'salt', amount: 1, unit: upstreamUnit }],
+      }),
+    );
+
+    expect(mapped?.ingredients[0].unit).toBe(expectedUnit);
+    expect(mapped?.ingredients[0].quantity).toBe(1);
+  });
+
+  it.each([
+    ['oz', 8, 227],
+    ['ounces', 4, 113],
+    ['lb', 1, 454],
+    ['pounds', 2, 907],
+  ])(
+    'converts %s to grams instead of falling back to unidade',
+    (upstreamUnit, amount, expectedQuantity) => {
+      const mapped = mapSpoonacularRecipe(
+        recipeFixture({
+          extendedIngredients: [{ name: 'tofu', amount, unit: upstreamUnit }],
+        }),
+      );
+
+      expect(mapped?.ingredients[0].unit).toBe('g');
+      expect(mapped?.ingredients[0].quantity).toBe(expectedQuantity);
+    },
+  );
+
+  it('keeps countable upstream units as unidade without converting', () => {
+    const mapped = mapSpoonacularRecipe(
+      recipeFixture({
+        extendedIngredients: [
+          { name: 'onion', amount: 2, unit: 'medium' },
+          { name: 'garlic', amount: 3, unit: 'cloves' },
+          { name: 'spinach', amount: 1, unit: '' },
+        ],
+      }),
+    );
+
+    expect(mapped?.ingredients.map((i) => [i.unit, i.quantity])).toEqual([
+      ['unidade', 2],
+      ['unidade', 3],
+      ['unidade', 1],
+    ]);
+  });
+
   it('falls back to the default category when no dishType matches', () => {
     const mapped = mapSpoonacularRecipe(
       recipeFixture({ dishTypes: ['unknown'] }),

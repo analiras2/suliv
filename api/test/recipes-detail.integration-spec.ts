@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
@@ -7,6 +7,7 @@ import { AddressInfo } from 'node:net';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
@@ -63,9 +64,7 @@ describe('GET /recipes/:slug (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
   });
 

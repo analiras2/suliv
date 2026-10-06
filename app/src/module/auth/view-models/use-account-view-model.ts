@@ -2,7 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 
-import { AUTH_MESSAGES } from '@/module/auth/messages';
+import { AUTH_MESSAGES, getErrorMessage } from '@/lib/error-messages';
 import { authService, type AuthService } from '@/module/auth/services/auth-service';
 import { profileService, type ProfileService } from '@/module/auth/services/profile-service';
 import { useSessionStore } from '@/module/auth/store/use-session-store';
@@ -28,13 +28,13 @@ export function useAccountViewModel(
     setIsDeleting(true);
     setError(null);
     try {
-      await profiles.deleteMe(session);
+      await profiles.deleteMe();
       await authentication.signOut().catch(() => undefined);
       useSessionStore.getState().setUser(null);
       useSessionStore.getState().setSession(null);
       router.replace(LOGIN_ROUTE);
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : AUTH_MESSAGES.deleteAccountFailed);
+      setError(getErrorMessage(caught, AUTH_MESSAGES.deleteAccountFailed));
     } finally {
       setIsDeleting(false);
     }

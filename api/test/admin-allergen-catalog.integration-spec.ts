@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, RecipeCategory } from '@prisma/client';
 import { hashSync } from 'bcrypt';
@@ -7,6 +7,7 @@ import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { createValidationPipe } from '../src/errors/validation-exception.factory';
 import { AllergenClassificationService } from '../src/allergen-classification/allergen-classification.service';
 import { AppModule } from '../src/app.module';
 import { SupabaseAdminService } from '../src/users/supabase-admin.service';
@@ -52,9 +53,7 @@ describe('Admin allergen catalog CRUD (integration)', () => {
       .useValue(supabaseAdmin)
       .compile();
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }),
-    );
+    app.useGlobalPipes(createValidationPipe());
     await app.init();
 
     const adminEmail = `admin-allergen-catalog-${randomUUID()}@example.com`;
@@ -228,6 +227,12 @@ describe('Admin allergen catalog CRUD (integration)', () => {
 
     const statuses = [first.status, second.status].sort();
     expect(statuses).toEqual([201, 409]);
+    const duplicate = [first, second].find(
+      (response) => response.status === 409,
+    );
+    expect((duplicate?.body as { code: string }).code).toBe(
+      'ALLERGEN_TERM_DUPLICATE',
+    );
 
     const rows = await prisma.allergenIngredientTerm.findMany({
       where: {

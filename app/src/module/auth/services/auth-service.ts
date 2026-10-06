@@ -1,13 +1,11 @@
-import {
-  createClient,
-  type AuthError,
-  type Session,
-  type SupabaseClient,
-} from '@supabase/supabase-js';
+import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
+
+import { ApiError } from '@/lib/api-error';
+import { completeSignInFromUrl, recordAuthNotice, throwAuthError } from '@/module/auth/services/auth-url';
 
 export const AUTH_STORAGE_KEY = 'suliv.auth.session';
 
@@ -65,12 +63,6 @@ export interface AuthService {
   onAuthStateChange(callback: (session: Session | null) => void): () => void;
 }
 
-function throwAuthError(error: AuthError | null): void {
-  if (error) {
-    throw error;
-  }
-}
-
 export class SupabaseAuthService implements AuthService {
   private initialUrlHandled = false;
 
@@ -92,12 +84,12 @@ export class SupabaseAuthService implements AuthService {
     throwAuthError(error);
 
     if (!data.url) {
-      throw new Error('Supabase did not return an OAuth URL.');
+      throw new ApiError('AUTH_PROVIDER_FAILED', null);
     }
 
     const result = await WebBrowser.openAuthSessionAsync(data.url);
     if (result.type === 'success') {
-      await this.completeSignInFromUrl(result.url);
+      await completeSignInFromUrl(this.client, result.url);
     }
   }
 
@@ -121,7 +113,7 @@ export class SupabaseAuthService implements AuthService {
       callback(session);
     });
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-      void this.completeSignInFromUrl(url).catch(() => undefined);
+      void completeSignInFromUrl(this.client, url).catch(recordAuthNotice);
     });
     this.handleInitialUrl();
     return () => {
@@ -141,35 +133,8 @@ export class SupabaseAuthService implements AuthService {
     if (this.initialUrlHandled) return;
     this.initialUrlHandled = true;
     void Linking.getInitialURL().then((url) => {
-      if (url) void this.completeSignInFromUrl(url).catch(() => undefined);
+      if (url) void completeSignInFromUrl(this.client, url).catch(recordAuthNotice);
     });
-  }
-
-  private async completeSignInFromUrl(url: string): Promise<void> {
-    const parsedUrl = new URL(url);
-    const query = parsedUrl.searchParams;
-    const fragment = new URLSearchParams(parsedUrl.hash.slice(1));
-    const errorDescription = query.get('error_description') ?? fragment.get('error_description');
-    if (errorDescription) {
-      throw new Error(errorDescription);
-    }
-
-    const code = query.get('code');
-    if (code) {
-      const { error } = await this.client.auth.exchangeCodeForSession(code);
-      throwAuthError(error);
-      return;
-    }
-
-    const accessToken = query.get('access_token') ?? fragment.get('access_token');
-    const refreshToken = query.get('refresh_token') ?? fragment.get('refresh_token');
-    if (accessToken && refreshToken) {
-      const { error } = await this.client.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      throwAuthError(error);
-    }
   }
 }
 

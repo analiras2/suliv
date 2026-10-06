@@ -28,7 +28,8 @@
     "prisma:validate": "prisma validate",
     "prisma:seed": "ts-node prisma/seed.ts",
     "import:recipes": "ts-node src/recipe-import/recipe-import.cli.ts",
-    "allergens:backfill": "ts-node src/allergen-classification/allergen-backfill.cli.ts"
+    "allergens:backfill": "ts-node src/allergen-classification/allergen-backfill.cli.ts",
+    "allergens:seed-catalog": "ts-node src/allergen-classification/allergen-catalog.cli.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

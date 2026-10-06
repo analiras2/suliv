@@ -33,7 +33,7 @@ describe('useLoginViewModel session orchestration', () => {
       signOut: jest.fn(),
     };
     profiles = {
-      bootstrap: jest.fn<(value: Session) => Promise<{ missingName: boolean; user: UserProfile }>>()
+      bootstrap: jest.fn<() => Promise<{ missingName: boolean; user: UserProfile }>>()
         .mockResolvedValue({ missingName: false, user }),
       deleteMe: jest.fn(),
       getMe: jest.fn(),
@@ -73,7 +73,7 @@ describe('useLoginViewModel session orchestration', () => {
     authentication.getSession.mockResolvedValue(session);
     const { result } = await renderHook(() => useLoginViewModel(authentication, profiles));
     await act(() => result.current.signInWithOAuth('google'));
-    expect(profiles.bootstrap).toHaveBeenCalledWith(session);
+    expect(profiles.bootstrap).toHaveBeenCalledWith();
   });
 
   it.each([new Error('OAuth failed'), 'offline'])('exposes OAuth failure %p', async (failure) => {
