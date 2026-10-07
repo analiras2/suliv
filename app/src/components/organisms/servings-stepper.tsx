@@ -21,6 +21,8 @@ function ServingsStepperComponent({ servings, onChange }: ServingsStepperProps) 
       <Text style={styles.label}>porções</Text>
       <View style={styles.stepper}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Diminuir porções"
           onPress={() => onChange(servings - 1)}
           disabled={!canDecrease}
           style={[styles.button, !canDecrease && styles.buttonDisabled]}
@@ -32,6 +34,8 @@ function ServingsStepperComponent({ servings, onChange }: ServingsStepperProps) 
           {servings}
         </Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Aumentar porções"
           onPress={() => onChange(servings + 1)}
           disabled={!canIncrease}
           style={[styles.button, !canIncrease && styles.buttonDisabled]}

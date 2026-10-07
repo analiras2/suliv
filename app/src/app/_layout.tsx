@@ -3,12 +3,14 @@ import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
+import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { StateView } from '@/components/molecules/state-view';
 import { semanticColors } from '@/design-system/tokens';
 import { useSulivFonts } from '@/design-system/fonts';
+import { i18n } from '@/i18n';
 import { STATE_COPY } from '@/lib/state-copy';
 import { useSessionStore, type SessionStatus } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
@@ -102,26 +104,28 @@ export default function RootLayout() {
     <OfflineModeProvider isOffline={splash.status === 'offline'}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider value={sulivTheme}>
-            <AnimatedSplashOverlay />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Protected guard={activeRoute === '(auth)'}>
-                <Stack.Screen name="(auth)" />
-              </Stack.Protected>
-              <Stack.Protected guard={activeRoute === '(onboarding)'}>
-                <Stack.Screen name="(onboarding)" />
-              </Stack.Protected>
-              <Stack.Protected guard={activeRoute === '(tabs)'}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="ver-tudo" />
-              </Stack.Protected>
-              {/* Recipe detail renders without an active session (ADR-002) — reachable via
-                  deep link regardless of the auth gate above, unlike the rest of (tabs). */}
-              <Stack.Screen name="recipe/[slug]" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="recipe/[slug]/cook" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="r/[slug]" />
-            </Stack>
-          </ThemeProvider>
+          <I18nextProvider i18n={i18n}>
+            <ThemeProvider value={sulivTheme}>
+              <AnimatedSplashOverlay />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Protected guard={activeRoute === '(auth)'}>
+                  <Stack.Screen name="(auth)" />
+                </Stack.Protected>
+                <Stack.Protected guard={activeRoute === '(onboarding)'}>
+                  <Stack.Screen name="(onboarding)" />
+                </Stack.Protected>
+                <Stack.Protected guard={activeRoute === '(tabs)'}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="ver-tudo" />
+                </Stack.Protected>
+                {/* Recipe detail renders without an active session (ADR-002) — reachable via
+                    deep link regardless of the auth gate above, unlike the rest of (tabs). */}
+                <Stack.Screen name="recipe/[slug]" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="recipe/[slug]/cook" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="r/[slug]" />
+              </Stack>
+            </ThemeProvider>
+          </I18nextProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </OfflineModeProvider>

@@ -28,6 +28,7 @@ export function RecipeStepFormList({ steps, onAdd, onUpdate, onRemove }: RecipeS
             </Pressable>
           </View>
           <TextInput
+            accessibilityLabel="Descrição do passo"
             value={step.description}
             onChangeText={(value) => onUpdate(index, { description: value })}
             placeholder="Descreva esse passo"
@@ -37,6 +38,7 @@ export function RecipeStepFormList({ steps, onAdd, onUpdate, onRemove }: RecipeS
             testID={`step-description-${index}`}
           />
           <TextInput
+            accessibilityLabel="Timer do passo em segundos"
             value={step.stepTimeSeconds === null ? '' : String(step.stepTimeSeconds)}
             onChangeText={(value) => onUpdate(index, { stepTimeSeconds: value === '' ? null : Number(value) })}
             placeholder="Timer (segundos, opcional)"

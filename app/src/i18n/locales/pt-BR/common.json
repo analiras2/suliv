@@ -1,0 +1,6 @@
+{
+  "recipes_count_one": "{{count}} receita",
+  "recipes_count_other": "{{count}} receitas",
+  "loading": "Carregando…",
+  "retry": "Tentar de novo"
+}

@@ -3,6 +3,7 @@ const { defineConfig } = require('eslint/config');
 const expoConfig = require("eslint-config-expo/flat");
 const sonarjs = require("eslint-plugin-sonarjs");
 const security = require("eslint-plugin-security");
+const reactNativeA11y = require("eslint-plugin-react-native-a11y");
 
 module.exports = defineConfig([
   expoConfig,
@@ -59,6 +60,18 @@ module.exports = defineConfig([
           message: "Do not read .message from a caught error in a view model; use getErrorMessage from @/lib/error-messages.",
         },
       ],
+    },
+  },
+  {
+    // ADR-004: interactive components must carry accessibility props. Contrast and touch-target
+    // size are not lintable; see src/components/README.md for the manual checklist.
+    files: ["src/components/**/*.tsx", "src/screens/**/*.tsx"],
+    ignores: ["**/*.test.tsx"],
+    plugins: { "react-native-a11y": reactNativeA11y },
+    rules: {
+      ...reactNativeA11y.configs.basic.rules,
+      // Hints are optional per platform guidance and flag every labelled control; labels and roles are the gate.
+      "react-native-a11y/has-accessibility-hint": "off",
     },
   },
   {
