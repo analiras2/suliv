@@ -5,4 +5,4 @@ name: E2E-005 A slug matching no approved recipe shows the not-found state, not 
     clearState: true
 - openLink: suliv://recipe/receita-que-nao-existe-em-nenhum-lugar
 - assertVisible: Receita não encontrada
-- assertVisible: Essa receita não existe ou não está mais disponível.
+- assertVisible: Essa receita não existe mais ou não está disponível no momento.

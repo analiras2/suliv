@@ -9,7 +9,7 @@ name: E2E-008 / mensageria E2E-001 A deep link to a nonexistent recipe slug rend
     id: state-view-recipe_not_found
 # The API answers 404 RECIPE_NOT_FOUND; the screen shows Portuguese copy, never the English API message.
 - assertVisible: Receita não encontrada
-- assertVisible: Essa receita não existe ou não está mais disponível.
+- assertVisible: Essa receita não existe mais ou não está disponível no momento.
 - assertNotVisible: Recipe not found
 - assertVisible:
     id: state-view-primary-action
