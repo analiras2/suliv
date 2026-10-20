@@ -16,7 +16,7 @@ dispositivo ou ambiente real durante o desenvolvimento.
   - [ ] `login-expired-magic-link.yaml`: link expirado mostra "Esse link expirou. Peça um novo link mágico." e some ao enviar outro.
   - [ ] `favorite-offline-uncached-shows-connection-message.yaml`: exige `setAirplaneMode` (Android) e o seed rodado.
   - [ ] `settings-username-taken.yaml`: exige um usuário seed dono do username `existing_user`; o usuário `PERSISTED_*` não pode estar na janela de 30 dias.
-- [ ] **(instável)** Playwright do admin com a porta 3000 livre: `cd admin && npm run test:e2e`. Em desenvolvimento só ficou estável com `--workers=1`; confirme se a instabilidade com workers paralelos se repete.
+- [x] Playwright do admin com a porta 3000 livre: `cd admin && npm run test:e2e`. Reconfirmado em 2026-10-20: 8/8 passaram tanto com `--workers=1` quanto em paralelo (4 workers); a instabilidade relatada não se reproduziu.
 - [ ] Teste manual rápido no app: abrir um link magic expirado, trocar o username (sucesso e erro de nome em uso) e favoritar offline uma receita nunca aberta.
 - [ ] Teste manual rápido no admin: login com e-mail inválido (mensagens por campo em pt-BR), senha errada e termo de alérgeno duplicado.
 
