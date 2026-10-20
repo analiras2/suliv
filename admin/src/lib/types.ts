@@ -119,3 +119,30 @@ export interface FeatureFlag {
   enabled: boolean;
   rolloutPercentage: number | null;
 }
+
+export const RECIPE_STATUS_LABELS: Record<RecipeStatus, string> = {
+  rascunho: 'Rascunho',
+  em_analise: 'Em análise',
+  aprovada: 'Aprovada',
+  precisa_de_ajustes: 'Precisa de ajustes',
+  removida: 'Removida',
+};
+
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  conteudo_inadequado: 'Conteúdo inadequado',
+  spam: 'Spam',
+  informacao_incorreta_perigosa: 'Informação incorreta ou perigosa',
+  discurso_odio_assedio: 'Discurso de ódio ou assédio',
+  outro: 'Outro',
+};
+
+export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
+  recipe: 'Receita',
+  comment: 'Comentário',
+};
+
+export const BOOST_STATUS_LABELS: Record<BoostStatus, string> = {
+  upcoming: 'Agendado',
+  active: 'Ativo',
+  expired: 'Expirado',
+};

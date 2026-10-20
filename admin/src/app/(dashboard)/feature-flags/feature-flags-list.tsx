@@ -10,15 +10,24 @@ export function FeatureFlagsList() {
     queryFn: fetchFeatureFlags,
   });
 
-  if (isLoading) return <p>Loading…</p>;
-  if (isError) return <p role="alert">Failed to load feature flags.</p>;
+  if (isLoading) return <p>Carregando…</p>;
+  if (isError) return <p role="alert">Não foi possível carregar as flags.</p>;
+  if (data && data.length === 0) return <p className="empty-state">Nenhuma flag configurada.</p>;
 
   return (
-    <ul>
-      {data?.map((flag) => (
-        <FeatureFlagRow key={flag.key} flag={flag} />
-      ))}
-      {data && data.length === 0 && <p>No feature flags configured.</p>}
-    </ul>
+    <table className="data-table">
+      <thead>
+        <tr>
+          <th>Flag</th>
+          <th>Ativa</th>
+          <th>Rollout (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data?.map((flag) => (
+          <FeatureFlagRow key={flag.key} flag={flag} />
+        ))}
+      </tbody>
+    </table>
   );
 }

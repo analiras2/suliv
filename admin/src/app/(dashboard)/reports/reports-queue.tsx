@@ -10,15 +10,17 @@ export function ReportsQueue() {
     queryFn: () => fetchReports('pending'),
   });
 
-  if (isLoading) return <p>Loading…</p>;
-  if (isError) return <p role="alert">Failed to load reports.</p>;
+  if (isLoading) return <p>Carregando…</p>;
+  if (isError) return <p role="alert">Não foi possível carregar as denúncias.</p>;
 
   return (
-    <ul>
-      {data?.items.map((report) => (
-        <ReportRow key={report.id} report={report} />
-      ))}
-      {data && data.items.length === 0 && <p>No pending reports.</p>}
-    </ul>
+    <>
+      <ul className="card-list">
+        {data?.items.map((report) => (
+          <ReportRow key={report.id} report={report} />
+        ))}
+      </ul>
+      {data && data.items.length === 0 && <p className="empty-state">Nenhuma denúncia pendente.</p>}
+    </>
   );
 }

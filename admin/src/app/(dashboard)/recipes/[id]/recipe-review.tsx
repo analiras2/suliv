@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { approveRecipe, fetchRecipeDetail, requestRecipeAdjustment } from '@/lib/api-client';
-import type { AdjustmentReason } from '@/lib/types';
+import { RECIPE_STATUS_LABELS, type AdjustmentReason } from '@/lib/types';
 import { AdjustmentReasonPicker } from './adjustment-reason-picker';
 
 interface RecipeReviewProps {
@@ -40,27 +40,29 @@ export function RecipeReview({ recipeId }: RecipeReviewProps) {
 
   function handleRequestAdjustment() {
     if (!reason) {
-      setAdjustmentError('Select an adjustment reason.');
+      setAdjustmentError('Selecione um motivo de ajuste.');
       return;
     }
     setAdjustmentError(null);
     adjustmentMutation.mutate();
   }
 
-  if (isLoading) return <p>Loading…</p>;
-  if (isError || !recipe) return <p role="alert">Failed to load recipe.</p>;
+  if (isLoading) return <p>Carregando…</p>;
+  if (isError || !recipe) return <p role="alert">Não foi possível carregar a receita.</p>;
 
   return (
     <div>
       <h1>{recipe.title}</h1>
       {recipe.coverImageUrl && <img src={recipe.coverImageUrl} alt={recipe.title} width={320} />}
-      <p>Status: {recipe.status}</p>
-      {recipe.authorMessageToModerator && <p>Author note: {recipe.authorMessageToModerator}</p>}
+      <p>
+        Status: <span className="badge">{RECIPE_STATUS_LABELS[recipe.status]}</span>
+      </p>
+      {recipe.authorMessageToModerator && <p>Mensagem da autora: {recipe.authorMessageToModerator}</p>}
 
-      <h2>Description</h2>
+      <h2>Descrição</h2>
       <p>{recipe.description}</p>
 
-      <h2>Ingredients</h2>
+      <h2>Ingredientes</h2>
       <ul>
         {recipe.ingredients.map((ingredient) => (
           <li key={ingredient.name}>
@@ -70,28 +72,35 @@ export function RecipeReview({ recipeId }: RecipeReviewProps) {
         ))}
       </ul>
 
-      <h2>Steps</h2>
+      <h2>Modo de preparo</h2>
       <ol>
         {recipe.steps.map((step) => (
           <li key={step.order}>{step.description}</li>
         ))}
       </ol>
 
-      <button type="button" onClick={() => approveMutation.mutate()} disabled={approveMutation.isPending}>
-        Aprovar
-      </button>
+      <div className="row-actions section-gap">
+        <button
+          type="button"
+          className="btn-sm"
+          onClick={() => approveMutation.mutate()}
+          disabled={approveMutation.isPending}
+        >
+          Aprovar
+        </button>
+      </div>
 
       <fieldset>
         <legend>Solicitar ajuste</legend>
         <AdjustmentReasonPicker value={reason} onChange={setReason} />
-        <label htmlFor="adjustment-note">Note (optional)</label>
+        <label htmlFor="adjustment-note">Observação (opcional)</label>
         <textarea
           id="adjustment-note"
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
         {adjustmentError && <p role="alert">{adjustmentError}</p>}
-        <button type="button" onClick={handleRequestAdjustment} disabled={adjustmentMutation.isPending}>
+        <button type="button" className="btn-secondary btn-sm" onClick={handleRequestAdjustment} disabled={adjustmentMutation.isPending}>
           Solicitar ajuste
         </button>
       </fieldset>
