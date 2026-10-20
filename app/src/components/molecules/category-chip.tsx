@@ -22,7 +22,7 @@ export type CategoryChipProps = {
 
 function CategoryChipComponent({ category }: CategoryChipProps) {
   return (
-    <Pressable style={styles.container}>
+    <Pressable accessibilityRole="button" accessibilityLabel={category.label} style={styles.container}>
       <View style={styles.circleWrapper}>
         <LinearGradient
           colors={recipeGradients[CATEGORY_GRADIENTS[category.key]]}

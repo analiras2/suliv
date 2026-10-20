@@ -35,6 +35,7 @@ export function CommentListItem({ comment, isOwn, onReport }: CommentListItemPro
 
       {!isOwn ? (
         <Pressable
+          accessibilityRole="button"
           onPress={onReport}
           hitSlop={6}
           testID={`comment-report-button-${comment.id}`}

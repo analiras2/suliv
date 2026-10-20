@@ -29,9 +29,11 @@
     "expo-symbols": "~57.0.0",
     "expo-system-ui": "~57.0.0",
     "expo-web-browser": "~57.0.0",
+    "i18next": "^26.4.2",
     "lucide-react-native": "^1.24.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-i18next": "^17.0.16",
     "react-native": "0.86.0",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-mmkv": "^3.3.3",
@@ -48,6 +50,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.0",
+    "eslint-plugin-react-native-a11y": "^3.5.1",
     "eslint-plugin-security": "^4.0.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "jest-expo": "~57.0.1",
@@ -63,5 +66,10 @@
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "eslint-plugin-react-native-a11y": {
+      "eslint": "$eslint"
+    }
+  }
 }

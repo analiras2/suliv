@@ -19,7 +19,7 @@ export function SectionHeader({ overline, title, actionLabel, onActionPress, tes
         <Text style={styles.title}>{title}</Text>
       </View>
       {actionLabel ? (
-        <Pressable onPress={onActionPress} testID={testID}>
+        <Pressable accessibilityRole="button" onPress={onActionPress} testID={testID}>
           <Text style={styles.action}>{actionLabel}</Text>
         </Pressable>
       ) : null}

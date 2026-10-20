@@ -25,6 +25,7 @@ export function CommentComposer({ ownReview, onSubmit, onDelete }: CommentCompos
       <Text style={styles.label}>{isEditMode ? 'Sua avaliação' : 'Avaliar receita'}</Text>
       <RatingStarsPicker key={ownReview?.rating ?? 'new'} onRate={setRating} initialValue={ownReview?.rating} />
       <TextInput
+        accessibilityLabel="Comentário"
         value={commentText}
         onChangeText={setCommentText}
         placeholder="O que você achou dessa receita? (opcional)"

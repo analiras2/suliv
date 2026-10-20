@@ -87,15 +87,16 @@ export function RecipeDetailHero({
       </Animated.View>
 
       <View style={styles.chrome}>
-        <Pressable onPress={onBack} style={styles.chromeButton} hitSlop={8}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={onBack} style={styles.chromeButton} hitSlop={8}>
           <Icon name="back" size={18} color={colors.ink900} />
         </Pressable>
         <View style={styles.chromeGroup}>
-          <Pressable style={styles.chromeButton} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Compartilhar" style={styles.chromeButton} hitSlop={8}>
             <Icon name="share" size={18} color={colors.ink900} />
           </Pressable>
           <Pressable
             accessibilityLabel="Favoritar"
+            accessibilityRole="button"
             onPress={onToggleSave}
             style={[styles.chromeButton, saved && styles.chromeButtonActive]}
             hitSlop={8}

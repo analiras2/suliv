@@ -17,6 +17,7 @@ export function SearchField({ value, onChangeText, placeholder = DEFAULT_PLACEHO
     <View style={styles.container}>
       <Icon name="search" size={18} color={semanticColors.fgSecondary} strokeWidth={1.9} />
       <TextInput
+        accessibilityLabel={placeholder}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

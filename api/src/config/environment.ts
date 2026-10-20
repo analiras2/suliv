@@ -3,6 +3,8 @@ import * as Joi from 'joi';
 const AUTH_PATH = '/auth/v1';
 const JWKS_PATH = `${AUTH_PATH}/.well-known/jwks.json`;
 
+export const APP_ENVIRONMENTS = ['dev', 'staging', 'prod'] as const;
+
 export const environmentValidationSchema = Joi.object({
   DATABASE_URL: Joi.string()
     .uri({ scheme: ['postgres', 'postgresql'] })
@@ -18,6 +20,10 @@ export const environmentValidationSchema = Joi.object({
   CLOUDINARY_API_KEY: Joi.string().min(1).required(),
   CLOUDINARY_API_SECRET: Joi.string().min(1).required(),
   CLOUDINARY_UPLOAD_PRESET: Joi.string().min(1).required(),
+  APP_ENV: Joi.string()
+    .valid(...APP_ENVIRONMENTS)
+    .required(),
+  PAGINATION_CURSOR_SECRET: Joi.string().min(1).required(),
   ADMIN_JWT_SECRET: Joi.string().min(1).required(),
   ADMIN_JWT_EXPIRES_IN: Joi.string().min(1).default('12h'),
   SPOONACULAR_API_KEY: Joi.string().min(1).required(),
@@ -33,6 +39,12 @@ export function environmentConfiguration() {
   const supabaseUrl = (process.env.SUPABASE_URL ?? '').replace(/\/$/, '');
 
   return {
+    app: {
+      env: process.env.APP_ENV,
+    },
+    pagination: {
+      cursorSecret: process.env.PAGINATION_CURSOR_SECRET,
+    },
     database: {
       url: process.env.DATABASE_URL,
     },

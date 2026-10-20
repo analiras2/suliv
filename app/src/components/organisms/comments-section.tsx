@@ -95,7 +95,7 @@ export function CommentsSection({ recipeId, onReviewChanged }: CommentsSectionPr
       </View>
 
       {hasMore ? (
-        <Pressable onPress={loadMore} testID="comments-load-more" style={styles.loadMore}>
+        <Pressable accessibilityRole="button" onPress={loadMore} testID="comments-load-more" style={styles.loadMore}>
           <Text style={styles.loadMoreLabel}>Ver mais avaliações</Text>
         </Pressable>
       ) : null}

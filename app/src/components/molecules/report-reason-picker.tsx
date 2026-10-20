@@ -24,6 +24,7 @@ export function ReportReasonPicker({ onSubmit, onCancel }: ReportReasonPickerPro
       {REASONS.map((reason) => (
         <Pressable
           key={reason.value}
+          accessibilityRole="button"
           onPress={() => onSubmit(reason.value)}
           testID={`report-reason-${reason.value}`}
           style={styles.reasonRow}>

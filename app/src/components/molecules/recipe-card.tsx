@@ -33,7 +33,7 @@ const TIME_BUCKET_LABELS: Record<TimeBucket, string> = {
 function RecipeCardComponent({ recipe, saved, onToggleSave, onOpen, conflictsWithUser }: RecipeCardProps) {
   return (
     <View style={styles.card}>
-      <Pressable onPress={onOpen}>
+      <Pressable accessibilityRole="button" accessibilityLabel={recipe.title} onPress={onOpen}>
         <View style={styles.image}>
           {recipe.coverImageUrl ? (
             <Image source={{ uri: recipe.coverImageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />

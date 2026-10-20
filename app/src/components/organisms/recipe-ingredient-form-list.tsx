@@ -45,6 +45,7 @@ export function RecipeIngredientFormList({ ingredients, onAdd, onUpdate, onRemov
         <View key={index} style={styles.row}>
           <View style={styles.rowTop}>
             <TextInput
+              accessibilityLabel="Ingrediente"
               value={ingredient.name}
               onChangeText={(value) => onUpdate(index, { name: value })}
               placeholder="Ingrediente"
@@ -53,6 +54,7 @@ export function RecipeIngredientFormList({ ingredients, onAdd, onUpdate, onRemov
               testID={`ingredient-name-${index}`}
             />
             <TextInput
+              accessibilityLabel="Quantidade"
               value={ingredient.quantity === null ? '' : String(ingredient.quantity)}
               onChangeText={(value) => onUpdate(index, { quantity: value === '' ? null : Number(value) })}
               placeholder="Qtd"
