@@ -14,7 +14,6 @@ dispositivo ou ambiente real durante o desenvolvimento.
 - [ ] **(não executado)** Maestro em dispositivo, com a API local e o Supabase local no ar (ver `app/.maestro/README.md`):
   - [ ] `recipe-not-found-state-view.yaml`: receita inexistente mostra a cópia pt-BR e o botão volta ao feed.
   - [ ] `login-expired-magic-link.yaml`: link expirado mostra "Esse link expirou. Peça um novo link mágico." e some ao enviar outro.
-  - [ ] `session-revoked-returns-to-login.yaml`: exige `REVOKED_ACCESS_TOKEN`, `REVOKED_REFRESH_TOKEN`, `REVOKED_USER_ID`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; usuário apagado volta ao login com "Sua sessão expirou. Entre novamente.".
   - [ ] `favorite-offline-uncached-shows-connection-message.yaml`: exige `setAirplaneMode` (Android) e o seed rodado.
   - [ ] `settings-username-taken.yaml`: exige um usuário seed dono do username `existing_user`; o usuário `PERSISTED_*` não pode estar na janela de 30 dias.
 - [ ] **(instável)** Playwright do admin com a porta 3000 livre: `cd admin && npm run test:e2e`. Em desenvolvimento só ficou estável com `--workers=1`; confirme se a instabilidade com workers paralelos se repete.
@@ -52,5 +51,6 @@ dispositivo ou ambiente real durante o desenvolvimento.
 ## 5. Lacunas conhecidas e rollback
 
 - O `DraftIngredientDto.name` só valida `@IsString()`; o nome vazio de ingrediente não retorna `isNotEmpty`. Mudar isso altera o comportamento de rascunhos com linha em branco e fica para um ajuste separado.
+- A API valida o JWT só por assinatura, emissor e expiração (`SupabaseJwtStrategy`) e não consulta o Supabase nem o banco. Uma conta apagada ou banida mantém acesso à API até o token expirar (cerca de 1 hora). Por isso não existe fluxo Maestro de sessão revogada; o 401 central é coberto por `UT-034` e `UT-035`. Exigir revogação imediata é uma decisão de produto e de segurança, fora deste ajuste.
 - O E2E de "favorito offline" só cobre receitas sem detalhe em cache; receitas em cache seguem favoritando em silêncio (decisão de produto, mantém o local-first).
 - **Rollback:** a mudança de contrato é no corpo de erro, sem alteração de status HTTP nem de schema. Voltar API e admin para a versão anterior restaura o comportamento antigo; o app novo, com a API antiga, mostra mensagens genéricas até a API voltar a enviar `code`. As migrations do import de receitas são aditivas; não desfaça sem avaliação.

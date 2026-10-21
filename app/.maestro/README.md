@@ -133,10 +133,11 @@ The error-messaging flows (mensageria-erros-api):
 `recipe-not-found-state-view.yaml` also asserts the Portuguese not-found copy (E2E-001).
 `login-expired-magic-link.yaml` opens a URL carrying `error_code=otp_expired` and asserts the
 expired-link notice, then that sending a new link clears it (E2E-003).
-`session-revoked-returns-to-login.yaml` needs a dedicated `REVOKED_ACCESS_TOKEN`/`REVOKED_REFRESH_TOKEN`
-pair plus `REVOKED_USER_ID`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: it deletes the user through
-the local Supabase admin API (`session-revoked-returns-to-login.js`), pulls to refresh and asserts the
-login screen shows "Sua sessão expirou. Entre novamente." (E2E-004).
+There is no Maestro flow for a revoked session (E2E-004 of the mensageria spec). The API validates the JWT
+signature, issuer and expiry only (`SupabaseJwtStrategy`), so deleting the user in Supabase does not make the
+API answer 401 before the token expires, and `supabase-js` rejects a tampered token before any API call. The
+central 401 handling (ADR-008) is covered by `UT-034` and `UT-035` in `app/src/lib/api-client.test.ts` and by
+`app/src/__tests__/app/auth-error-notices.test.tsx`.
 `favorite-offline-uncached-shows-connection-message.yaml` goes offline on the feed, taps a card's heart
 (`recipe-card-save-button`, whose detail was never opened and so is not cached), asserts the
 `favorite-error-message` shows the Portuguese connection copy, then reconnects and asserts it clears
