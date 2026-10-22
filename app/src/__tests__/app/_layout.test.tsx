@@ -208,3 +208,22 @@ describe('_layout auth guard reacts to live session state', () => {
     expectOnlyGroupVisible(rendered, '(tabs)');
   });
 });
+
+describe('_layout profile sub-screens', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useSessionStore.setState({ status: 'loading', session: null, user: null });
+  });
+
+  it('registers the (profile) group next to (tabs), so settings stay reachable from the profile tab', async () => {
+    mockSplash('ready', '(tabs)');
+    const rendered = await render(<RootLayout />);
+    expect(rendered.queryByTestId('screen-(profile)')).toBeTruthy();
+  });
+
+  it.each<InitialRoute>(['(auth)', '(onboarding)'])('keeps (profile) unreachable while %s is active', async (route) => {
+    mockSplash('ready', route);
+    const rendered = await render(<RootLayout />);
+    expect(rendered.queryByTestId('screen-(profile)')).toBeNull();
+  });
+});
