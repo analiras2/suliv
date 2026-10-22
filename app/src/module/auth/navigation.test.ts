@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { resolveHomeRoute } from '@/module/auth/navigation';
+import { resolveHomeRoute, shouldKeepCurrentRoute } from '@/module/auth/navigation';
 import type { UserProfile } from '@/module/auth/types';
 
 const COMPLETED_AT = '2026-01-01T00:00:00.000Z';
@@ -20,5 +20,27 @@ describe('resolveHomeRoute', () => {
 
   it('falls back to the tabs group when the profile has not loaded', () => {
     expect(resolveHomeRoute(null)).toBe('/(tabs)');
+  });
+});
+
+describe('shouldKeepCurrentRoute', () => {
+  it('keeps a standalone deep-linked screen such as a recipe', () => {
+    expect(shouldKeepCurrentRoute(['recipe', '[slug]'], '/(tabs)')).toBe(true);
+    expect(shouldKeepCurrentRoute(['r', '[slug]'], '/(onboarding)')).toBe(true);
+  });
+
+  it('keeps any screen of the group the profile already belongs to', () => {
+    expect(shouldKeepCurrentRoute(['(tabs)'], '/(tabs)')).toBe(true);
+    expect(shouldKeepCurrentRoute(['(tabs)', 'search'], '/(tabs)')).toBe(true);
+    expect(shouldKeepCurrentRoute(['(onboarding)', 'steps'], '/(onboarding)')).toBe(true);
+  });
+
+  it('does not keep a screen of another group', () => {
+    expect(shouldKeepCurrentRoute(['(auth)', 'login'], '/(tabs)')).toBe(false);
+    expect(shouldKeepCurrentRoute(['(tabs)'], '/(onboarding)')).toBe(false);
+  });
+
+  it('keeps the initial route while the navigator has not mounted one yet', () => {
+    expect(shouldKeepCurrentRoute([], '/(tabs)')).toBe(true);
   });
 });

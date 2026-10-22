@@ -10,7 +10,7 @@ import { useSessionStore } from '@/module/auth/store/use-session-store';
 import type { UserProfile } from '@/module/auth/types';
 
 const mockReplace = jest.fn();
-let mockSegments = ['(tabs)'];
+let mockSegments: string[] = ['(auth)', 'login'];
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useSegments: () => mockSegments,
@@ -30,7 +30,7 @@ describe('useSessionViewModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSegments = ['(tabs)'];
+    mockSegments = ['(auth)', 'login'];
     useSessionStore.setState({ session: null, status: 'loading', user: null });
     authentication = {
       getSession: jest.fn<() => Promise<Session | null>>().mockResolvedValue(session),
@@ -101,5 +101,50 @@ describe('useSessionViewModel', () => {
     await renderHook(() => useSessionViewModel(authentication, profiles));
     await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
     expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
+  });
+
+  describe('cold start on a deep link', () => {
+    it('keeps a deep-linked recipe instead of replacing it with the home route', async () => {
+      mockSegments = ['recipe', '[slug]'];
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('does not navigate before the navigator has mounted a route', async () => {
+      mockSegments = [];
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('keeps the tab the app opened on', async () => {
+      mockSegments = ['(tabs)', 'search'];
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('still sends a profile without a name to completion', async () => {
+      mockSegments = ['recipe', '[slug]'];
+      profiles.bootstrap.mockResolvedValue({ missingName: true, user });
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/complete-profile'));
+    });
+
+    it('sends an unfinished onboarding profile to onboarding even from a tab', async () => {
+      mockSegments = ['(tabs)'];
+      profiles.bootstrap.mockResolvedValue({ missingName: false, user: { ...user, onboardingCompletedAt: null } });
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(onboarding)'));
+    });
+
+    it('keeps a deep-linked recipe when the offline bootstrap fails with a cached session', async () => {
+      mockSegments = ['recipe', '[slug]'];
+      profiles.bootstrap.mockRejectedValue(new ApiError('NETWORK_OFFLINE', null));
+      const { result } = await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(result.current.error).toBe(ERROR_MESSAGES.NETWORK_OFFLINE));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
   });
 });
