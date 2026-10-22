@@ -1,5 +1,6 @@
 import { AccountStatus, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccountStatusService } from '../auth/account-status.service';
 import { SupabaseAdminService } from './supabase-admin.service';
 import { UsersService } from './users.service';
 
@@ -57,6 +58,8 @@ describe('UsersService', () => {
   const supabaseAdmin = { deleteUser: jest.fn() };
   let service: UsersService;
 
+  const accountStatus = { invalidate: jest.fn() };
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(NOW);
@@ -72,6 +75,7 @@ describe('UsersService', () => {
     service = new UsersService(
       prisma as unknown as PrismaService,
       supabaseAdmin as unknown as SupabaseAdminService,
+      accountStatus as unknown as AccountStatusService,
     );
   });
 
@@ -258,6 +262,7 @@ describe('UsersService', () => {
       data: { userId: null },
     });
     expect(supabaseAdmin.deleteUser).toHaveBeenCalledWith('user-1');
+    expect(accountStatus.invalidate).toHaveBeenCalledWith('user-1');
   });
 
   it('UT-013b does not anonymize local data when Supabase auth deletion fails', async () => {

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import jwksRsa from 'jwks-rsa';
+import { AccountStatusService } from './account-status.service';
 
 export interface SupabaseJwtPayload {
   sub: string;
@@ -17,7 +18,10 @@ export interface AuthenticatedUser {
 
 @Injectable()
 export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly accountStatus: AccountStatusService,
+  ) {
     super({
       algorithms: ['RS256', 'ES256'],
       ignoreExpiration: false,
@@ -34,13 +38,15 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  validate(payload: SupabaseJwtPayload): Promise<AuthenticatedUser> {
+  async validate(payload: SupabaseJwtPayload): Promise<AuthenticatedUser> {
     if (!payload.sub) {
-      return Promise.reject(
-        new UnauthorizedException('Token is missing the subject claim'),
-      );
+      throw new UnauthorizedException('Token is missing the subject claim');
     }
 
-    return Promise.resolve({ id: payload.sub, email: payload.email });
+    if (!(await this.accountStatus.isUsable(payload.sub))) {
+      throw new UnauthorizedException('Account is no longer active');
+    }
+
+    return { id: payload.sub, email: payload.email };
   }
 }
