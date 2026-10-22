@@ -1,18 +1,15 @@
-import { describe, expect, it } from '@jest/globals';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+/* global __dirname */
+// Plain JavaScript on purpose: importing node:fs from a .ts test pulls the Node typings
+// into the TypeScript program, where they conflict with the global fetch mocks of other tests.
+const { describe, expect, it } = require('@jest/globals');
+const { readdirSync, readFileSync } = require('node:fs');
+const { join } = require('node:path');
 
 const MAESTRO_DIRECTORY = join(__dirname, '..', '..', '.maestro');
 const AIRPLANE_MODE_PATTERN = /^\s*-\s*setAirplaneMode:\s*(\S+)\s*$/;
 const VALID_AIRPLANE_MODE_VALUES = ['enabled', 'disabled'];
 
-interface AirplaneModeUsage {
-  file: string;
-  line: number;
-  value: string;
-}
-
-function findAirplaneModeUsages(): AirplaneModeUsage[] {
+function findAirplaneModeUsages() {
   return readdirSync(MAESTRO_DIRECTORY)
     .filter((fileName) => fileName.endsWith('.yaml'))
     .flatMap((fileName) =>
