@@ -111,6 +111,13 @@ describe('useSessionViewModel', () => {
       expect(mockReplace).not.toHaveBeenCalled();
     });
 
+    it('does not navigate before the navigator has mounted a route', async () => {
+      mockSegments = [];
+      await renderHook(() => useSessionViewModel(authentication, profiles));
+      await waitFor(() => expect(useSessionStore.getState().user).toBe(user));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
     it('keeps the tab the app opened on', async () => {
       mockSegments = ['(tabs)', 'search'];
       await renderHook(() => useSessionViewModel(authentication, profiles));

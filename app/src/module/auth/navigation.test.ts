@@ -40,7 +40,7 @@ describe('shouldKeepCurrentRoute', () => {
     expect(shouldKeepCurrentRoute(['(tabs)'], '/(onboarding)')).toBe(false);
   });
 
-  it('does not keep anything before the navigator has mounted a route', () => {
-    expect(shouldKeepCurrentRoute([], '/(tabs)')).toBe(false);
+  it('keeps the initial route while the navigator has not mounted one yet', () => {
+    expect(shouldKeepCurrentRoute([], '/(tabs)')).toBe(true);
   });
 });
