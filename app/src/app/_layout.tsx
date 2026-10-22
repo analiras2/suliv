@@ -116,6 +116,7 @@ export default function RootLayout() {
                 </Stack.Protected>
                 <Stack.Protected guard={activeRoute === '(tabs)'}>
                   <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="(profile)" />
                   <Stack.Screen name="ver-tudo" />
                 </Stack.Protected>
                 {/* Recipe detail renders without an active session (ADR-002) — reachable via
