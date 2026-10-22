@@ -11,7 +11,7 @@ name: E2E-001 Create a recipe fully offline, reconnect to sync and auto-upload t
 - tapOn:
     id: settings-my-recipes
 - assertVisible: Nenhuma receita ainda
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - tapOn:
     id: my-recipes-create-cta
 - tapOn:
@@ -39,7 +39,7 @@ name: E2E-001 Create a recipe fully offline, reconnect to sync and auto-upload t
 - tapOn: Você
 - tapOn:
     id: settings-my-recipes
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 # The draft's text fields sync automatically (no manual sync trigger) and the
 # picked cover image uploads automatically once reconnected — both surfaced
 # here as the recipe reappearing under Rascunho with no dead-end error state.

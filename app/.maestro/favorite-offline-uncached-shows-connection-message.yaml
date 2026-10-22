@@ -9,12 +9,12 @@ name: mensageria E2E-002 Favoriting an uncached recipe while offline shows the c
     clearState: true
 - openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
 - assertVisible: Selecionadas para você
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - tapOn:
     id: recipe-card-save-button
 - assertVisible:
     id: favorite-error-message
 - assertVisible: Você está sem conexão. Verifique sua internet e tente novamente.
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 - assertNotVisible:
     id: favorite-error-message
