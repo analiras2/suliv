@@ -9,7 +9,7 @@ name: E2E-004 Offline guided-cooking session from a previously-cached recipe, ev
 - openLink: suliv://login#access_token=${PERSISTED_ACCESS_TOKEN}&refresh_token=${PERSISTED_REFRESH_TOKEN}
 - openLink: suliv://r/panqueca-de-banana-vegana
 - assertVisible: Panqueca de banana vegana
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - tapOn: Começar a cozinhar
 - assertVisible: Amasse as bananas até formar um purê.
 - assertNotVisible:
@@ -27,7 +27,7 @@ name: E2E-004 Offline guided-cooking session from a previously-cached recipe, ev
     id: cook-advance-button
 - assertVisible:
     id: finalization-panel
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 # Queued analytics events flush on reconnect; verified via analytics_events row
 # counts (test-only check), not a user-visible assertion. A subsequent relaunch
 # must not duplicate them (sync_operations idempotency, ADR-003).

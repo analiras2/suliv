@@ -9,13 +9,13 @@ name: E2E-001 Airplane-mode launch with a session but no cached profile shows re
 - openLink: suliv://login#access_token=${MAGIC_LINK_ACCESS_TOKEN}&refresh_token=${MAGIC_LINK_REFRESH_TOKEN}
 - assertVisible: Início
 - stopApp
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - launchApp
 - assertVisible:
     id: state-view-splash_offline
 - assertVisible:
     id: state-view-primary-action
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 - tapOn:
     id: state-view-primary-action
 - assertVisible: Início

@@ -11,7 +11,7 @@ name: E2E-002 Favorite a previously-cached recipe while offline; syncs to the se
 - openLink: suliv://r/panqueca-de-banana-vegana
 - assertVisible: Panqueca de banana vegana
 - back
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - openLink: suliv://r/panqueca-de-banana-vegana
 - assertVisible: Panqueca de banana vegana
 - tapOn:
@@ -19,7 +19,7 @@ name: E2E-002 Favorite a previously-cached recipe while offline; syncs to the se
 - back
 - tapOn: Salvos
 - assertVisible: Panqueca de banana vegana
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 # favorite_saved_offline firing exactly once, and the server-side Favorite row
 # eventually appearing via GET /favorites once the sync queue flushes, are
 # verified via a test-only check against the test backend (seeded state /

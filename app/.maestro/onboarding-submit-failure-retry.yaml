@@ -22,14 +22,14 @@ name: E2E-002 Submit failure shows inline error and succeeds on retry
     id: onboarding-level-option-iniciante
 - tapOn:
     id: onboarding-frequency-option-raramente
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - tapOn:
     id: onboarding-submit-button
 - assertVisible:
     id: state-view-onboarding_submit_error
 - assertVisible:
     id: state-view-primary-action
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 - tapOn:
     id: state-view-primary-action
 - assertVisible: Início
