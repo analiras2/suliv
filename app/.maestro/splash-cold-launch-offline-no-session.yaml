@@ -3,7 +3,7 @@ name: E2E-004 Airplane-mode launch with no session
 ---
 - launchApp:
     clearState: true
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - launchApp
 - assertVisible:
     id: state-view-login_offline_no_session
@@ -11,6 +11,6 @@ name: E2E-004 Airplane-mode launch with no session
     id: login-magic-link-button
 - assertNotVisible:
     id: state-view-splash_offline
-- setAirplaneMode: false
+- setAirplaneMode: disabled
 - assertNotVisible:
     id: state-view-login_offline_no_session

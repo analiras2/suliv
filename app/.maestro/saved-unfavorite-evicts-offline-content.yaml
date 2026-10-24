@@ -10,8 +10,8 @@ name: E2E-003 Unfavoriting evicts cached content; the recipe becomes unavailable
     id: recipe-detail-favorite-button
 - tapOn:
     id: recipe-detail-favorite-button
-- setAirplaneMode: true
+- setAirplaneMode: enabled
 - tapOn: Começar a cozinhar
 - assertVisible:
     id: cook-unavailable-state
-- setAirplaneMode: false
+- setAirplaneMode: disabled
