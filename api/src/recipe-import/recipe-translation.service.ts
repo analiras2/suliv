@@ -42,6 +42,24 @@ const CANONICAL_NAME_INSTRUCTION = [
   'form, and return one canonical name per ingredient in the same order.',
 ].join(' ');
 
+// The provider's `summary` is auto-generated marketing copy: nutrition figures,
+// a cost per serving in dollars, a score, popularity counts, a credit to the
+// source blog and a list of "similar recipes" that do not exist in the app.
+// None of it belongs in a description, so the model rewrites it instead of
+// translating it, which costs nothing extra: the call is already made.
+const DESCRIPTION_INSTRUCTION = [
+  'The input description is auto-generated marketing text, so do not translate',
+  'it: rewrite it as 1 to 3 short pt-BR sentences using only facts present in',
+  'the input, the title or the ingredients, and never invent anything.',
+  'Remove calories, protein, fat and any other nutrition figures; prices and',
+  'cost per serving; percentages of daily needs; scores and ratings, including',
+  'the word "spoonacular"; counts of people who liked or tried the recipe; any',
+  'credit to a blog, website or author; lists of similar recipes; claims of',
+  'being gluten-free, dairy-free, vegetarian or vegan; and total time and',
+  'number of servings, which the app shows elsewhere. Keep what describes the',
+  'dish: its type, cuisine or origin, season or occasion, and main ingredients.',
+].join(' ');
+
 const SYSTEM_PROMPT = [
   'You translate recipes from English into Brazilian Portuguese (pt-BR) for a',
   'cooking app. Translate cooking terms, ingredient names, and units the way a',
@@ -51,6 +69,7 @@ const SYSTEM_PROMPT = [
   'many items as you received, in the same order.',
   BRAND_INSTRUCTION,
   CANONICAL_NAME_INSTRUCTION,
+  DESCRIPTION_INSTRUCTION,
 ].join(' ');
 
 const TRANSLATION_SCHEMA = {
