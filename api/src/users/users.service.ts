@@ -4,6 +4,7 @@ import { Prisma, User } from '@prisma/client';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { OnboardingDto, UpdateUserDto, UserDto } from './dto';
+import { AccountStatusService } from '../auth/account-status.service';
 import { SupabaseAdminService } from './supabase-admin.service';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{3,20}$/;
@@ -33,6 +34,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabaseAdmin: SupabaseAdminService,
+    private readonly accountStatus: AccountStatusService,
   ) {}
 
   async bootstrap(
@@ -265,6 +267,7 @@ export class UsersService {
       throw error;
     }
 
+    this.accountStatus.invalidate(userId);
     this.logger.log({ userId }, 'UserDeleted');
   }
 

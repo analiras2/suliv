@@ -1,12 +1,20 @@
-import { Controller, Get, INestApplication, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Global,
+  INestApplication,
+  Module,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, KeyObject } from 'node:crypto';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { AuthModule } from '../src/auth/auth.module';
 import { SupabaseAuthGuard } from '../src/auth/supabase-auth.guard';
 import {
@@ -23,12 +31,31 @@ class ProtectedController {
   }
 }
 
+const findUnique = jest.fn();
+
+@Global()
+@Module({
+  providers: [{ provide: PrismaService, useValue: { user: { findUnique } } }],
+  exports: [PrismaService],
+})
+class PrismaStubModule {}
+
 describe('SupabaseAuthGuard (e2e)', () => {
   let app: INestApplication<App>;
   let jwksServer: Server;
+  let trustedPrivateKey: KeyObject;
+
+  const signTrustedToken = (subject: string): string =>
+    sign({ sub: subject, email: 'a@b.com' }, trustedPrivateKey, {
+      algorithm: 'RS256',
+      expiresIn: '5m',
+      issuer: `${process.env.SUPABASE_URL}/auth/v1`,
+      keyid: 'trusted-key',
+    });
 
   beforeAll(async () => {
     const trustedKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    trustedPrivateKey = trustedKeys.privateKey;
     const trustedJwk = trustedKeys.publicKey.export({ format: 'jwk' });
     Object.assign(trustedJwk, { alg: 'RS256', kid: 'trusted-key', use: 'sig' });
 
@@ -54,6 +81,7 @@ describe('SupabaseAuthGuard (e2e)', () => {
           load: [environmentConfiguration],
           validationSchema: environmentValidationSchema,
         }),
+        PrismaStubModule,
         AuthModule,
       ],
       controllers: [ProtectedController],
@@ -86,6 +114,24 @@ describe('SupabaseAuthGuard (e2e)', () => {
     await request(app.getHttpServer())
       .get('/protected')
       .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  });
+
+  it('accepts a trusted token for an active account', async () => {
+    findUnique.mockResolvedValue({ status: 'active' });
+
+    await request(app.getHttpServer())
+      .get('/protected')
+      .set('Authorization', `Bearer ${signTrustedToken('uuid-active')}`)
+      .expect(200);
+  });
+
+  it('rejects a trusted, unexpired token once the account is anonymized', async () => {
+    findUnique.mockResolvedValue({ status: 'anonymized' });
+
+    await request(app.getHttpServer())
+      .get('/protected')
+      .set('Authorization', `Bearer ${signTrustedToken('uuid-deleted')}`)
       .expect(401);
   });
 });
