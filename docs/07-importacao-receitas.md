@@ -63,6 +63,12 @@ Acontece **na promoção**, não na busca. O pool guarda o inglês original inta
 
 Qualquer uma dessas falhas lança `RecipeTranslationError`, a promoção daquele candidato é abortada e ele **fica no pool** para a próxima execução tentar de novo. Nunca publica inglês na fila de moderação.
 
+### Descrição reescrita, não traduzida
+
+O `summary` da Spoonacular é texto de marketing gerado automaticamente: calorias, preço por porção em dólar, nota, contagem de "fãs", crédito ao blog de origem, alegações de dieta e uma lista de "receitas parecidas" que não existem no app. Nada disso serve de descrição, então o prompt manda **reescrever** em 1 a 3 frases, usando só fatos do texto, do título ou dos ingredientes. Fica o tipo de prato, a culinária, a ocasião e os ingredientes principais. Não custa uma chamada a mais: é a mesma da tradução.
+
+Decisão de produto: o app **não credita a fonte** na descrição nem em outro campo.
+
 ### Nome de exibição x nome canônico
 
 A tradução devolve **dois nomes por ingrediente**:

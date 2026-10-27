@@ -127,6 +127,28 @@ describe('RecipeTranslationService', () => {
     expect(system).toContain('no preparation');
   });
 
+  // The provider's summary is SEO copy (nutrition, dollar prices, scores, a
+  // credit to a blog, similar recipes), so the prompt must rewrite it. Only
+  // the prompt can do that, which is why its presence is asserted.
+  it('instructs the model to rewrite the description instead of translating it', async () => {
+    create.mockResolvedValue(
+      messageFixture({
+        title: 'x',
+        description: 'y',
+        ingredientNames: ['a', 'b'],
+        canonicalIngredientNames: ['a', 'b'],
+        stepDescriptions: ['c', 'd'],
+      }),
+    );
+
+    await service.translateToPortuguese(recipeFixture());
+
+    const { system } = create.mock.calls[0][0];
+    expect(system).toContain('do not translate it');
+    expect(system).toContain('cost per serving');
+    expect(system).toContain('credit to a blog');
+  });
+
   it('throws when the canonical names do not align with the ingredients', async () => {
     create.mockResolvedValue(
       messageFixture({
